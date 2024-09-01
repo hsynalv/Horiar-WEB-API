@@ -18,7 +18,7 @@ def login_discord():
 def discord_callback():
     discord = oauth.create_client('discord')
     token = discord.authorize_access_token()
-    user_info = discord.get('users/@me').json()
+    user_info = discord.get('https://discord.com/api/users/@me').json()
 
     # Kullanıcı bilgilerini MongoDB'ye kaydetme veya güncelleme
     user_data = {
@@ -28,4 +28,4 @@ def discord_callback():
     }
     UserService.add_or_update_user(user_data)
 
-    return redirect(url_for('main.status'))
+    return redirect(url_for('main.status')) #TODO: Yönlendir işlemini burada kontrol et
