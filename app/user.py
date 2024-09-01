@@ -4,22 +4,21 @@ from flask import current_app
 class UserService:
     @staticmethod
     def add_or_update_user(user_data):
-        """
-        Kullanıcıyı MongoDB'ye ekler veya günceller.
-        """
         users_collection = current_app.db["users"]
 
-        # Discord ID'sine göre kullanıcıyı bul veya oluştur
-        existing_user = users_collection.find_one({"discord_id": user_data["discord_id"]})
+        if "google_id" in user_data:
+            existing_user = users_collection.find_one({"google_id": user_data["google_id"]})
+        elif "discord_id" in user_data:
+            existing_user = users_collection.find_one({"discord_id": user_data["discord_id"]})
+        else:
+            existing_user = None
 
         if existing_user:
-            # Kullanıcıyı güncelle
             users_collection.update_one(
-                {"discord_id": user_data["discord_id"]},
+                {"_id": existing_user["_id"]},
                 {"$set": user_data}
             )
         else:
-            # Yeni kullanıcıyı ekle
             users_collection.insert_one(user_data)
 
     @staticmethod
@@ -37,3 +36,10 @@ class UserService:
         """
         users_collection = current_app.db["users"]
         return list(users_collection.find({}))
+    @staticmethod
+    def update_user_by_google_id(user_id, update_data):
+        users_collection = current_app.db["users"]
+        users_collection.update_one(
+            {"_id": user_id},
+            {"$set": update_data}
+        )
