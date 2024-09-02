@@ -1,3 +1,4 @@
+from bson import ObjectId
 from flask import current_app
 
 
@@ -18,8 +19,10 @@ class UserService:
                 {"_id": existing_user["_id"]},
                 {"$set": user_data}
             )
+            return existing_user["_id"]
         else:
-            users_collection.insert_one(user_data)
+            inserted_user = users_collection.insert_one(user_data)
+            return inserted_user.inserted_id
 
     @staticmethod
     def get_user_by_discord_id(discord_id):
@@ -28,6 +31,14 @@ class UserService:
         """
         users_collection = current_app.db["users"]
         return users_collection.find_one({"discord_id": discord_id})
+
+    @staticmethod
+    def get_user_by_id(id):
+        """
+        Discord ID'ye göre kullanıcıyı bulur.
+        """
+        users_collection = current_app.db["users"]
+        return users_collection.find_one({"_id": ObjectId(id)})
 
     @staticmethod
     def get_all_users():

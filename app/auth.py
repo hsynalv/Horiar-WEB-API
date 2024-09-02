@@ -19,24 +19,20 @@ def configure_oauth(app):
     )
 
     oauth.register(
-            name='google',
-            client_id=app.config['GOOGLE_CLIENT_ID'],
-            client_secret=app.config['GOOGLE_CLIENT_SECRET'],
-            authorize_url='https://accounts.google.com/o/oauth2/auth',
-            access_token_url='https://accounts.google.com/o/oauth2/token',
-            authorize_params=None,
-            access_token_params=None,
-            refresh_token_url=None,
-            redirect_uri=app.config['GOOGLE_REDIRECT_URI'],  # Google redirect URI
-            client_kwargs={'scope': 'openid email profile'}
-        )
+        name='google',
+        client_id=app.config['GOOGLE_CLIENT_ID'],
+        client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+        redirect_uri=app.config['GOOGLE_REDIRECT_URI'],
+        client_kwargs={'scope': 'openid email profile'}
+    )
 
 
 def create_jwt_token(discord_id, username, secret_key):
 
     payload = {
-        "discord_id": str(discord_id),  # _id ObjectId türünde olduğu için stringe çeviriyoruz
-        "discord_username": username,
+        "user_id": str(discord_id),  # _id ObjectId türünde olduğu için stringe çeviriyoruz
+        "username": username,
         "exp": datetime.datetime.utcnow() + datetime.timedelta(days=30)  # Token geçerlilik süresi
     }
     token = jwt.encode(payload, secret_key, algorithm="HS256")
@@ -55,7 +51,7 @@ def jwt_required(f):
     """
     JWT doğrulaması yapan middleware.
     """
-    def decorator(*args, **kwargs):
+    def jwt_wrapper(*args, **kwargs):
         auth_header = request.headers.get('Authorization')
         if auth_header:
             token = auth_header.split(" ")[1]
@@ -67,4 +63,4 @@ def jwt_required(f):
             return jsonify({"message": "Token is invalid or expired!"}), 403
 
         return f(payload, *args, **kwargs)
-    return decorator
+    return jwt_wrapper

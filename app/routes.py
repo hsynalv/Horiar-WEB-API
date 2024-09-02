@@ -27,13 +27,15 @@ def discord_callback():
     # Kullanıcı bilgilerini işleme ve veritabanına kaydetme
     user_data = {
         "discord_id": user_info["id"],
-        "username": user_info["username"],
-        "email": user_info.get("email")
+        "discord_username": user_info["username"],
+        "email": user_info.get("email"),
+        "google_id": None,
+        "google_username": None,
     }
     user_id = UserService.add_or_update_user(user_data)
 
     # JWT oluşturma
-    jwt_token = create_jwt_token(user_info["id"], user_info["username"], current_app.config['SECRET_KEY'])
+    jwt_token = create_jwt_token(user_id, user_info["username"], current_app.config['SECRET_KEY'])
 
     # JWT'yi JSON yanıtı olarak döndürme
     return jsonify({"token": jwt_token})
@@ -43,6 +45,7 @@ def login_google():
     google = oauth.create_client('google')
     redirect_uri = url_for('main.google_callback', _external=True)
     return google.authorize_redirect(redirect_uri)
+
 
 @main_bp.route('/login/google/callback')
 def google_callback():
@@ -61,11 +64,13 @@ def google_callback():
         "discord_username": None
     }
     user_id = UserService.add_or_update_user(user_data)
+    print(user_id)
 
     # JWT oluşturma
     jwt_token = create_jwt_token(user_id, user_info["name"], current_app.config['SECRET_KEY'])
 
-    return jsonify({"message": "Google ile kayıt oldunuz. Lütfen Discord ile bağlantı kurarak işlemi tamamlayın.", "token": jwt_token})
+    return jsonify({"token": jwt_token})
+
 
 # Discord Callback
 @main_bp.route('/connect/discord/callback')
@@ -85,3 +90,23 @@ def connect_discord_callback(payload):
     UserService.update_user_by_google_id(payload['user_id'], user_data)
 
     return jsonify({"message": "Discord ile bağlantı başarılı.", "discord_id": user_info["id"], "discord_username": user_info["username"]})
+
+
+#@main_bp.route('/getuser', methods=['GET'])
+#TODO @jwt_reuqired
+@main_bp.route('/getuser/<user_id>', methods=['GET'])
+def get_user_by_id(user_id):
+    #user_id = payload['user_id']
+    user = UserService.get_user_by_id(user_id)
+
+    if user:
+        return jsonify({
+            "user_id": str(user["_id"]),
+            "google_id": user.get("google_id"),
+            "discord_id": user.get("discord_id"),
+            "username": user.get("username"),
+            "discord_username": user.get("discord_username"),
+            "email": user.get("email")
+        })
+    else:
+        return jsonify({"message": "User not found"}), 404
