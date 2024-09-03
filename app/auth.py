@@ -28,10 +28,10 @@ def configure_oauth(app):
     )
 
 
-def create_jwt_token(discord_id, username, secret_key):
+def create_jwt_token(user_id, username, secret_key):
 
     payload = {
-        "user_id": str(discord_id),  # _id ObjectId türünde olduğu için stringe çeviriyoruz
+        "user_id": str(user_id),  # _id ObjectId türünde olduğu için stringe çeviriyoruz
         "username": username,
         "exp": datetime.datetime.utcnow() + datetime.timedelta(days=30)  # Token geçerlilik süresi
     }

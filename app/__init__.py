@@ -2,9 +2,10 @@ from flask import Flask
 from .config import Config
 from pymongo import MongoClient
 from .auth import configure_oauth
-
+from flask_cors import CORS
 def create_app():
     app = Flask(__name__)
+    CORS(app, supports_credentials=True)
     app.config.from_object(Config)
 
     # MongoDB bağlantısı

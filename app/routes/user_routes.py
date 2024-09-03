@@ -1,6 +1,8 @@
-from flask import Blueprint, jsonify, url_for, current_app
+from flask import Blueprint, jsonify, url_for, current_app, redirect, make_response, request
 from ..auth import oauth, create_jwt_token, jwt_required
 from app.services.user import UserService
+import jwt
+import datetime
 
 user_bp = Blueprint('user', __name__)
 
@@ -26,14 +28,20 @@ def discord_callback():
         "email": user_info.get("email"),
         "google_id": None,
         "google_username": None,
+        "password": None
     }
     user_id = UserService.add_or_update_user(user_data)
 
     # JWT oluşturma
     jwt_token = create_jwt_token(user_id, user_info["username"], current_app.config['SECRET_KEY'])
 
-    # JWT'yi JSON yanıtı olarak döndürme
-    return jsonify({"token": jwt_token})
+    # Token'ı cookie olarak ayarlama
+    response = make_response(redirect("http://127.0.0.1:3000"))
+    response.set_cookie('token', jwt_token, httponly=False, secure=False, samesite='Lax')
+    response.set_cookie('userId', str(user_id), httponly=False, secure=False, samesite='Lax')
+    print(response.headers)
+
+    return response
 
 @user_bp.route('/login/google')
 def login_google():
@@ -56,7 +64,8 @@ def google_callback():
         "username": user_info["name"],
         "email": user_info["email"],
         "discord_id": None,
-        "discord_username": None
+        "discord_username": None,
+        "password": None
     }
     user_id = UserService.add_or_update_user(user_data)
     print(user_id)
@@ -64,7 +73,11 @@ def google_callback():
     # JWT oluşturma
     jwt_token = create_jwt_token(user_id, user_info["name"], current_app.config['SECRET_KEY'])
 
-    return jsonify({"token": jwt_token})
+    # Token'ı cookie olarak ayarlama
+    response = make_response(redirect("http://127.0.0.1:3000"))
+    response.set_cookie('token', jwt_token, httponly=False, secure=False, samesite='Lax')
+    response.set_cookie('userId', str(user_id), httponly=False, secure=False, samesite='Lax')
+    print(response.headers)
 
 
 # Discord Callback
@@ -105,4 +118,40 @@ def get_user_by_id(user_id):
         })
     else:
         return jsonify({"message": "User not found"}), 404
+
+
+
+@user_bp.route('/signup', methods=['POST'])
+def signup():
+    data = request.json
+    email = data.get('email')
+    password = data.get('password')
+    username = data.get('username')
+
+    if not email or not password or not username:
+        return jsonify({"message": "Missing required fields"}), 400
+
+    user_id = UserService.add_user(email, password, username)
+    if user_id is None:
+        return jsonify({"message": "User already exists"}), 400
+
+    return jsonify({"message": "User created successfully", "user_id": user_id}), 201
+
+@user_bp.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    email = data.get('email')
+    password = data.get('password')
+
+    if not email or not password:
+        return jsonify({"message": "Missing required fields"}), 400
+
+    user = UserService.find_user_by_email(email)
+    if not user or not UserService.check_password(user['password'], password):
+        return jsonify({"message": "Invalid credentials"}), 401
+
+    # JWT token oluşturma (auth.py içerisindeki create_jwt_token fonksiyonu kullanılarak)
+    token = create_jwt_token(str(user["_id"]), user["username"], current_app.config['SECRET_KEY'])
+
+    return jsonify({"message": "Login successful", "token": token}), 200
 
