@@ -18,8 +18,10 @@ def create_app():
     # OAuth'u başlat
     configure_oauth(app)
 
-    # Blueprint'leri buraya ekleyebilirsiniz
-    from .routes import main_bp
-    app.register_blueprint(main_bp)
+    # Blueprint'leri kaydetme
+    from .routes.user_routes import user_bp
+    from .routes.package_routes import package_bp
+    app.register_blueprint(user_bp, url_prefix='/user')
+    app.register_blueprint(package_bp, url_prefix='/package')
 
     return app
