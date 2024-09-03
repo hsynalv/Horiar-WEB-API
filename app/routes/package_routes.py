@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from app.services.package import PackageService
 
+
 package_bp = Blueprint('package', __name__)
 
 @package_bp.route('/packages', methods=['POST'])
