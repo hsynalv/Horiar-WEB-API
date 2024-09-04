@@ -2,6 +2,7 @@ from flask import current_app, jsonify, request
 from authlib.integrations.flask_client import OAuth
 import jwt
 import datetime
+import uuid
 
 
 oauth = OAuth()
@@ -29,23 +30,44 @@ def configure_oauth(app):
 
 
 def create_jwt_token(user_id, username, secret_key):
+    # Token oluşturulma zamanı
+    issued_at = datetime.datetime.utcnow()
+
+    # Token sona erme süresi (örnek olarak 30 gün)
+    expiration = issued_at + datetime.timedelta(days=30)
+
+    # UUID kullanarak benzersiz jti oluşturma
+    unique_jti = str(uuid.uuid4())
 
     payload = {
-        "user_id": str(user_id),  # _id ObjectId türünde olduğu için stringe çeviriyoruz
-        "username": username,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=30)  # Token geçerlilik süresi
+        "iss": "horiarapi.com",
+        "sub": user_id,
+        "aud": "horiar_client",
+        "exp": expiration,
+        "iat": issued_at,
+        "jti": unique_jti,
+        "username": username
     }
+
+    # Token oluşturma
     token = jwt.encode(payload, secret_key, algorithm="HS256")
     return token
 
+
 def verify_jwt_token(token, secret_key):
     try:
-        payload = jwt.decode(token, secret_key, algorithms=["HS256"])
+        payload = jwt.decode(token, secret_key, algorithms=["HS256"], audience='horiar_client')
+
+        # Gerekli alanların olup olmadığını kontrol et
+        if "user_id" not in payload or "username" not in payload:
+            return None
+
         return payload
     except jwt.ExpiredSignatureError:
         return None  # Token süresi dolmuş
     except jwt.InvalidTokenError:
         return None  # Geçersiz token
+
 
 def jwt_required(f):
     """

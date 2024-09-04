@@ -2,9 +2,8 @@ import unittest
 from mongomock import MongoClient
 from app.services.user import UserService
 from app import create_app
-from werkzeug.security import generate_password_hash
 from bson import ObjectId
-
+from werkzeug.security import check_password_hash
 
 class TestUserService(unittest.TestCase):
 
@@ -13,106 +12,130 @@ class TestUserService(unittest.TestCase):
         self.app = create_app()
         self.app.config['TESTING'] = True
 
-        # Uygulama bağlamı
         self.app_context = self.app.app_context()
         self.app_context.push()
 
-        # MongoClient'ı mock olarak oluştur
+        # Mock MongoClient
         self.client = MongoClient()
         self.db = self.client['horiar']
         self.users_collection = self.db['users']
 
-        # Uygulama bağlamına mock veritabanını ekle
         self.app.db = self.db
 
     def tearDown(self):
-        # Testler bittikten sonra uygulama bağlamını temizle
         self.app_context.pop()
 
-    def test_add_user(self):
-        # Kullanıcıyı ekleyelim
+    def test_add_user_success(self):
         user_id = UserService.add_user("test@example.com", "password123", "TestUser")
         self.assertIsNotNone(user_id)
+        self.assertIsInstance(user_id, str)
 
-        # Aynı email ile tekrar kullanıcı eklemeye çalışalım
-        duplicate_user_id = UserService.add_user("test@example.com", "password123", "TestUser")
-        self.assertIsNone(duplicate_user_id)
+        # Veritabanında kullanıcıyı kontrol edelim
+        user = self.users_collection.find_one({"_id": ObjectId(user_id)})
+        self.assertIsNotNone(user)
+        self.assertEqual(user["email"], "test@example.com")
+        self.assertTrue(check_password_hash(user["password"], "password123"))
 
-    def test_check_password(self):
-        # Kullanıcı ekle ve şifreyi kontrol et
-        password = "password123"
-        hashed_password = generate_password_hash(password)
-        result = UserService.check_password(hashed_password, password)
-        self.assertTrue(result)
+    def test_add_user_already_exists(self):
+        # İlk kullanıcıyı ekleyelim
+        self.users_collection.insert_one({
+            "email": "test@example.com",
+            "password": "hashedpassword",
+            "username": "TestUser"
+        })
+
+        # Aynı email ile ikinci kullanıcı eklemeye çalışalım
+        with self.assertRaises(ValueError):
+            UserService.add_user("test@example.com", "password123", "TestUser")
 
     def test_find_user_by_email(self):
-        # Kullanıcı ekle ve sonrasında kullanıcıyı bulmayı test et
-        UserService.add_user("find@example.com", "password123", "FindUser")
-        user = UserService.find_user_by_email("find@example.com")
+        # Kullanıcıyı ekleyelim
+        self.users_collection.insert_one({
+            "email": "test@example.com",
+            "password": "hashedpassword",
+            "username": "TestUser"
+        })
+
+        # Kullanıcıyı email'e göre bulalım
+        user = UserService.find_user_by_email("test@example.com")
         self.assertIsNotNone(user)
-        self.assertEqual(user['email'], "find@example.com")
+        self.assertEqual(user.email, "test@example.com")
 
-    def test_find_user_by_email_not_found(self):
-        # Var olmayan bir kullanıcıyı bulmaya çalışalım
-        user = UserService.find_user_by_email("notfound@example.com")
-        self.assertIsNone(user)
-
-    def test_check_password_incorrect(self):
-        # Yanlış şifreyle giriş yapmaya çalışalım
-        password = "password123"
-        hashed_password = generate_password_hash(password)
-        result = UserService.check_password(hashed_password, "wrongpassword")
-        self.assertFalse(result)
-
-    def test_add_user_password_is_hashed(self):
-        # Kullanıcı ekleyelim
-        user_id = UserService.add_user("test@example.com", "password123", "TestUser")
-        user = self.users_collection.find_one({"_id": ObjectId(user_id)})
-
-        # Kullanıcının şifresinin hashlenip hashlenmediğini kontrol edelim
-        self.assertIsNotNone(user)
-        self.assertNotEqual(user["password"], "password123")  # Şifrenin düz metin olmadığından emin ol
-        self.assertTrue(user["password"].startswith("scrypt"))  # Hash formatı kontrolü
+    def test_check_password(self):
+        # Şifre kontrol testi
+        hashed_password = UserService.add_user("test@example.com", "password123", "TestUser")
+        user = self.users_collection.find_one({"email": "test@example.com"})
+        self.assertTrue(UserService.check_password(user["password"], "password123"))
 
     def test_add_or_update_user(self):
-        # Kullanıcı ekle
+        # Yeni kullanıcı ekle
         user_data = {
-            "email": "update@example.com",
-            "password": "password123",
-            "username": "TestUser"
+            "email": "test2@example.com",
+            "username": "TestUser2",
+            "google_id": "google123",
+            "discord_id": None
         }
         user_id = UserService.add_or_update_user(user_data)
+        self.assertIsNotNone(user_id)
 
-        # Kullanıcıyı güncelle
-        updated_user_data = {
-            "email": "update@example.com",
-            "password": "newpassword123",
-            "username": "UpdatedUser"
-        }
-        updated_user_id = UserService.add_or_update_user(updated_user_data)
+        # Aynı kullanıcıyı güncelle
+        user_data["username"] = "UpdatedUser"
+        updated_user_id = UserService.add_or_update_user(user_data)
+        self.assertEqual(user_id, updated_user_id)
 
-        # Güncellenen kullanıcıyı kontrol et
+        # Kullanıcı verilerini kontrol et
         user = self.users_collection.find_one({"_id": ObjectId(user_id)})
-        self.assertIsNotNone(user)
         self.assertEqual(user["username"], "UpdatedUser")
 
     def test_get_user_by_id(self):
-        # Kullanıcı ekle ve ID ile kullanıcıyı bulmayı test et
-        user_id = UserService.add_user("findbyid@example.com", "password123", "FindByIdUser")
-        user = UserService.get_user_by_id(user_id)
-        self.assertIsNotNone(user)
-        self.assertEqual(user['email'], "findbyid@example.com")
+        # Kullanıcıyı ekleyelim
+        user_id = self.users_collection.insert_one({
+            "email": "test@example.com",
+            "password": "hashedpassword",
+            "username": "TestUser"
+        }).inserted_id
 
-    def test_get_user_by_id_not_found(self):
-        # Var olmayan bir ID ile kullanıcı arayalım
-        user = UserService.get_user_by_id("invalid_user_id")
+        # UserService üzerinden kullanıcıyı bul
+        user = UserService.get_user_by_id(str(user_id))
+        self.assertIsNotNone(user)
+        self.assertEqual(user["email"], "test@example.com")
+
+    def test_get_user_by_id_invalid(self):
+        # Geçersiz ID ile kullanıcıyı bulmaya çalış
+        user = UserService.get_user_by_id("invalid_id")
         self.assertIsNone(user)
 
-    def test_check_password_incorrect(self):
-        # Yanlış şifre ile giriş yapma testi
-        hashed_password = generate_password_hash("correctpassword")
-        result = UserService.check_password(hashed_password, "wrongpassword")
-        self.assertFalse(result)
+    def test_update_user_by_id(self):
+        # Kullanıcıyı ekleyelim
+        user_id = self.users_collection.insert_one({
+            "email": "test@example.com",
+            "google_id": "google123",
+            "username": "TestUser"
+        }).inserted_id
+
+        # Kullanıcıyı güncelle
+        UserService.update_user_by_id(user_id, {"username": "UpdatedUser"})
+        updated_user = self.users_collection.find_one({"_id": ObjectId(user_id)})
+        self.assertEqual(updated_user["username"], "UpdatedUser")
+
+    def test_add_user_invalid_email(self):
+        with self.assertRaises(ValueError):
+            UserService.add_user("invalid_email", "password123", "TestUser")
+
+    def test_password_is_hashed(self):
+        user_id = UserService.add_user("test@example.com", "password123", "TestUser")
+        user = self.users_collection.find_one({"_id": ObjectId(user_id)})
+        # Şifre hashlenmiş olmalı, yani düz metin olarak saklanmamalı
+        self.assertNotEqual(user["password"], "password123")
+        self.assertTrue(check_password_hash(user["password"], "password123"))
+
+    def test_update_user_not_found(self):
+        with self.assertRaises(ValueError):
+            UserService.update_user_by_id("non_existing_user_id", {"username": "UpdatedUser"})
+
+    def test_get_user_by_invalid_id(self):
+        user = UserService.get_user_by_id("invalid_object_id_format")
+        self.assertIsNone(user)
 
 
 if __name__ == '__main__':
