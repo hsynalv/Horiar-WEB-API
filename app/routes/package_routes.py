@@ -1,31 +1,16 @@
 from flask import Blueprint, jsonify, request
 from app.services.package import PackageService
 
-
 package_bp = Blueprint('package', __name__)
 
 @package_bp.route('/packages', methods=['POST'])
 def add_package():
     data = request.json
-
-    # Eksik alan kontrolü
-    if not data.get("name") or not data.get("credits") or not data.get("price"):
-        return jsonify({"message": "Missing required fields"}), 400
-
-    # İndirimli fiyat kontrolü
-    if data.get("discounted_price", data.get("price")) > data.get("price"):
-        return jsonify({"message": "Discounted price cannot be greater than the original price."}), 400
-
-    package = {
-        "name": data.get("name"),
-        "credits": data.get("credits"),
-        "price": data.get("price"),
-        "discounted_price": data.get("discounted_price", data.get("price"))
-    }
-
-    package_id = PackageService.add_package(package)
-    return jsonify({"message": "Package added successfully", "package_id": str(package_id)}), 201
-
+    try:
+        package_id = PackageService.add_package(data)
+        return jsonify({"message": "Package added successfully", "package_id": str(package_id)}), 201
+    except ValueError as e:
+        return jsonify({"message": str(e)}), 400
 
 @package_bp.route('/packages', methods=['GET'])
 def get_packages():
@@ -43,26 +28,18 @@ def get_package(package_id):
 @package_bp.route('/packages/<package_id>', methods=['PUT'])
 def update_package(package_id):
     data = request.json
+    try:
+        if not PackageService.get_package_by_id(package_id):
+            return jsonify({"message": "Package not found"}), 404
 
-    # Paket olup olmadığını kontrol et
-    if not PackageService.get_package_by_id(package_id):
-        return jsonify({"message": "Package not found"}), 404
-
-    update_data = {
-        "name": data.get("name"),
-        "credits": data.get("credits"),
-        "price": data.get("price"),
-        "discounted_price": data.get("discounted_price", data.get("price"))
-    }
-
-    PackageService.update_package(package_id, update_data)
-    return jsonify({"message": "Package updated successfully"}), 200
+        PackageService.update_package(package_id, data)
+        return jsonify({"message": "Package updated successfully"}), 200
+    except ValueError as e:
+        return jsonify({"message": str(e)}), 400
 
 @package_bp.route('/packages/<package_id>', methods=['DELETE'])
 def delete_package(package_id):
-    # Paket olup olmadığını kontrol et
     if not PackageService.delete_package(package_id):
         return jsonify({"message": "Package not found"}), 404
 
     return jsonify({"message": "Package deleted successfully"}), 200
-
