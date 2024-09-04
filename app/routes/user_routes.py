@@ -28,7 +28,7 @@ def discord_callback():
     }
     user_id = UserService.add_or_update_user(user_data)
 
-    jwt_token = create_jwt_token(user_id, user_info["username"], current_app.config['SECRET_KEY'])
+    jwt_token = create_jwt_token(str(user_id), user_info["username"], current_app.config['SECRET_KEY'])
 
     response = make_response(redirect("http://127.0.0.1:3000"))
     response.set_cookie('token', jwt_token, httponly=False, secure=False, samesite='Lax')
@@ -59,7 +59,7 @@ def google_callback():
     }
     user_id = UserService.add_or_update_user(user_data)
 
-    jwt_token = create_jwt_token(user_id, user_info["name"], current_app.config['SECRET_KEY'])
+    jwt_token = create_jwt_token(str(user_id), user_info["name"], current_app.config['SECRET_KEY'])
 
     response = make_response(redirect("http://127.0.0.1:3000"))
     response.set_cookie('token', jwt_token, httponly=False, secure=False, samesite='Lax')
