@@ -78,6 +78,7 @@ def google_callback():
     response.set_cookie('token', jwt_token, httponly=False, secure=False, samesite='Lax')
     response.set_cookie('userId', str(user_id), httponly=False, secure=False, samesite='Lax')
     print(response.headers)
+    return response
 
 
 # Discord Callback

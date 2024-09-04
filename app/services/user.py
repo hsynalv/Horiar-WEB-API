@@ -1,4 +1,5 @@
 from bson import ObjectId
+from bson.errors import InvalidId
 from flask import current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -8,20 +9,23 @@ class UserService:
     def add_or_update_user(user_data):
         users_collection = current_app.db["users"]
 
-        if "google_id" in user_data:
+        # Google veya Discord ID'sine göre kullanıcıyı kontrol et
+        if "google_id" in user_data and user_data["google_id"]:
             existing_user = users_collection.find_one({"google_id": user_data["google_id"]})
-        elif "discord_id" in user_data:
+        elif "discord_id" in user_data and user_data["discord_id"]:
             existing_user = users_collection.find_one({"discord_id": user_data["discord_id"]})
         else:
-            existing_user = None
+            existing_user = users_collection.find_one({"email": user_data["email"]})
 
         if existing_user:
+            # Mevcut kullanıcıyı güncelle
             users_collection.update_one(
                 {"_id": existing_user["_id"]},
                 {"$set": user_data}
             )
             return existing_user["_id"]
         else:
+            # Yeni kullanıcı ekle
             inserted_user = users_collection.insert_one(user_data)
             return inserted_user.inserted_id
 
@@ -33,13 +37,18 @@ class UserService:
         users_collection = current_app.db["users"]
         return users_collection.find_one({"discord_id": discord_id})
 
+    from bson.errors import InvalidId
+
     @staticmethod
     def get_user_by_id(id):
         """
-        Discord ID'ye göre kullanıcıyı bulur.
+        Kullanıcıyı ID ile bulur.
         """
         users_collection = current_app.db["users"]
-        return users_collection.find_one({"_id": ObjectId(id)})
+        try:
+            return users_collection.find_one({"_id": ObjectId(id)})
+        except InvalidId:
+            return None
 
     @staticmethod
     def get_all_users():
@@ -74,9 +83,7 @@ class UserService:
             "discord_id": None,
             "discord_username": None,
             "google_id": None,
-
         }).inserted_id
-
 
         return str(user_id)
 

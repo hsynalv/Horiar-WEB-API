@@ -56,9 +56,9 @@ class TextToImageService:
 
     @staticmethod
     def add_to_queue(app, prompt):
-        """
-        Gelen prompt'u kuyruğa ekler ve işlem başlatır.
-        """
+        if not prompt.strip():  # Boş veya yalnızca boşluklardan oluşan prompt
+            raise ValueError("Prompt cannot be empty.")
+
         global is_processing
         result_queue = Queue()
         image_queue.put((app, prompt, result_queue))
