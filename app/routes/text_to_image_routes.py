@@ -1,6 +1,5 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from app.services.text_to_image import TextToImageService
-import requests
 
 text_to_image_bp = Blueprint('text_to_image', __name__)
 
@@ -13,8 +12,8 @@ def generate_image():
         return jsonify({"message": "Missing required fields"}), 400
 
     try:
-        # Text to image servisinden görseli oluşturma
-        image_data = TextToImageService.generate_image_from_text(prompt)
-        return jsonify(image_data), 200
-    except requests.HTTPError as http_err:
-        return jsonify({"message": str(http_err)}), 500
+        # Text to image kuyruğuna ekle ve sonucu bekle
+        result = TextToImageService.add_to_queue(current_app._get_current_object(), prompt)
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
