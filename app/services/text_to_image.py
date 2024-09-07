@@ -6,6 +6,8 @@ from flask import current_app, jsonify
 from queue import Queue
 import time
 
+from app.models.image_request_model import ImageRequest
+
 # FIFO Kuyruğu
 image_queue = Queue()
 is_processing = False
@@ -92,7 +94,7 @@ class TextToImageService:
         is_processing = False
 
     @staticmethod
-    def generate_image_directly(app, prompt):
+    def generate_image_directly(app, prompt, payload):
         """
         Kuyruk kullanmadan doğrudan RunPod API'sine istek göndererek prompt'a göre görüntü oluşturur.
         """
@@ -104,10 +106,7 @@ class TextToImageService:
 
         # Uygulama bağlamı içinde ayarları çek
         with app.app_context():
-            # RunPod API endpoint URL'si
             runpod_url = app.config['RUNPOD_URL']
-
-            # İstek başlıkları (headers)
             headers = {
                 "Content-Type": "application/json",
                 "Authorization": app.config['RUNPOD_API_KEY']
@@ -118,6 +117,27 @@ class TextToImageService:
 
             # Eğer istek başarılı olduysa yanıtı döndür
             if response.status_code == 200:
-                return response.json()  # Yanıtı JSON olarak döndürün
+                result = response.json()
+
+                # RunPod API isteği başarılı olduğunda kaydetme işlemini yapıyoruz
+                user_id = payload["sub"]
+                username = payload["username"]
+                TextToImageService.save_request_to_db(app, user_id, username, prompt)
+
+                return result  # Yanıtı JSON olarak döndür
             else:
                 response.raise_for_status()  # Bir hata varsa hatayı fırlatın
+
+    @staticmethod
+    def save_request_to_db(app, user_id, username, prompt):
+        """
+        Kullanıcı isteğini veritabanına kaydeder.
+        """
+        with app.app_context():
+            requests_collection = app.db["image_requests"]
+            image_request = ImageRequest(
+                user_id=user_id,
+                username=username,
+                prompt=prompt
+            )
+            requests_collection.insert_one(image_request.to_dict())
