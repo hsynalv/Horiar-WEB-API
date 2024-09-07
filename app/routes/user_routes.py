@@ -104,6 +104,12 @@ def login():
     if not user or not UserService.check_password(user.password, password):
         return jsonify({"message": "Invalid credentials"}), 401
 
+    # JWT token oluşturma
     token = create_jwt_token(str(user._id), user.username, current_app.config['SECRET_KEY'])
 
-    return jsonify({"message": "Login successful", "token": token}), 200
+    # Cookie ile token ve userId'yi gönderme
+    response = make_response(jsonify({"message": "Login successful"}), 200)
+    response.set_cookie('token', token, httponly=False, secure=False, samesite='Lax')
+    response.set_cookie('userId', str(user._id), httponly=False, secure=False, samesite='Lax')
+
+    return response
