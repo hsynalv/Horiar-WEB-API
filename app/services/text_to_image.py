@@ -90,3 +90,34 @@ class TextToImageService:
             result_queue.put(result)  # Sonucu kuyrukta bekleyen işleme ilet
 
         is_processing = False
+
+    @staticmethod
+    def generate_image_directly(app, prompt):
+        """
+        Kuyruk kullanmadan doğrudan RunPod API'sine istek göndererek prompt'a göre görüntü oluşturur.
+        """
+        # Proje dizininde yer alan workflow.json dosyasının yolu
+        workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_dev.json')
+
+        # workflow.json dosyasını güncelle
+        updated_workflow = TextToImageService.update_workflow_with_prompt(workflow_path, prompt)
+
+        # Uygulama bağlamı içinde ayarları çek
+        with app.app_context():
+            # RunPod API endpoint URL'si
+            runpod_url = app.config['RUNPOD_URL']
+
+            # İstek başlıkları (headers)
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": app.config['RUNPOD_API_KEY']
+            }
+
+            # RunPod API'sine POST isteği gönderme
+            response = requests.post(runpod_url, json=updated_workflow, headers=headers)
+
+            # Eğer istek başarılı olduysa yanıtı döndür
+            if response.status_code == 200:
+                return response.json()  # Yanıtı JSON olarak döndürün
+            else:
+                response.raise_for_status()  # Bir hata varsa hatayı fırlatın

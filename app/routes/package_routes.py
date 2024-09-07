@@ -1,9 +1,12 @@
 from flask import Blueprint, jsonify, request
 from app.services.package import PackageService
 
+from ..auth import jwt_required
+
 package_bp = Blueprint('package', __name__)
 
 @package_bp.route('/packages', methods=['POST'])
+@jwt_required(pass_payload=False)
 def add_package():
     data = request.json
     try:
@@ -13,6 +16,7 @@ def add_package():
         return jsonify({"message": str(e)}), 400
 
 @package_bp.route('/packages', methods=['GET'])
+@jwt_required(pass_payload=False)
 def get_packages():
     packages = PackageService.get_all_packages()
     return jsonify(packages), 200
