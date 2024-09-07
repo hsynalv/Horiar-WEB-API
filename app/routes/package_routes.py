@@ -22,6 +22,7 @@ def get_packages():
     return jsonify(packages), 200
 
 @package_bp.route('/packages/<package_id>', methods=['GET'])
+@jwt_required(pass_payload=False)
 def get_package(package_id):
     package = PackageService.get_package_by_id(package_id)
     if package:
@@ -30,6 +31,7 @@ def get_package(package_id):
         return jsonify({"message": "Package not found"}), 404
 
 @package_bp.route('/packages/<package_id>', methods=['PUT'])
+@jwt_required(pass_payload=False)
 def update_package(package_id):
     data = request.json
     try:
@@ -42,6 +44,7 @@ def update_package(package_id):
         return jsonify({"message": str(e)}), 400
 
 @package_bp.route('/packages/<package_id>', methods=['DELETE'])
+@jwt_required(pass_payload=False)
 def delete_package(package_id):
     if not PackageService.delete_package(package_id):
         return jsonify({"message": "Package not found"}), 404

@@ -32,7 +32,6 @@ def generate_image_direct(payload):
 
     try:
         # Text to image işlemini kuyruk kullanmadan doğrudan yap
-        print("Generating image without queue...")  # Log ekleyelim
         result = TextToImageService.generate_image_directly(current_app._get_current_object(), prompt, payload)
 
         # Eğer result JSON değilse, burada hata olabilir

@@ -68,6 +68,7 @@ def google_callback():
     return response
 
 @user_bp.route('/getuser/<user_id>', methods=['GET'])
+@jwt_required(pass_payload=False)
 def get_user_by_id(user_id):
     user = UserService.get_user_by_id(user_id)
 
