@@ -39,9 +39,9 @@ def daily_request_limit(f):
         # Bugün yapılan istek sayısını logla
         print(f"Today's request count for user {user_id}: {request_count}")
 
-        # Eğer istek sayısı 15'ten büyükse 403 döndür
+        # Eğer istek sayısı 15'ten büyükse 401 döndür
         if request_count >= 15:
-            return jsonify({"message": "Daily request limit exceeded!"}), 403
+            return jsonify({"message": "Daily request limit exceeded!"}), 401
 
         # İstek sınırını geçmemişse, fonksiyonu çalıştır
         return f(*args, **kwargs)
