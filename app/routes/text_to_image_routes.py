@@ -39,3 +39,21 @@ def generate_image_direct(payload):
     except Exception as e:
         print(f"Error: {e}")  # Hata mesajı
         return jsonify({"message": str(e)}), 500
+
+
+@text_to_image_bp.route('/requests', methods=['GET'])
+@jwt_required(pass_payload=True)
+def get_requests_by_user(payload):
+    """
+    JWT'den alınan kullanıcı ID'sine göre tüm istekleri döndürür.
+    """
+    try:
+        # Kullanıcı ID'sine göre istekleri al
+        requests = TextToImageService.get_requests_by_user_id(current_app, payload)
+
+        # Sonuçları JSON formatında döndür
+        return jsonify([request.to_dict() for request in requests]), 200
+
+    except Exception as e:
+        # Hata durumunda hata mesajı döndür
+        return jsonify({"error": str(e)}), 500

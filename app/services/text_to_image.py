@@ -118,18 +118,20 @@ class TextToImageService:
             # Eğer istek başarılı olduysa yanıtı döndür
             if response.status_code == 200:
                 result = response.json()
+                # RunPod API yanıtından message bilgisini al
+                message = result.get("output", {}).get("message")
 
                 # RunPod API isteği başarılı olduğunda kaydetme işlemini yapıyoruz
                 user_id = payload["sub"]
                 username = payload["username"]
-                TextToImageService.save_request_to_db(app, user_id, username, prompt)
+                TextToImageService.save_request_to_db(app, user_id, username, prompt, message)
 
                 return result  # Yanıtı JSON olarak döndür
             else:
                 response.raise_for_status()  # Bir hata varsa hatayı fırlatın
 
     @staticmethod
-    def save_request_to_db(app, user_id, username, prompt):
+    def save_request_to_db(app, user_id, username, prompt, message):
         """
         Kullanıcı isteğini veritabanına kaydeder.
         """
@@ -138,6 +140,23 @@ class TextToImageService:
             image_request = ImageRequest(
                 user_id=user_id,
                 username=username,
-                prompt=prompt
+                prompt=prompt,
+                image=message
             )
             requests_collection.insert_one(image_request.to_dict())
+
+    @staticmethod
+    def get_requests_by_user_id(app, payload):
+        """
+        Veritabanından kullanıcı ID'sine göre istekleri getirir.
+        """
+        with app.app_context():
+            # Veritabanı bağlantısını al
+            requests_collection = app.db["image_requests"]
+            user_id = payload["sub"]
+
+            # Kullanıcı ID'sine göre sorgu yap
+            results = requests_collection.find({"user_id": user_id})
+
+            # Sonuçları liste halinde döndür
+            return [ImageRequest.from_dict(result) for result in results]

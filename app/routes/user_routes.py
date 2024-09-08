@@ -26,9 +26,10 @@ def discord_callback():
         "google_username": None,
         "password": None
     }
+
     user_id = UserService.add_or_update_user(user_data)
 
-    jwt_token = create_jwt_token(str(user_id), user_info["username"], current_app.config['SECRET_KEY'])
+    jwt_token = create_jwt_token(str(user_id), user_info["username"], user_info["email"],current_app.config['SECRET_KEY'])
 
     response = make_response(redirect("http://127.0.0.1:3000"))
     response.set_cookie('token', jwt_token, httponly=False, secure=False, samesite='Lax')
@@ -59,7 +60,7 @@ def google_callback():
     }
     user_id = UserService.add_or_update_user(user_data)
 
-    jwt_token = create_jwt_token(str(user_id), user_info["name"], current_app.config['SECRET_KEY'])
+    jwt_token = create_jwt_token(str(user_id), user_info["name"], user_info["email"],current_app.config['SECRET_KEY'])
 
     response = make_response(redirect("http://127.0.0.1:3000"))
     response.set_cookie('token', jwt_token, httponly=False, secure=False, samesite='Lax')
@@ -104,12 +105,14 @@ def login():
     if not user or not UserService.check_password(user.password, password):
         return jsonify({"message": "Invalid credentials"}), 401
 
-    # JWT token oluşturma
-    token = create_jwt_token(str(user._id), user.username, current_app.config['SECRET_KEY'])
+    # Generate JWT token with email and user information
+    token = create_jwt_token(str(user._id), user.username, user.email, current_app.config['SECRET_KEY'])
 
-    # Cookie ile token ve userId'yi gönderme
-    response = make_response(jsonify({"message": "Login successful"}), 200)
-    response.set_cookie('token', token, httponly=False, secure=False, samesite='Lax')
-    response.set_cookie('userId', str(user._id), httponly=False, secure=False, samesite='Lax')
-
-    return response
+    response_data = {
+        "message": "Login successful",
+        "token": token,
+        "userId": str(user._id),
+        "username": user.username,
+        "email": user.email,
+    }
+    return jsonify(response_data), 200

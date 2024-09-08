@@ -30,24 +30,25 @@ def configure_oauth(app):
     )
 
 
-def create_jwt_token(user_id, username, secret_key):
-    # Token oluşturulma zamanı
+def create_jwt_token(user_id, username, email, secret_key):
+    # Token creation time
     issued_at = datetime.datetime.utcnow()
 
-    # Token sona erme süresi (örnek olarak 30 gün)
+    # Token expiration time (for example, 30 days)
     expiration = issued_at + datetime.timedelta(days=30)
 
-    # UUID kullanarak benzersiz jti oluşturma
+    # Generate unique jti using UUID
     unique_jti = str(uuid.uuid4())
 
     payload = {
-        "iss": "horiarapi.com",
-        "sub": user_id,
-        "aud": "horiar_client",
-        "exp": expiration,
-        "iat": issued_at,
-        "jti": unique_jti,
-        "username": username
+        "iss": "horiarapi.com",   # Issuer
+        "sub": user_id,           # Subject (user ID)
+        "aud": "horiar_client",   # Audience
+        "exp": expiration,        # Expiration time
+        "iat": issued_at,         # Issued at time
+        "jti": unique_jti,        # Unique ID
+        "username": username,     # User's username
+        "email": email            # User's email
     }
 
     # Token oluşturma
