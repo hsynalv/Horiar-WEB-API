@@ -12,7 +12,7 @@ def create_app():
 
     # MongoDB bağlantısı
     client = MongoClient(app.config["MONGO_URI"])
-    app.db = client.get_database()
+    app.db = client.get_database("horiar")
 
     # Varsayılan kullanıcı koleksiyonunu kontrol etme ve oluşturma
     if "users" not in app.db.list_collection_names():
