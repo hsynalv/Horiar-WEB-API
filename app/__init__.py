@@ -4,9 +4,16 @@ from pymongo import MongoClient
 from mongoengine import connect
 import os
 from .auth import configure_oauth
+
 from .routes.text_to_image_routes import text_to_image_bp
 from dotenv import load_dotenv
 from flask_wtf.csrf import CSRFProtect
+
+# Extensions ve helper fonksiyonları içe aktar
+from app.extensions.errors import register_error_handlers
+from app.extensions.blueprints import register_blueprints
+
+from app.auth import configure_oauth
 
 # Ortam değişkenine göre doğru .env dosyasını yükle
 env_file = ".env.development" if os.getenv('FLASK_ENV') == 'development' else ".env.production"
@@ -41,10 +48,9 @@ def create_app():
     configure_oauth(app)
 
     # Blueprint'leri kaydetme
-    from .routes.user_routes import user_bp
-    from .routes.package_routes import package_bp
-    app.register_blueprint(user_bp, url_prefix='/user')
-    app.register_blueprint(package_bp, url_prefix='/package')
-    app.register_blueprint(text_to_image_bp, url_prefix='/create')
+    register_blueprints(app)
+
+    # Global hata yönetimi
+    register_error_handlers(app)
 
     return app

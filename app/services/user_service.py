@@ -1,5 +1,7 @@
 from flask import current_app
 from bson import ObjectId
+
+from app.errors.not_found_error import NotFoundError
 from app.models.user_model import User
 from werkzeug.security import generate_password_hash, check_password_hash
 import re
@@ -69,7 +71,7 @@ class UserService(BaseService):
         """
         user = User.objects(id=user_id).first()
         if not user:
-            raise ValueError("User not found")
+            raise NotFoundError("User not found")
 
         return user
 
@@ -80,7 +82,7 @@ class UserService(BaseService):
         """
         user = User.objects(id=user_id).first()
         if not user:
-            raise ValueError("User not found")
+            raise NotFoundError("User not found")
 
         user.update(**update_data)
 
