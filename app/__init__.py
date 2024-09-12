@@ -29,8 +29,8 @@ def create_app():
     # Loglama yapılandırmasını başlat
     setup_logging()
 
-    csrf = CSRFProtect()
-    csrf.init_app(app)
+    #csrf = CSRFProtect()
+    #csrf.init_app(app)
 
     # Ortam değişkenine göre yapılandırmayı yükle
     if os.getenv('FLASK_ENV') == 'production':
