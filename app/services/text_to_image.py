@@ -61,14 +61,13 @@ class TextToImageService:
         Kullanıcı isteğini veritabanına kaydeder.
         """
         with app.app_context():
-            requests_collection = app.db["image_requests"]
             image_request = ImageRequest(
                 user_id=user_id,
                 username=username,
                 prompt=prompt,
                 image=message
             )
-            requests_collection.insert_one(image_request.to_dict())
+            image_request.save()
 
     @staticmethod
     def get_requests_by_user_id(app, payload):
@@ -76,12 +75,5 @@ class TextToImageService:
         Veritabanından kullanıcı ID'sine göre istekleri getirir.
         """
         with app.app_context():
-            # Veritabanı bağlantısını al
-            requests_collection = app.db["image_requests"]
             user_id = payload["sub"]
-
-            # Kullanıcı ID'sine göre sorgu yap
-            results = requests_collection.find({"user_id": user_id})
-
-            # Sonuçları liste halinde döndür
-            return [ImageRequest.from_dict(result) for result in results]
+            return ImageRequest.objects(user_id=user_id).all()
