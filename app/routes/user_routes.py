@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app, make_response, redirect, url_for
 from ..auth import create_jwt_token, jwt_required, oauth
-from app.services.user import UserService
+from app.services.user_service import UserService
 import jwt
 
 user_bp = Blueprint('user', __name__)

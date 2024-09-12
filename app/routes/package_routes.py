@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.services.package import PackageService
+from app.services.package_service import PackageService
 
 from ..auth import jwt_required
 
@@ -34,14 +34,9 @@ def get_package(package_id):
 @jwt_required(pass_payload=False)
 def update_package(package_id):
     data = request.json
-    try:
-        if not PackageService.get_package_by_id(package_id):
-            return jsonify({"message": "Package not found"}), 404
+    PackageService.update_package(package_id, data)
+    return jsonify({"message": "Package updated successfully"}), 200
 
-        PackageService.update_package(package_id, data)
-        return jsonify({"message": "Package updated successfully"}), 200
-    except ValueError as e:
-        return jsonify({"message": str(e)}), 400
 
 @package_bp.route('/packages/<package_id>', methods=['DELETE'])
 @jwt_required(pass_payload=False)

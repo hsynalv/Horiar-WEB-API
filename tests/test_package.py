@@ -1,7 +1,7 @@
 import unittest
 from mongomock import MongoClient
 from flask import Flask
-from app.services.package import PackageService
+from app.services.package_service import PackageService
 from app import create_app
 from bson import ObjectId
 

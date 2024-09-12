@@ -1,21 +1,22 @@
 import json
 import os
 import requests
-from queue import Queue
-
 from app.models.image_request_model import ImageRequest
+from app.services.base_service import BaseService
 
+class TextToImageService(BaseService):
+    model = ImageRequest
 
-class TextToImageService:
     @staticmethod
     def update_workflow_with_prompt(path, prompt):
-        # workflow.json dosyasını oku
+        """
+        workflow.json dosyasını okur ve verilen prompt ile günceller.
+        """
         with open(path, 'r') as file:
             workflow_data = json.load(file)
 
         # JSON verisinde gerekli değişiklikleri yap
         workflow_data["input"]["workflow"]["6"]["inputs"]["text"] = prompt
-
         return workflow_data
 
     @staticmethod
@@ -23,7 +24,6 @@ class TextToImageService:
         """
         Kuyruk kullanmadan doğrudan RunPod API'sine istek göndererek prompt'a göre görüntü oluşturur.
         """
-        # Proje dizininde yer alan workflow.json dosyasının yolu
         workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_dev.json')
 
         # workflow.json dosyasını güncelle
@@ -43,37 +43,33 @@ class TextToImageService:
             # Eğer istek başarılı olduysa yanıtı döndür
             if response.status_code == 200:
                 result = response.json()
-                # RunPod API yanıtından message bilgisini al
                 message = result.get("output", {}).get("message")
 
-                # RunPod API isteği başarılı olduğunda kaydetme işlemini yapıyoruz
+                # API yanıtını veritabanına kaydet
                 user_id = payload["sub"]
                 username = payload["username"]
-                TextToImageService.save_request_to_db(app, user_id, username, prompt, message)
+                TextToImageService.save_request_to_db(user_id, username, prompt, message)
 
                 return result  # Yanıtı JSON olarak döndür
             else:
                 response.raise_for_status()  # Bir hata varsa hatayı fırlatın
 
     @staticmethod
-    def save_request_to_db(app, user_id, username, prompt, message):
+    def save_request_to_db(user_id, username, prompt, message):
         """
         Kullanıcı isteğini veritabanına kaydeder.
         """
-        with app.app_context():
-            image_request = ImageRequest(
-                user_id=user_id,
-                username=username,
-                prompt=prompt,
-                image=message
-            )
-            image_request.save()
+        image_request = ImageRequest(
+            user_id=user_id,
+            username=username,
+            prompt=prompt,
+            image=message
+        )
+        image_request.save()
 
     @staticmethod
-    def get_requests_by_user_id(app, payload):
+    def get_requests_by_user_id(user_id):
         """
         Veritabanından kullanıcı ID'sine göre istekleri getirir.
         """
-        with app.app_context():
-            user_id = payload["sub"]
-            return ImageRequest.objects(user_id=user_id).all()
+        return ImageRequest.objects(user_id=user_id).all()
