@@ -1,6 +1,7 @@
 import os
 from flask import Flask
 from flask_cors import CORS
+from flask_wtf import CSRFProtect
 from mongoengine import connect
 from dotenv import load_dotenv
 
@@ -28,8 +29,8 @@ def create_app():
     # Loglama yapılandırmasını başlat
     setup_logging()
 
-    #csrf = CSRFProtect()
-    #csrf.init_app(app)
+    csrf = CSRFProtect()
+    csrf.init_app(app)
 
     # Ortam değişkenine göre yapılandırmayı yükle
     if os.getenv('FLASK_ENV') == 'production':
