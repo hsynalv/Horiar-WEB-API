@@ -1,9 +1,8 @@
 from flask import current_app
 from bson import ObjectId
-
 from app.errors.not_found_error import NotFoundError
 from app.models.user_model import User
-from werkzeug.security import generate_password_hash, check_password_hash
+from passlib.hash import pbkdf2_sha256  # passlib ile pbkdf2_sha256 kullanımı
 import re
 
 from app.services.base_service import BaseService
@@ -11,6 +10,7 @@ from app.services.base_service import BaseService
 
 class UserService(BaseService):
     model = User
+
     @staticmethod
     def add_or_update_user(user_data):
         """
@@ -41,9 +41,9 @@ class UserService(BaseService):
     @staticmethod
     def check_password(stored_password, provided_password):
         """
-        Kullanıcının şifresini doğrular.
+        Kullanıcının şifresini doğrular. pbkdf2_sha256 kullanılıyor.
         """
-        return check_password_hash(stored_password, provided_password)
+        return pbkdf2_sha256.verify(provided_password, stored_password)
 
     @staticmethod
     def add_user(email, password, username):
@@ -58,8 +58,8 @@ class UserService(BaseService):
         if existing_user:
             raise ValueError("User with this email already exists")
 
-        # Şifreyi hash'le ve kullanıcıyı ekle
-        hashed_password = generate_password_hash(password)
+        # Şifreyi hash'le ve kullanıcıyı ekle (pbkdf2_sha256 kullanılıyor)
+        hashed_password = pbkdf2_sha256.hash(password)
         user = User(email=email, username=username, password=hashed_password)
         user.save()
         return str(user.id)
