@@ -24,11 +24,14 @@ class ImageRequestView(ModelView):
     can_delete = True  # Admin panelde istekleri silebiliriz
 
 class UserView(ModelView):
-    column_list = ('email', 'username', 'is_active', 'is_banned')  # is_banned alanını ekliyoruz
-    form_columns = ('email', 'username', 'is_active', 'is_banned')  # Admin panelde is_banned alanı düzenlenebilir
+    column_list = ('email', 'username', 'is_active', 'is_banned')  # Görüntülenecek sütunlar
+    form_columns = ('email', 'username', 'is_active', 'is_banned')  # Düzenlenebilir alanlar
     can_create = False  # Yeni kullanıcı oluşturma kapalı
     can_edit = True     # Kullanıcı düzenlenebilir
     can_delete = True   # Kullanıcı silinebilir
+
+    # Aranabilir sütunlar
+    searchable_columns = ['username']  # Kullanıcı adı üzerinden arama yapabilirsiniz
 
 
 def configure_admin(app):
