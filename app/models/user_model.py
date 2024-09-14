@@ -1,4 +1,5 @@
-from mongoengine import Document, StringField, EmailField
+from mongoengine.fields import StringField, BooleanField, EmailField
+from flask_mongoengine import Document
 
 class User(Document):
     email = EmailField(required=True, unique=True)
@@ -8,6 +9,10 @@ class User(Document):
     google_username = StringField()
     discord_id = StringField()
     discord_username = StringField()
+
+    # Yeni eklenen alanlar
+    is_active = BooleanField(default=True)  # Kullanıcı aktif mi?
+    is_banned = BooleanField(default=False)  # Kullanıcı yasaklı mı?
 
     meta = {'collection': 'users'}
 
@@ -19,5 +24,7 @@ class User(Document):
             "google_id": self.google_id,
             "google_username": self.google_username,
             "discord_id": self.discord_id,
-            "discord_username": self.discord_username
+            "discord_username": self.discord_username,
+            "is_active": self.is_active,
+            "is_banned": self.is_banned
         }

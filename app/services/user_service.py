@@ -53,10 +53,15 @@ class UserService(BaseService):
         # Kullanıcı verilerini doğrula
         UserService.validate_user_data(email, password, username)
 
-        # Kullanıcıyı MongoDB'de kontrol et
-        existing_user = User.objects(email=email).first()
-        if existing_user:
+        # E-posta var mı kontrol et
+        existing_user_email = User.objects(email=email).first()
+        if existing_user_email:
             raise ValueError("User with this email already exists")
+
+        # Kullanıcı adı var mı kontrol et
+        existing_user_username = User.objects(username=username).first()
+        if existing_user_username:
+            raise ValueError("User with this username already exists")
 
         # Şifreyi hash'le ve kullanıcıyı ekle (pbkdf2_sha256 kullanılıyor)
         hashed_password = pbkdf2_sha256.hash(password)

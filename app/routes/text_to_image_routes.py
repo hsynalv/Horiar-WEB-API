@@ -4,7 +4,7 @@ from app.middlewares import daily_request_limit
 
 from ..auth import jwt_required
 
-text_to_image_bp = Blueprint('text_to_image', __name__)
+text_to_image_bp = Blueprint('text_to_image_bp', __name__)
 
 @text_to_image_bp.route('/generate-image-direct', methods=['POST'])
 @jwt_required(pass_payload=True)
