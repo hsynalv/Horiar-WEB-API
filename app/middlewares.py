@@ -5,6 +5,7 @@ import pytz
 
 from app.auth import verify_jwt_token
 from app.models.image_request_model import ImageRequest  # MongoEngine modelini içe aktar
+from app.models.user_model import User
 
 
 def daily_request_limit(f):
@@ -45,6 +46,31 @@ def daily_request_limit(f):
             return jsonify({"message": "Daily request limit exceeded!"}), 401
 
         # İstek sınırını geçmemişse, fonksiyonu çalıştır
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+def ban_check(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return jsonify({"message": "Token is missing!"}), 403
+
+        token = auth_header.split(" ")[1]
+        payload = verify_jwt_token(token, current_app.config['SECRET_KEY'])
+        if payload is None:
+            return jsonify({"message": "Invalid or expired token!"}), 403
+
+        # Kullanıcıyı kontrol et
+        user = User.objects(id=payload['sub']).first()
+        if not user:
+            return jsonify({"message": "User not found!"}), 404
+
+        # Kullanıcının banlı olup olmadığını kontrol et
+        if user.is_banned:
+            return jsonify({"message": "User is banned!"}), 403
+
         return f(*args, **kwargs)
 
     return decorated_function

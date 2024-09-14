@@ -2,6 +2,7 @@ from flask_admin import Admin
 from flask_admin.contrib.mongoengine import ModelView
 
 from app.models.coupon_model import Coupon
+from app.models.image_request_model import ImageRequest
 from app.models.user_model import User
 from app.models.package_model import Package
 
@@ -14,11 +15,27 @@ class CouponView(ModelView):
         'used_by': lambda v, c, m, p: ', '.join([user.username for user in m.used_by])  # Kullanıcı adlarını gösteriyoruz
     }
 
+class ImageRequestView(ModelView):
+    column_list = ('user_id', 'username', 'prompt', 'image', 'request_time')  # Görüntülenecek alanlar
+    form_columns = (
+    'user_id', 'username', 'prompt')  # Sadece gerekli alanları admin panelde düzenlenebilir yapıyoruz
+    can_create = False  # Admin panelden yeni istek oluşturma kapalı
+    can_edit = False  # Admin panelden düzenleme kapalı
+    can_delete = True  # Admin panelde istekleri silebiliriz
+
+class UserView(ModelView):
+    column_list = ('email', 'username', 'is_active', 'is_banned')  # is_banned alanını ekliyoruz
+    form_columns = ('email', 'username', 'is_active', 'is_banned')  # Admin panelde is_banned alanı düzenlenebilir
+    can_create = False  # Yeni kullanıcı oluşturma kapalı
+    can_edit = True     # Kullanıcı düzenlenebilir
+    can_delete = True   # Kullanıcı silinebilir
+
 
 def configure_admin(app):
     # Flask-Admin'i başlat
     admin = Admin(app, name='Horiar Admin Paneli', template_mode='bootstrap3')
-    admin.add_view(CouponView(Coupon))
     # Modelleri admin paneline ekleyin
-    admin.add_view(ModelView(User))
+    admin.add_view(UserView(User))
     admin.add_view(ModelView(Package))
+    admin.add_view(CouponView(Coupon))
+    admin.add_view(ImageRequestView(ImageRequest))
