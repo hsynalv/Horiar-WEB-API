@@ -1,5 +1,5 @@
-from mongoengine import Document, StringField, IntField, FloatField
-
+from mongoengine.fields import StringField, IntField, FloatField
+from flask_mongoengine import Document
 class Package(Document):
     name = StringField(required=True, max_length=100)
     credits = IntField(required=True)

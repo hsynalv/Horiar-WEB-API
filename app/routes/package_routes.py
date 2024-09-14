@@ -3,7 +3,7 @@ from app.services.package_service import PackageService
 
 from ..auth import jwt_required
 
-package_bp = Blueprint('package', __name__)
+package_bp = Blueprint('package_bp', __name__)
 
 @package_bp.route('/packages', methods=['POST'])
 @jwt_required(pass_payload=False)

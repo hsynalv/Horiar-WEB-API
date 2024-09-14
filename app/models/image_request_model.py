@@ -1,5 +1,6 @@
-from mongoengine import Document, StringField, DateTimeField
+from mongoengine.fields import StringField, DateTimeField
 from datetime import datetime
+from flask_mongoengine import Document
 import pytz
 
 class ImageRequest(Document):

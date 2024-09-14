@@ -3,7 +3,7 @@ from ..auth import create_jwt_token, jwt_required, oauth
 from app.services.user_service import UserService
 import jwt
 
-user_bp = Blueprint('user', __name__)
+user_bp = Blueprint('user_bp', __name__)
 
 @user_bp.route('/login/discord')
 def login_discord():
