@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import pytz
 
 from app.auth import verify_jwt_token
+from app.models.image_request_model import ImageRequest  # MongoEngine modelini içe aktar
 
 
 def daily_request_limit(f):
@@ -29,12 +30,12 @@ def daily_request_limit(f):
         # Log ekle: user_id ve zaman aralıklarını yazdır
         print(f"user_id: {user_id}, today_start (UTC): {today_start}, today_end (UTC): {today_end}")
 
-        # Veritabanında bugünkü istekleri say
-        requests_collection = current_app.db["image_requests"]
-        request_count = requests_collection.count_documents({
-            "user_id": user_id,
-            "request_time": {"$gte": today_start, "$lt": today_end}
-        })
+        # Veritabanında bugünkü istekleri say - MongoEngine kullanarak
+        request_count = ImageRequest.objects(
+            user_id=user_id,
+            request_time__gte=today_start,
+            request_time__lt=today_end
+        ).count()
 
         # Bugün yapılan istek sayısını logla
         print(f"Today's request count for user {user_id}: {request_count}")

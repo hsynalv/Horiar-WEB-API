@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app
-from app.services.text_to_image import TextToImageService
+from app.services.text_to_image_service import TextToImageService
 from app.middlewares import daily_request_limit
 
 from ..auth import jwt_required
@@ -27,15 +27,15 @@ def generate_image_direct(payload):
         return jsonify({"message": str(e)}), 500
 
 
-@text_to_image_bp.route('/requests', methods=['GET'])
-@jwt_required(pass_payload=True)
-def get_requests_by_user(payload):
+@text_to_image_bp.route('/requests/<user_id>', methods=['GET'])
+@jwt_required(pass_payload=False)
+def get_requests_by_user(user_id):
     """
     JWT'den alınan kullanıcı ID'sine göre tüm istekleri döndürür.
     """
     try:
         # Kullanıcı ID'sine göre istekleri al
-        requests = TextToImageService.get_requests_by_user_id(current_app, payload)
+        requests = TextToImageService.get_requests_by_user_id(user_id)
 
         # Sonuçları JSON formatında döndür
         return jsonify([request.to_dict() for request in requests]), 200

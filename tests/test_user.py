@@ -1,6 +1,6 @@
 import unittest
 from mongomock import MongoClient
-from app.services.user import UserService
+from app.services.user_service import UserService
 from app import create_app
 from bson import ObjectId
 from werkzeug.security import check_password_hash

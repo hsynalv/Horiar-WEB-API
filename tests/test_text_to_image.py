@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from queue import Queue
-from app.services.text_to_image import TextToImageService, image_queue, is_processing
+from app.services.text_to_image_service import TextToImageService, image_queue, is_processing
 from flask import Flask
 from app import create_app
 

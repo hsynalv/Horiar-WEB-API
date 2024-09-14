@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app, make_response, redirect, url_for
 from ..auth import create_jwt_token, jwt_required, oauth
-from app.services.user import UserService
+from app.services.user_service import UserService
 import jwt
 
 user_bp = Blueprint('user', __name__)
@@ -74,7 +74,7 @@ def get_user_by_id(user_id):
     user = UserService.get_user_by_id(user_id)
 
     if user:
-        return jsonify(user), 200
+        return jsonify(user.to_dict()), 200
     else:
         return jsonify({"message": "User not found"}), 404
 
@@ -106,12 +106,12 @@ def login():
         return jsonify({"message": "Invalid credentials"}), 401
 
     # Generate JWT token with email and user information
-    token = create_jwt_token(str(user._id), user.username, user.email, current_app.config['SECRET_KEY'])
+    token = create_jwt_token(str(user.id), user.username, user.email, current_app.config['SECRET_KEY'])
 
     response_data = {
         "message": "Login successful",
         "token": token,
-        "userId": str(user._id),
+        "userId": str(user.id),
         "username": user.username,
         "email": user.email,
     }

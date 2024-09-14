@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-class Config:
+class ProductionConfig:
+    DEBUG = False
     SECRET_KEY = os.getenv("SECRET_KEY")
     MONGO_URI = os.getenv("MONGO_URI")
     DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
