@@ -30,7 +30,7 @@ def configure_oauth(app):
     )
 
 
-def create_jwt_token(user_id, username, email, secret_key):
+def create_jwt_token(user_id, username, email, roles, secret_key):
     # Token creation time
     issued_at = datetime.datetime.utcnow()
 
@@ -48,7 +48,8 @@ def create_jwt_token(user_id, username, email, secret_key):
         "iat": issued_at,         # Issued at time
         "jti": unique_jti,        # Unique ID
         "username": username,     # User's username
-        "email": email            # User's email
+        "email": email,            # User's email
+        "roles": roles
     }
 
     # Token oluşturma

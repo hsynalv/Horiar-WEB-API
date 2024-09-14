@@ -1,4 +1,5 @@
-from mongoengine.fields import StringField, BooleanField, EmailField
+# /app/models/user_model.py
+from mongoengine.fields import StringField, BooleanField, EmailField, ListField
 from flask_mongoengine import Document
 
 class User(Document):
@@ -10,7 +11,9 @@ class User(Document):
     discord_id = StringField()
     discord_username = StringField()
 
-    # Yeni eklenen alanlar
+    # Rol alanı ekliyoruz (örn. 'admin', 'user')
+    roles = ListField(StringField(), default=["user"])  # Varsayılan rol 'user'
+
     is_active = BooleanField(default=True)  # Kullanıcı aktif mi?
     is_banned = BooleanField(default=False)  # Kullanıcı yasaklı mı?
 
@@ -25,6 +28,7 @@ class User(Document):
             "google_username": self.google_username,
             "discord_id": self.discord_id,
             "discord_username": self.discord_username,
+            "roles": self.roles,
             "is_active": self.is_active,
             "is_banned": self.is_banned
         }

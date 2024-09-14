@@ -12,3 +12,6 @@ pytz~=2024.1
 Flask-WTF~=1.2.1
 mongoengine~=0.29.0
 passlib~=1.7.4
+flask-mongoengine~=1.0.0
+MarkupSafe~=2.0.1
+Flask-Admin~=1.6.1

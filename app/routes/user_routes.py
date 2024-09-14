@@ -24,12 +24,15 @@ def discord_callback():
         "email": user_info.get("email"),
         "google_id": None,
         "google_username": None,
-        "password": None
+        "password": None,
+        "is_active": True,  # Kullanıcı varsayılan olarak aktif olabilir
+        "is_banned": False,  # Varsayılan olarak yasaklanmamış olabilir
+        "roles": ["user"]  # Discord üzerinden gelenler 'user' rolüyle atanabilir
     }
 
     user_id = UserService.add_or_update_user(user_data)
 
-    jwt_token = create_jwt_token(str(user_id), user_info["username"], user_info["email"],current_app.config['SECRET_KEY'])
+    jwt_token = create_jwt_token(str(user_id), user_info["username"], user_info["email"], user_info["roles"], current_app.config['SECRET_KEY'])
 
     response = make_response(redirect("http://127.0.0.1:3000"))
     response.set_cookie('token', jwt_token, httponly=False, secure=False, samesite='Lax')
@@ -56,11 +59,14 @@ def google_callback():
         "email": user_info["email"],
         "discord_id": None,
         "discord_username": None,
-        "password": None
+        "password": None,
+        "is_active": True,  # Kullanıcı varsayılan olarak aktif olabilir
+        "is_banned": False,  # Varsayılan olarak yasaklanmamış olabilir
+        "roles": ["user"]  # Discord üzerinden gelenler 'user' rolüyle atanabilir
     }
     user_id = UserService.add_or_update_user(user_data)
 
-    jwt_token = create_jwt_token(str(user_id), user_info["name"], user_info["email"],current_app.config['SECRET_KEY'])
+    jwt_token = create_jwt_token(str(user_id), user_info["name"], user_info["email"],user_info["roles"], current_app.config['SECRET_KEY'])
 
     response = make_response(redirect("http://127.0.0.1:3000"))
     response.set_cookie('token', jwt_token, httponly=False, secure=False, samesite='Lax')
@@ -106,7 +112,7 @@ def login():
         return jsonify({"message": "Invalid credentials"}), 401
 
     # Generate JWT token with email and user information
-    token = create_jwt_token(str(user.id), user.username, user.email, current_app.config['SECRET_KEY'])
+    token = create_jwt_token(str(user.id), user.username, user.email, user.roles, current_app.config['SECRET_KEY'])
 
     response_data = {
         "message": "Login successful",
