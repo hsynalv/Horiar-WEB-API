@@ -31,6 +31,14 @@ db = MongoEngine()
 def create_app():
     app = Flask(__name__)
 
+    @app.after_request
+    def after_request(response):
+        response.headers['Access-Control-Allow-Origin'] = 'https://www.horiar.com'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, DELETE, PUT, PATCH'
+        response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
+        response.headers['Access-Control-Allow-Credentials'] = 'true'
+        return response
+
     # Loglama yapılandırmasını başlat
     setup_logging()
 
