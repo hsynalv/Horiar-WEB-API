@@ -12,7 +12,17 @@ text_to_image_bp = Blueprint('text_to_image_bp', __name__)
 @ban_check
 def generate_image_direct(payload):
     if request.method == 'OPTIONS':
-        return '', 200  # Preflight isteği başarıyla karşılanırsa boş yanıt döner
+        # Preflight OPTIONS isteğine 200 OK ile yanıt dönüyoruz
+        response = current_app.response_class(
+            status=200,
+            headers={
+                'Access-Control-Allow-Origin': 'https://www.horiar.com',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+                'Access-Control-Allow-Credentials': 'true'
+            }
+        )
+        return response
     data = request.json
     prompt = data.get('prompt')
 
