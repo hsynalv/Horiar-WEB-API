@@ -6,11 +6,13 @@ from ..auth import jwt_required
 
 text_to_image_bp = Blueprint('text_to_image_bp', __name__)
 
-@text_to_image_bp.route('/generate-image-direct', methods=['POST'])
+@text_to_image_bp.route('/generate-image-direct', methods=['POST', 'OPTIONS'])
 @jwt_required(pass_payload=True)
 @daily_request_limit
 @ban_check
 def generate_image_direct(payload):
+    if request.method == 'OPTIONS':
+        return '', 200  # Preflight isteği başarıyla karşılanırsa boş yanıt döner
     data = request.json
     prompt = data.get('prompt')
 
