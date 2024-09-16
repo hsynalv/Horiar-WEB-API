@@ -123,8 +123,8 @@ class GuildFilter(FilterEqual):
         return [(guild, guild) for guild in guilds]
 
 class DiscordImageRequestView(AdminBaseView):
-    column_list = ('user_id', 'username', 'prompt', 'datetime', 'guild')  # Gösterilecek alanlar
-    form_columns = ('user_id', 'username', 'prompt', 'datetime', 'guild')  # Düzenlenebilir alanlar
+    column_list = ('user_id', 'username', 'prompt', 'datetime', 'guild', 'channel')  # Gösterilecek alanlar
+    form_columns = ('user_id', 'username', 'prompt', 'datetime', 'guild', 'channel')  # Düzenlenebilir alanlar
     can_create = False  # Yeni kayıt ekleme kapalı
     can_edit = False    # Düzenleme kapalı
     can_delete = True   # Sadece silme işlemi aktif
