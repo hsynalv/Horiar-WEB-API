@@ -79,6 +79,10 @@ def jwt_required(pass_payload=False):
     def decorator(f):
         @wraps(f)
         def jwt_wrapper(*args, **kwargs):
+            # OPTIONS isteklerinde JWT doğrulaması yapılmaz, isteği doğrudan geç
+            if request.method == 'OPTIONS':
+                return f(*args, **kwargs)
+
             auth_header = request.headers.get('Authorization')
             if auth_header:
                 token = auth_header.split(" ")[1]
