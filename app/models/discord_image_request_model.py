@@ -7,6 +7,7 @@ class DiscordImageRequest(Document):
     prompt = StringField(required=True)
     datetime = DateTimeField(required=True)
     guild = StringField()
+    channel = StringField(required=False)
 
     meta = {
         'collection': 'image_requests_from_discord'  # MongoDB'deki koleksiyon adı
