@@ -49,7 +49,7 @@ def create_jwt_token(user_id, username, email, roles, secret_key):
         "jti": unique_jti,        # Unique ID
         "username": username,     # User's username
         "email": email,            # User's email
-        "roles": roles
+        "role": roles
     }
 
     # Token oluşturma
