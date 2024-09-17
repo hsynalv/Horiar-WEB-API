@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import requests
 from app.models.image_request_model import ImageRequest
@@ -21,14 +22,12 @@ class TextToImageService(BaseService):
 
     @staticmethod
     def generate_image_directly(app, prompt, payload):
-        """
-        Kuyruk kullanmadan doğrudan RunPod API'sine istek göndererek prompt'a göre görüntü oluşturur.
-        """
+        logging.log("serviste generate image direct fonksiyonu giriş")
         workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_dev.json')
 
         # workflow.json dosyasını güncelle
         updated_workflow = TextToImageService.update_workflow_with_prompt(workflow_path, prompt)
-
+        logging.log("serviste workflow değiştirildi")
         # Uygulama bağlamı içinde ayarları çek
         with app.app_context():
             runpod_url = app.config['RUNPOD_URL']
@@ -37,8 +36,14 @@ class TextToImageService(BaseService):
                 "Authorization": app.config['RUNPOD_API_KEY']
             }
 
-            # RunPod API'sine POST isteği gönderme
-            response = requests.post(runpod_url, json=updated_workflow, headers=headers)
+            try:
+                logging.log("runpod istek öncesi")
+                # RunPod API'sine POST isteği gönderme
+                response = requests.post(runpod_url, json=updated_workflow, headers=headers)
+                logging.log("runpod request sonrası")
+            except Exception as e:
+                logging.log("runpod isteğinde hata oluştu")
+                logging.log(e)
 
             # Eğer istek başarılı olduysa yanıtı döndür
             if response.status_code == 200:
@@ -56,6 +61,7 @@ class TextToImageService(BaseService):
 
     @staticmethod
     def save_request_to_db(user_id, username, prompt, message):
+        logging.log("save request to db fonksiyonu")
         """
         Kullanıcı isteğini veritabanına kaydeder.
         """
