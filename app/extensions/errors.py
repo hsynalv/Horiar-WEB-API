@@ -1,4 +1,5 @@
 import logging
+import traceback
 from flask import jsonify
 from app.errors.unauthorized_error import UnauthorizedError
 from app.errors.not_found_error import NotFoundError
@@ -25,11 +26,18 @@ def register_error_handlers(app):
 
     @app.errorhandler(Exception)
     def handle_global_exception(e):
-        # Genel hatalar için loglama (ERROR seviyesi)
+        # Hata kodu belirleme
         code = 500
         if hasattr(e, 'code'):
             code = e.code
-        logging.critical(f"Unhandled exception occurred: {str(e)}")
+
+        # Hata yığın izini almak
+        error_trace = traceback.format_exc()
+
+        # Hatanın nerede oluştuğunu ve yığın izini loglama (CRITICAL seviyesi)
+        logging.critical(f"Unhandled exception occurred: {str(e)}\nTraceback: {error_trace}")
+
+        # Hata cevabı döndürme
         return jsonify({
             "error": "Internal Server Error",
             "message": str(e),
