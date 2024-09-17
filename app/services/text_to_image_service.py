@@ -23,12 +23,10 @@ class TextToImageService(BaseService):
 
     @staticmethod
     def generate_image_directly(app, prompt, payload):
-        logging.warning("serviste generate image direct fonksiyonu giriş")
         workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_dev.json')
 
         # workflow.json dosyasını güncelle
         updated_workflow = TextToImageService.update_workflow_with_prompt(workflow_path, prompt)
-        logging.warning("serviste workflow değiştirildi")
         # Uygulama bağlamı içinde ayarları çek
         with app.app_context():
             runpod_url = app.config['RUNPOD_URL']
@@ -36,14 +34,10 @@ class TextToImageService(BaseService):
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {app.config['RUNPOD_API_KEY']}",
             }
-            logging.warning(f"header log: {app.config['RUNPOD_API_KEY']}")
-            logging.warning(f"header log: {app.config['RUNPOD_URL']}")
 
             try:
-                logging.warning("runpod istek öncesi")
                 # RunPod API'sine POST isteği gönderme
                 response = requests.post(runpod_url, headers=headers, data=json.dumps(updated_workflow), timeout=60)
-                logging.warning("runpod request sonrası")
             except Timeout:
                 logging.error("RunPod isteği zaman aşımına uğradı!")
                 return {"message": "RunPod isteği zaman aşımına uğradı."}, 500
@@ -70,7 +64,6 @@ class TextToImageService(BaseService):
 
     @staticmethod
     def save_request_to_db(user_id, username, prompt, message):
-        logging.warning("save request to db fonksiyonu")
         """
         Kullanıcı isteğini veritabanına kaydeder.
         """
