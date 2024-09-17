@@ -138,7 +138,7 @@ class DiscordImageRequestView(AdminBaseView):
     }
 
     # Sunucu adına göre sıralama ekliyoruz
-    column_sortable_list = ['guild']  # Sunucu adına göre sıralanabilir liste
+    column_sortable_list = ['guild','datetime']  # Sunucu adına göre sıralanabilir liste
 
     # Dinamik sunucu adı filtresi ekliyoruz
     column_filters = [GuildFilter(column=DiscordImageRequest.guild, name='Sunucu Adı')]
