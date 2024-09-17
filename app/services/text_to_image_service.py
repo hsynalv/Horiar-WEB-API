@@ -33,7 +33,7 @@ class TextToImageService(BaseService):
             runpod_url = app.config['RUNPOD_URL']
             headers = {
                 "Content-Type": "application/json",
-                "Authorization": app.config['RUNPOD_API_KEY']
+                "Authorization": f"Bearer {app.config['RUNPOD_API_KEY']}",
             }
 
             try:
