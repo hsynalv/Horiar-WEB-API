@@ -39,7 +39,7 @@ class TextToImageService(BaseService):
             try:
                 logging.warning("runpod istek öncesi")
                 # RunPod API'sine POST isteği gönderme
-                response = requests.post(runpod_url, json=updated_workflow, headers=headers)
+                response = requests.post(runpod_url, data=json.dumps(updated_workflow), headers=headers)
                 logging.warning("runpod request sonrası")
             except Exception as e:
                 logging.warning("runpod isteğinde hata oluştu")
