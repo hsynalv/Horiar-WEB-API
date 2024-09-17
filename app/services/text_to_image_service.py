@@ -4,6 +4,7 @@ import os
 import requests
 from app.models.image_request_model import ImageRequest
 from app.services.base_service import BaseService
+from requests.exceptions import Timeout, ConnectionError, RequestException
 
 class TextToImageService(BaseService):
     model = ImageRequest
@@ -41,11 +42,17 @@ class TextToImageService(BaseService):
             try:
                 logging.warning("runpod istek öncesi")
                 # RunPod API'sine POST isteği gönderme
-                response = requests.post(runpod_url, headers=headers, data=json.dumps(updated_workflow))
+                response = requests.post(runpod_url, headers=headers, data=json.dumps(updated_workflow), timeout=60)
                 logging.warning("runpod request sonrası")
-            except Exception as e:
-                logging.warning("runpod isteğinde hata oluştu")
-                logging.warning(str(e))
+            except Timeout:
+                logging.error("RunPod isteği zaman aşımına uğradı!")
+                return {"message": "RunPod isteği zaman aşımına uğradı."}, 500
+            except ConnectionError:
+                logging.error("RunPod bağlantı hatası!")
+                return {"message": "RunPod bağlantı hatası."}, 500
+            except RequestException as e:
+                logging.error(f"RunPod isteğinde bir hata oluştu: {str(e)}")
+                return {"message": f"RunPod isteğinde bir hata oluştu: {str(e)}"}, 500
 
             # Eğer istek başarılı olduysa yanıtı döndür
             if response.status_code == 200:
