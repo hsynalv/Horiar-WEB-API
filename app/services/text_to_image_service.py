@@ -35,11 +35,13 @@ class TextToImageService(BaseService):
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {app.config['RUNPOD_API_KEY']}",
             }
+            logging.warning(f"header log: {app.config['RUNPOD_API_KEY']}")
+            logging.warning(f"header log: {app.config['RUNPOD_URL']}")
 
             try:
                 logging.warning("runpod istek öncesi")
                 # RunPod API'sine POST isteği gönderme
-                response = requests.post(runpod_url, data=json.dumps(updated_workflow), headers=headers)
+                response = requests.post(runpod_url, headers=headers, data=json.dumps(updated_workflow))
                 logging.warning("runpod request sonrası")
             except Exception as e:
                 logging.warning("runpod isteğinde hata oluştu")
