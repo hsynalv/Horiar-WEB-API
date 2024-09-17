@@ -43,7 +43,7 @@ class TextToImageService(BaseService):
                 logging.log("runpod request sonrası")
             except Exception as e:
                 logging.log("runpod isteğinde hata oluştu")
-                logging.log(e)
+                logging.log(str(e))
 
             # Eğer istek başarılı olduysa yanıtı döndür
             if response.status_code == 200:
