@@ -8,7 +8,7 @@ user_bp = Blueprint('user_bp', __name__)
 @user_bp.route('/login/discord')
 def login_discord():
     discord = oauth.create_client('discord')
-    redirect_uri = url_for('user.discord_callback', _external=True)
+    redirect_uri = url_for('user_bp.discord_callback', _external=True)
     return discord.authorize_redirect(redirect_uri)
 
 @user_bp.route('/login/discord/callback')
