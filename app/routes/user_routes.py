@@ -63,7 +63,17 @@ def login_google():
 @user_bp.route('/login/google/callback')
 def google_callback():
     google = oauth.create_client('google')
-    token = google.authorize_access_token()
+    try:
+        # Discord'dan yetkilendirme token'ını almayı deneyin
+        token = google.authorize_access_token()
+    except Exception as e:
+        # Eğer "access_denied" hatası gelirse kullanıcıyı istediğiniz yere yönlendirin
+        error_message = str(e)
+        if "access_denied" in error_message:
+            return redirect("https://horiar.com/explore")  # İptal durumunda yönlendirme
+        else:
+            logging.error(f"Discord login sırasında hata meydana geldi: {error_message}")
+            return redirect("https://horiar.com/explore")
 
     user_info = google.get('https://www.googleapis.com/oauth2/v1/userinfo').json()
 
@@ -80,11 +90,11 @@ def google_callback():
     }
     user_id = UserService.add_or_update_user(user_data)
 
-    jwt_token = create_jwt_token(str(user_id), user_info["name"], user_info["email"],user_info["roles"], current_app.config['SECRET_KEY'])
+    jwt_token = create_jwt_token(str(user_id), user_info["name"], user_info["email"],user_data["roles"], current_app.config['SECRET_KEY'])
 
-    response = make_response(redirect("http://127.0.0.1:3000"))
-    response.set_cookie('token', jwt_token, httponly=False, secure=False, samesite='Lax')
-    response.set_cookie('userId', str(user_id), httponly=False, secure=False, samesite='Lax')
+    response = make_response(redirect("https://horiar.com/explore"))
+    response.set_cookie('token', jwt_token, httponly=False, secure=True, samesite='None', domain='.horiar.com')
+    response.set_cookie('userId', str(user_id), httponly=False, secure=True, samesite='None', domain='.horiar.com')
 
     return response
 
