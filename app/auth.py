@@ -16,7 +16,7 @@ def configure_oauth(app):
         client_secret=app.config['DISCORD_CLIENT_SECRET'],
         authorize_url='https://discord.com/api/oauth2/authorize',
         access_token_url='https://discord.com/api/oauth2/token',
-        redirect_uri='https://horiar.com',# TODO: Geri Dönüşü burada ve discord dev de düzeltmek gerek
+        redirect_uri=app.config['DISCORD_REDIRECT_URI'],# TODO: Geri Dönüşü burada ve discord dev de düzeltmek gerek
         client_kwargs={'scope': 'identify email'}
     )
 
