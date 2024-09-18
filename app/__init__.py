@@ -40,8 +40,6 @@ def create_app():
     else:
         app.config.from_object(DevelopmentConfig)
 
-    print(f"Flask ENV: {app.config.get('ENV')}")
-
     # CORS ayarları
     if app.config['ENV'] == 'production':
         CORS(app, resources={r"/*": {"origins": ["https://www.horiar.com"], "supports_credentials": True}})
