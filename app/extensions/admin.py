@@ -1,3 +1,4 @@
+import logging
 from flask import request, current_app, redirect, url_for
 from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.mongoengine import ModelView
@@ -12,7 +13,6 @@ from app.models.package_model import Package
 
 # Tüm admin paneli için global erişim kontrolü
 class AdminBaseView(ModelView):
-    """
     def is_accessible(self):
 
         # JWT token'ı Authorization başlığından al
@@ -24,7 +24,8 @@ class AdminBaseView(ModelView):
         payload = verify_jwt_token(token, current_app.config['SECRET_KEY'])
 
         # Kullanıcının rollerini kontrol ediyoruz
-        if payload and 'admin' in payload.get('roles', []):
+        if payload and 'admin' in payload.get('role') == 'admin':
+            logging.info(f"Admin paneline giriş yapan kullanıcı: {payload['username']} (ID: {payload['sub']})")
             return True
 
         return False  # Admin rolü olmayan kullanıcılar için erişim yok
@@ -32,11 +33,10 @@ class AdminBaseView(ModelView):
     def inaccessible_callback(self, name, **kwargs):
         return redirect(url_for('user_bp.login'))  # Giriş sayfasına yönlendir
         pass
-    """
+
 
 # Admin index view (Home sayfası) için de erişim kontrolü
 class AdminHomeView(AdminIndexView):
-    """
     def is_accessible(self):
         # JWT token'ı Authorization başlığından al
         auth_header = request.headers.get('Authorization')
@@ -47,14 +47,14 @@ class AdminHomeView(AdminIndexView):
         payload = verify_jwt_token(token, current_app.config['SECRET_KEY'])
 
         # Kullanıcının rollerini kontrol ediyoruz
-        if payload and 'admin' in payload.get('roles', []):
+        if payload and 'admin' in payload.get('role') == 'admin':
             return True
 
         return False
 
     def inaccessible_callback(self, name, **kwargs):
         return redirect(url_for('user_bp.login'))  # Giriş sayfasına yönlendir
-    """
+
 
 # AdminBaseView'i kullanarak diğer view'leri türetelim
 class CouponView(AdminBaseView):
