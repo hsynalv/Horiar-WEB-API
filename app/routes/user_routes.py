@@ -33,7 +33,7 @@ def discord_callback():
 
     user_id = UserService.add_or_update_user(user_data)
 
-    jwt_token = create_jwt_token(str(user_id), user_info["username"], user_info["email"], user_info["roles"], current_app.config['SECRET_KEY'])
+    jwt_token = create_jwt_token(str(user_id), user_info["username"], user_info["email"], user_data["roles"], current_app.config['SECRET_KEY'])
 
     response = make_response(redirect("https://horiar.com"))
     response.set_cookie('token', jwt_token, httponly=False, secure=False, samesite='Lax')
