@@ -1,6 +1,6 @@
 import logging
 import traceback
-from flask import jsonify
+from flask import jsonify, request
 from app.errors.unauthorized_error import UnauthorizedError
 from app.errors.not_found_error import NotFoundError
 from app.errors.validation_error import ValidationError
@@ -35,7 +35,10 @@ def register_error_handlers(app):
         error_trace = traceback.format_exc()
 
         # Hatanın nerede oluştuğunu ve yığın izini loglama (CRITICAL seviyesi)
-        logging.critical(f"Unhandled exception occurred: {str(e)}\nTraceback: {error_trace}")
+        logging.critical(f"Unhandled exception occurred: {str(e)}\n"
+                         f"URL: {request.url}\n"
+                         f"Method: {request.method}\n"
+                         f"Traceback: {error_trace}")
 
         # Hata cevabı döndürme
         return jsonify({
