@@ -57,7 +57,7 @@ def discord_callback():
 @user_bp.route('/login/google')
 def login_google():
     google = oauth.create_client('google')
-    redirect_uri = url_for('user.google_callback', _external=True)
+    redirect_uri = url_for('user_bp.google_callback', _external=True)
     return google.authorize_redirect(redirect_uri)
 
 @user_bp.route('/login/google/callback')
