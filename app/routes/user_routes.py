@@ -1,7 +1,9 @@
+import logging
+
 from flask import Blueprint, jsonify, request, current_app, make_response, redirect, url_for
 from ..auth import create_jwt_token, jwt_required, oauth
 from app.services.user_service import UserService
-import jwt
+
 
 user_bp = Blueprint('user_bp', __name__)
 
@@ -14,7 +16,18 @@ def login_discord():
 @user_bp.route('/login/discord/callback')
 def discord_callback():
     discord = oauth.create_client('discord')
-    token = discord.authorize_access_token()
+
+    try:
+        # Discord'dan yetkilendirme token'ını almayı deneyin
+        token = discord.authorize_access_token()
+    except Exception as e:
+        # Eğer "access_denied" hatası gelirse kullanıcıyı istediğiniz yere yönlendirin
+        error_message = str(e)
+        if "access_denied" in error_message:
+            return redirect("https://horiar.com/explore")  # İptal durumunda yönlendirme
+        else:
+            logging.error(f"Discord login sırasında hata meydana geldi: {error_message}")
+            return redirect("https://horiar.com/explore")
 
     user_info = discord.get('https://discord.com/api/users/@me').json()
 
