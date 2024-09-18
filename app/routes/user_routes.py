@@ -20,6 +20,7 @@ def discord_callback():
 
     user_data = {
         "discord_id": user_info["id"],
+        "discord_username": user_info["username"],
         "username": user_info["username"],
         "email": user_info.get("email"),
         "google_id": None,
