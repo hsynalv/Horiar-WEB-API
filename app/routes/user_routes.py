@@ -146,3 +146,72 @@ def login():
         "email": user.email,
     }
     return jsonify(response_data), 200
+
+@user_bp.route('/connect/google')
+@jwt_required(pass_payload=True)
+def connect_google(payload):
+    google = oauth.create_client('google')
+    redirect_uri = url_for('user_bp.connect_google_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+@user_bp.route('/connect/google/callback')
+@jwt_required(pass_payload=True)
+def connect_google_callback(payload):
+    google = oauth.create_client('google')
+    try:
+        token = google.authorize_access_token()
+    except Exception as e:
+        # Eğer "access_denied" hatası gelirse kullanıcıyı istediğiniz yere yönlendirin
+        error_message = str(e)
+        if "access_denied" in error_message:
+            return redirect("https://horiar.com/user")  # İptal durumunda yönlendirme
+        else:
+            logging.error(f"Discord login sırasında hata meydana geldi: {error_message}")
+            return redirect("https://horiar.com/user")
+
+    user_info = google.get('https://www.googleapis.com/oauth2/v1/userinfo').json()
+
+    # Mevcut kullanıcının Google hesabını bağlama
+    user_id = payload['sub']  # Mevcut kullanıcının ID'sini JWT'den alıyoruz
+    user_data = {
+        "google_id": user_info["id"],
+        "google_username": user_info["name"],
+    }
+    UserService.update_user_by_id(user_id, user_data)
+
+    return redirect("https://horiar.com/explore")
+
+@user_bp.route('/connect/discord')
+@jwt_required(pass_payload=True)
+def connect_discord(payload):
+    discord = oauth.create_client('discord')
+    redirect_uri = url_for('user_bp.connect_discord_callback', _external=True)
+    return discord.authorize_redirect(redirect_uri)
+
+@user_bp.route('/connect/discord/callback')
+@jwt_required(pass_payload=True)
+def connect_discord_callback(payload):
+    discord = oauth.create_client('discord')
+    try:
+        token = discord.authorize_access_token()
+    except Exception as e:
+        # Eğer "access_denied" hatası gelirse kullanıcıyı istediğiniz yere yönlendirin
+        error_message = str(e)
+        if "access_denied" in error_message:
+            return redirect("https://horiar.com/user")  # İptal durumunda yönlendirme
+        else:
+            logging.error(f"Discord login sırasında hata meydana geldi: {error_message}")
+            return redirect("https://horiar.com/user")
+
+    user_info = discord.get('https://discord.com/api/users/@me').json()
+
+    # Mevcut kullanıcının Discord hesabını bağlama
+    user_id = payload['sub']  # Mevcut kullanıcının ID'sini JWT'den alıyoruz
+    user_data = {
+        "discord_id": user_info["id"],
+        "discord_username": user_info["username"]
+    }
+    UserService.update_user_by_id(user_id, user_data)
+
+    return redirect("https://horiar.com/explore")
+
