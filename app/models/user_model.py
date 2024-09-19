@@ -12,7 +12,7 @@ class User(Document):
     discord_username = StringField()
 
     # Rol alanı ekliyoruz (örn. 'admin', 'user')
-    roles = ListField(StringField(), default=["user"])  # Varsayılan rol 'user'
+    roles = ListField(StringField(), default=["37fb8744-faf9-4f62-a729-a284c842bf0a"])  # Varsayılan rol 'user'
 
     is_active = BooleanField(default=True)  # Kullanıcı aktif mi?
     is_banned = BooleanField(default=False)  # Kullanıcı yasaklı mı?

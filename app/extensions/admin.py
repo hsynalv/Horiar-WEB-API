@@ -24,7 +24,7 @@ class AdminBaseView(ModelView):
         payload = verify_jwt_token(token, current_app.config['SECRET_KEY'])
 
         # Kullanıcının rollerini kontrol ediyoruz
-        if payload and 'admin' in payload.get('role') == 'admin':
+        if payload and 'admin' in payload.get('role') == '9951a9b2-f455-4940-931e-432bc057179a':
             logging.info(f"Admin paneline giriş yapan kullanıcı: {payload['username']} (ID: {payload['sub']})")
             return True
 
@@ -47,7 +47,7 @@ class AdminHomeView(AdminIndexView):
         payload = verify_jwt_token(token, current_app.config['SECRET_KEY'])
 
         # Kullanıcının rollerini kontrol ediyoruz
-        if payload and 'admin' in payload.get('role') == 'admin':
+        if payload and 'admin' in payload.get('role') == '9951a9b2-f455-4940-931e-432bc057179a':
             return True
 
         return False
