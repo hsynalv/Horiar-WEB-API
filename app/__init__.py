@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, g, request
 from flask_cors import CORS
 from flask_wtf import CSRFProtect
 from flask_mongoengine import MongoEngine
@@ -30,6 +30,17 @@ db = MongoEngine()
 
 def create_app():
     app = Flask(__name__)
+
+    @app.before_request
+    def add_auth_token_to_requests():
+        """
+        Tüm isteklerde Authorization başlığının varlığını kontrol eder ve admin sayfalarında kullanılmasını sağlar.
+        """
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            g.auth_header = None
+        else:
+            g.auth_header = auth_header
 
     # Loglama yapılandırmasını başlat
     setup_logging()

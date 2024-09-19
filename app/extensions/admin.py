@@ -1,5 +1,5 @@
 import logging
-from flask import request, current_app, redirect, url_for
+from flask import request, current_app, redirect, g
 from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.mongoengine import ModelView
 from flask_admin.contrib.mongoengine.filters import FilterEqual
@@ -14,12 +14,12 @@ from app.models.package_model import Package
 # Tüm admin paneli için global erişim kontrolü
 class AdminBaseView(ModelView):
     def is_accessible(self):
-        # Eğer istek bir statik dosya isteği ise erişime izin ver
+        # Eğer istek bir statik dosya veya Flask-Admin'in dahili isteklerinden biri ise yetkilendirme kontrolünü atla
         if request.endpoint in ('static', 'admin.static', 'admin.index', 'admin.css', 'admin.js'):
             return True
 
         # JWT token'ı Authorization başlığından al
-        auth_header = request.headers.get('Authorization')
+        auth_header = g.get('Authorization')
         if not auth_header or not auth_header.startswith("Bearer "):
             logging.warning("Authorization header is missing or invalid. BaseView")
             return False  # Authorization başlığı yoksa erişimi engelle
