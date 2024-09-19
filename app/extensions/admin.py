@@ -15,7 +15,7 @@ from app.models.package_model import Package
 class AdminBaseView(ModelView):
     def is_accessible(self):
         # Eğer istek bir statik dosya isteği ise erişime izin ver
-        if request.endpoint == 'static':
+        if request.endpoint in ('static', 'admin.static', 'admin.index', 'admin.css', 'admin.js'):
             return True
 
         # JWT token'ı Authorization başlığından al
