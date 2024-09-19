@@ -17,7 +17,7 @@ class AdminBaseView(ModelView):
         # JWT token'ı Authorization başlığından al
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith("Bearer "):
-            logging.warning("Authorization header is missing or invalid.")
+            logging.warning("Authorization header is missing or invalid. BaseView")
             return False  # Authorization başlığı yoksa erişimi engelle
 
         token = auth_header.split(" ")[1]
@@ -25,7 +25,7 @@ class AdminBaseView(ModelView):
         logging.warning(payload)
 
         # Kullanıcının rolünü kontrol ediyoruz
-        if payload and payload.get('role') == 'admin' or payload and payload.get('role') == '9951a9b2-f455-4940-931e-432bc057179a':
+        if payload and (payload.get('role') == 'admin' or payload.get('role') == '9951a9b2-f455-4940-931e-432bc057179a'):
             # Kullanıcı bilgilerini loglama
             logging.info(f"Admin paneline giriş yapan kullanıcı: {payload['username']} (ID: {payload['sub']})")
             return True
@@ -37,13 +37,12 @@ class AdminBaseView(ModelView):
         logging.warning("Kullanıcı admin değil, login sayfasına yönlendiriliyor.")
         return redirect("https://horiar.com/explore")  # Giriş sayfasına yönlendir
 
-# Artık AdminHomeView'da doğrulama yapmıyoruz
 class AdminHomeView(AdminIndexView):
     def is_accessible(self):
         # JWT token'ı Authorization başlığından al
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith("Bearer "):
-            logging.warning("Authorization header is missing or invalid.")
+            logging.warning("Authorization header is missing or invalid. (HomeView)")
             return False  # Authorization başlığı yoksa erişimi engelle
 
         token = auth_header.split(" ")[1]
@@ -51,16 +50,13 @@ class AdminHomeView(AdminIndexView):
         logging.warning(payload)
 
         # Kullanıcının rolünü kontrol ediyoruz
-        if payload and payload.get('role') == 'admin' or payload and payload.get('role') == '9951a9b2-f455-4940-931e-432bc057179a':
+        if payload and (payload.get('role') == 'admin' or payload.get('role') == '9951a9b2-f455-4940-931e-432bc057179a'):
             # Kullanıcı bilgilerini loglama
-            logging.info(f"Admin paneline giriş yapan kullanıcı: {payload['username']} (ID: {payload['sub']})")
             return True
 
-        logging.warning(f"Admin yetkisi olmayan kullanıcı erişim denedi: {payload['username']} (ID: {payload['sub']})")
         return False  # Admin rolü olmayan kullanıcılar için erişim yok
 
     def inaccessible_callback(self, name, **kwargs):
-        logging.warning("Kullanıcı admin değil, login sayfasına yönlendiriliyor.")
         return redirect("https://horiar.com/explore")  # Giriş sayfasına yönlendir
 
 
