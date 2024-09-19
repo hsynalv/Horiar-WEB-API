@@ -14,6 +14,10 @@ from app.models.package_model import Package
 # Tüm admin paneli için global erişim kontrolü
 class AdminBaseView(ModelView):
     def is_accessible(self):
+        # Eğer istek bir statik dosya isteği ise erişime izin ver
+        if request.endpoint == 'static':
+            return True
+
         # JWT token'ı Authorization başlığından al
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith("Bearer "):
