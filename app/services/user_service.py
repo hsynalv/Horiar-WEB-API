@@ -17,9 +17,9 @@ class UserService(BaseService):
         Kullanıcıyı ekler veya günceller.
         """
         if user_data.get("google_id"):
-            user = User.objects(google_id=user_data["google_id"]).first()
+            user = User.objects(email=user_data["email"]).first()
         elif user_data.get("discord_id"):
-            user = User.objects(discord_id=user_data["discord_id"]).first()
+            user = User.objects(email=user_data["email"]).first()
         else:
             user = None
 
