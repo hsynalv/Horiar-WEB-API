@@ -31,7 +31,7 @@ class AdminBaseView(ModelView):
         return False  # Admin rolü olmayan kullanıcılar için erişim yok
 
     def inaccessible_callback(self, name, **kwargs):
-        return redirect("https://horiar.com/explore")  # Giriş sayfasına yönlendir
+        return redirect("https://horiar.com/user")  # Giriş sayfasına yönlendir
         pass
 
 
@@ -53,7 +53,7 @@ class AdminHomeView(AdminIndexView):
         return False
 
     def inaccessible_callback(self, name, **kwargs):
-        return redirect("https://horiar.com/explore")  # Giriş sayfasına yönlendir
+        return redirect("https://horiar.com/user")  # Giriş sayfasına yönlendir
 
 
 # AdminBaseView'i kullanarak diğer view'leri türetelim
