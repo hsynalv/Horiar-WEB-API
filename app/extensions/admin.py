@@ -38,7 +38,28 @@ class AdminBaseView(ModelView):
 
 # Artık AdminHomeView'da doğrulama yapmıyoruz
 class AdminHomeView(AdminIndexView):
-    pass  # AdminHomeView'da doğrulama yapılmıyor, sadece panelin ana sayfası
+    def is_accessible(self):
+        # JWT token'ı Authorization başlığından al
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith("Bearer "):
+            logging.warning("Authorization header is missing or invalid.")
+            return False  # Authorization başlığı yoksa erişimi engelle
+
+        token = auth_header.split(" ")[1]
+        payload = verify_jwt_token(token, current_app.config['SECRET_KEY'])
+
+        # Kullanıcının rolünü kontrol ediyoruz
+        if payload and payload.get('role') == 'admin':
+            # Kullanıcı bilgilerini loglama
+            logging.info(f"Admin paneline giriş yapan kullanıcı: {payload['username']} (ID: {payload['sub']})")
+            return True
+
+        logging.warning(f"Admin yetkisi olmayan kullanıcı erişim denedi: {payload['username']} (ID: {payload['sub']})")
+        return False  # Admin rolü olmayan kullanıcılar için erişim yok
+
+    def inaccessible_callback(self, name, **kwargs):
+        logging.warning("Kullanıcı admin değil, login sayfasına yönlendiriliyor.")
+        return redirect(url_for('user_bp.login'))  # Giriş sayfasına yönlendir
 
 
 # AdminBaseView'i kullanarak diğer view'leri türetelim
