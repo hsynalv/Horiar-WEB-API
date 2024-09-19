@@ -15,7 +15,7 @@ from app.models.package_model import Package
 class AdminBaseView(ModelView):
     def is_accessible(self):
         # Eğer istek bir statik dosya veya Flask-Admin'in dahili isteklerinden biri ise yetkilendirme kontrolünü atla
-        if request.endpoint in ('static', 'admin.static', 'admin.index', 'admin.css', 'admin.js'):
+        if request.endpoint in ('static', 'admin.static', 'admin.index', 'admin.css', 'admin.js' 'admin.index', 'admin.user'):
             return True
 
         # JWT token'ı Authorization başlığından al
