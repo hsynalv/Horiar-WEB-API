@@ -34,11 +34,21 @@ def register_error_handlers(app):
         # Hata yığın izini almak
         error_trace = traceback.format_exc()
 
-        # Hatanın nerede oluştuğunu ve yığın izini loglama (CRITICAL seviyesi)
-        logging.critical(f"Unhandled exception occurred: {str(e)}\n"
-                         f"URL: {request.url}\n"
-                         f"Method: {request.method}\n"
-                         f"Traceback: {error_trace}")
+        # Hatanın türüne göre farklı loglama seviyeleri kullanma
+        if isinstance(e, ValueError) and "Kullanıcının şifresi yok" in str(e):
+            # Şifreyle ilgili hataları WARNING olarak logla
+            logging.warning(f"Handled exception: {str(e)}\n"
+                            f"URL: {request.url}\n"
+                            f"Method: {request.method}\n"
+                            f"IP: {request.remote_addr}\n"
+                            f"Traceback: {error_trace}")
+        else:
+            # Diğer tüm hataları CRITICAL olarak logla
+            logging.critical(f"Unhandled exception occurred: {str(e)}\n"
+                             f"URL: {request.url}\n"
+                             f"Method: {request.method}\n"
+                             f"IP: {request.remote_addr}\n"
+                             f"Traceback: {error_trace}")
 
         # Hata cevabı döndürme
         return jsonify({

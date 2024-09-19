@@ -132,7 +132,15 @@ def login():
         return jsonify({"message": "Missing required fields"}), 400
 
     user = UserService.find_user_by_email(email)
-    if not user or not UserService.check_password(user.password, password):
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    # Şifre olup olmadığını kontrol edin
+    if user.password is None:
+        return jsonify({"message": "This user doesn't have a password. Please use Google or Discord login."}), 400
+
+    if not UserService.check_password(user.password, password):
         return jsonify({"message": "Invalid credentials"}), 401
 
     # Generate JWT token with email and user information
