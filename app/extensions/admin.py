@@ -38,25 +38,9 @@ class AdminBaseView(ModelView):
         return redirect("https://horiar.com/explore")  # Giriş sayfasına yönlendir
 
 class AdminHomeView(AdminIndexView):
-    def is_accessible(self):
-        # JWT token'ı Authorization başlığından al
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith("Bearer "):
-            logging.warning("Authorization header is missing or invalid. (HomeView)")
-            return False  # Authorization başlığı yoksa erişimi engelle
-
-        token = auth_header.split(" ")[1]
-        payload = verify_jwt_token(token, current_app.config['SECRET_KEY'])
-        logging.warning(payload)
-
-        # Kullanıcının rolünü kontrol ediyoruz
-        if payload and (payload.get('role') == 'admin' or payload.get('role') == '9951a9b2-f455-4940-931e-432bc057179a'):
-            # Kullanıcı bilgilerini loglama
-            return True
-
-        return False  # Admin rolü olmayan kullanıcılar için erişim yok
-
+    # Burada is_accessible fonksiyonuna gerek yok çünkü BaseView'da kontrol sağlanıyor
     def inaccessible_callback(self, name, **kwargs):
+        logging.warning("Kullanıcı admin değil, login sayfasına yönlendiriliyor.")
         return redirect("https://horiar.com/explore")  # Giriş sayfasına yönlendir
 
 
