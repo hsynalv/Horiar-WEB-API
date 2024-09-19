@@ -43,6 +43,8 @@ class UserService(BaseService):
         """
         Kullanıcının şifresini doğrular. pbkdf2_sha256 kullanılıyor.
         """
+        if stored_password is None:
+            raise ValueError("Kullanıcının şifresi yok")  # Şifre yoksa hata fırlat
         return pbkdf2_sha256.verify(provided_password, stored_password)
 
     @staticmethod
