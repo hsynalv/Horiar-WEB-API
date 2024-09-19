@@ -79,10 +79,11 @@ def google_callback():
 
     user_data = {
         "google_id": user_info["id"],
-        "username": user_info["name"],
+        "username": None,
         "email": user_info["email"],
         "discord_id": None,
         "discord_username": None,
+        "google_username": user_info["name"],
         "password": None,
         "is_active": True,  # Kullanıcı varsayılan olarak aktif olabilir
         "is_banned": False,  # Varsayılan olarak yasaklanmamış olabilir
