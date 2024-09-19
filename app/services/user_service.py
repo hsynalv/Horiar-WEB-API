@@ -20,16 +20,15 @@ class UserService(BaseService):
             user = User.objects(email=user_data["email"]).first()
             user.google_id = user_data["google_id"]
             user.google_username = user_data["google_username"]
-            user.update(user)
         elif user_data.get("discord_id"):
             user = User.objects(email=user_data["email"]).first()
             user.discord_id = user_data["discord_id"]
             user.discord_username = user_data["discord_username"]
-            user.update(user)
         else:
             user = None
 
         if user:
+            user.save()  # Değişiklikleri kaydetmek için save() kullanılır
             return str(user.id)
         else:
             user = User(**user_data)
