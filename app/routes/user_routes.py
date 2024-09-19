@@ -79,7 +79,7 @@ def google_callback():
 
     user_data = {
         "google_id": user_info["id"],
-        "username": None,
+        "username": user_info["name"],
         "email": user_info["email"],
         "discord_id": None,
         "discord_username": None,
