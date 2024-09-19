@@ -19,7 +19,7 @@ class AdminBaseView(ModelView):
             return True
 
         # JWT token'ı Authorization başlığından al
-        auth_header = g.get('Authorization')
+        auth_header = request.cookies.get('token')
         if not auth_header or not auth_header.startswith("Bearer "):
             logging.warning("Authorization header is missing or invalid. BaseView")
             return False  # Authorization başlığı yoksa erişimi engelle
