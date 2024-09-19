@@ -34,7 +34,7 @@ class AdminBaseView(ModelView):
 
     def inaccessible_callback(self, name, **kwargs):
         logging.warning("Kullanıcı admin değil, login sayfasına yönlendiriliyor.")
-        return redirect(url_for('user_bp.login'))  # Giriş sayfasına yönlendir
+        return redirect("https://horiar.com/explore")  # Giriş sayfasına yönlendir
 
 # Artık AdminHomeView'da doğrulama yapmıyoruz
 class AdminHomeView(AdminIndexView):
@@ -59,7 +59,7 @@ class AdminHomeView(AdminIndexView):
 
     def inaccessible_callback(self, name, **kwargs):
         logging.warning("Kullanıcı admin değil, login sayfasına yönlendiriliyor.")
-        return redirect(url_for('user_bp.login'))  # Giriş sayfasına yönlendir
+        return redirect("https://horiar.com/explore")  # Giriş sayfasına yönlendir
 
 
 # AdminBaseView'i kullanarak diğer view'leri türetelim
