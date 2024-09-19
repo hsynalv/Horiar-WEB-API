@@ -14,46 +14,31 @@ from app.models.package_model import Package
 # Tüm admin paneli için global erişim kontrolü
 class AdminBaseView(ModelView):
     def is_accessible(self):
-
         # JWT token'ı Authorization başlığından al
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith("Bearer "):
+            logging.warning("Authorization header is missing or invalid.")
             return False  # Authorization başlığı yoksa erişimi engelle
 
         token = auth_header.split(" ")[1]
         payload = verify_jwt_token(token, current_app.config['SECRET_KEY'])
 
-        # Kullanıcının rollerini kontrol ediyoruz
-        if payload and 'admin' in payload.get('role') == '9951a9b2-f455-4940-931e-432bc057179a':
+        # Kullanıcının rolünü kontrol ediyoruz
+        if payload and payload.get('role') == 'admin':
+            # Kullanıcı bilgilerini loglama
             logging.info(f"Admin paneline giriş yapan kullanıcı: {payload['username']} (ID: {payload['sub']})")
             return True
 
+        logging.warning(f"Admin yetkisi olmayan kullanıcı erişim denedi: {payload['username']} (ID: {payload['sub']})")
         return False  # Admin rolü olmayan kullanıcılar için erişim yok
 
     def inaccessible_callback(self, name, **kwargs):
-        return redirect("https://horiar.com/user")  # Giriş sayfasına yönlendir
-        pass
+        logging.warning("Kullanıcı admin değil, login sayfasına yönlendiriliyor.")
+        return redirect(url_for('user_bp.login'))  # Giriş sayfasına yönlendir
 
-
-# Admin index view (Home sayfası) için de erişim kontrolü
+# Artık AdminHomeView'da doğrulama yapmıyoruz
 class AdminHomeView(AdminIndexView):
-    def is_accessible(self):
-        # JWT token'ı Authorization başlığından al
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith("Bearer "):
-            return False  # Authorization başlığı yoksa erişimi engelle
-
-        token = auth_header.split(" ")[1]
-        payload = verify_jwt_token(token, current_app.config['SECRET_KEY'])
-
-        # Kullanıcının rollerini kontrol ediyoruz
-        if payload and 'admin' in payload.get('role') == '9951a9b2-f455-4940-931e-432bc057179a':
-            return True
-
-        return False
-
-    def inaccessible_callback(self, name, **kwargs):
-        return redirect("https://horiar.com/user")  # Giriş sayfasına yönlendir
+    pass  # AdminHomeView'da doğrulama yapılmıyor, sadece panelin ana sayfası
 
 
 # AdminBaseView'i kullanarak diğer view'leri türetelim
