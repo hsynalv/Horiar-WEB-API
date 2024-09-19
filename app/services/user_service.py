@@ -18,8 +18,14 @@ class UserService(BaseService):
         """
         if user_data.get("google_id"):
             user = User.objects(email=user_data["email"]).first()
+            user.google_id = user_data["google_id"]
+            user.google_username = user_data["google_username"]
+            user.update(**user_data)
         elif user_data.get("discord_id"):
             user = User.objects(email=user_data["email"]).first()
+            user.discord_id = user_data["discord_id"]
+            user.discord_username = user_data["discord_username"]
+            user.update(**user_data)
         else:
             user = None
 
