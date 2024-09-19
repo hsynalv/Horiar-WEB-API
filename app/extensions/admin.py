@@ -22,6 +22,7 @@ class AdminBaseView(ModelView):
 
         token = auth_header.split(" ")[1]
         payload = verify_jwt_token(token, current_app.config['SECRET_KEY'])
+        logging.warning(payload)
 
         # Kullanıcının rolünü kontrol ediyoruz
         if payload and payload.get('role') == 'admin':
@@ -47,6 +48,7 @@ class AdminHomeView(AdminIndexView):
 
         token = auth_header.split(" ")[1]
         payload = verify_jwt_token(token, current_app.config['SECRET_KEY'])
+        logging.warning(payload)
 
         # Kullanıcının rolünü kontrol ediyoruz
         if payload and payload.get('role') == 'admin':
