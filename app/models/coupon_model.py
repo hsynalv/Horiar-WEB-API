@@ -26,3 +26,5 @@ class Coupon(Document):
             "usage_count": self.usage_count,
             "used_by": [str(user.id) for user in self.used_by]  # Kullanıcıların ID'lerini döndürüyoruz
         }
+
+
