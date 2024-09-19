@@ -24,7 +24,7 @@ class UserService(BaseService):
             user = None
 
         if user:
-            user.update(**user_data)
+            return str(user.id)
         else:
             user = User(**user_data)
             user.save()
