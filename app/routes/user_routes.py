@@ -39,7 +39,7 @@ def discord_callback():
         "google_id": None,
         "google_username": None,
         "password": None,
-        "is_active": True,  # Kullanıcı varsayılan olarak aktif olabilir
+        "is_enabled": True,  # Kullanıcı varsayılan olarak aktif olabilir
         "is_banned": False,  # Varsayılan olarak yasaklanmamış olabilir
         "roles": ["37fb8744-faf9-4f62-a729-a284c842bf0a"]  # Discord üzerinden gelenler 'user' rolüyle atanabilir
     }
@@ -85,7 +85,7 @@ def google_callback():
         "discord_username": None,
         "google_username": user_info["name"],
         "password": None,
-        "is_active": True,  # Kullanıcı varsayılan olarak aktif olabilir
+        "is_enabled": True,  # Kullanıcı varsayılan olarak aktif olabilir
         "is_banned": False,  # Varsayılan olarak yasaklanmamış olabilir
         "roles": ["37fb8744-faf9-4f62-a729-a284c842bf0a"]  # Discord üzerinden gelenler 'user' rolüyle atanabilir
     }
