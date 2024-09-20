@@ -25,7 +25,7 @@ class TextToImageService(BaseService):
         """
 
     @staticmethod
-    def update_workflow_with_prompt(path, prompt):
+    def update_workflow_with_prompt(path, prompt, model_type, resolution):
         """
         workflow.json dosyasını okur ve verilen prompt ile günceller.
         """
@@ -37,10 +37,25 @@ class TextToImageService(BaseService):
         workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = prompt[0]
         workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = prompt[1]
         workflow_data["input"]["workflow"]["112"]["inputs"]["noise_seed"] = random.randint(10**14, 10**15 - 1)
+
+        if model_type:
+            print(model_type)
+            if model_type == "normal":
+                workflow_data['input']['workflow']['106']['inputs']['steps'] = 24
+            elif model_type == "ultra detailed":
+                workflow_data['input']['workflow']['106']['inputs']['steps'] = 50
+
+        if resolution:
+            print(resolution)
+            width = resolution.split('x')[0]
+            height = resolution.split('x')[1].split(' |')[0]
+            workflow_data['input']['workflow']['71']['inputs']['width'] = width
+            workflow_data['input']['workflow']['71']['inputs']['height'] = height
+
         return workflow_data
 
     @staticmethod
-    def generate_image_directly(app, prompt, payload):
+    def generate_image_directly(app, prompt, model_type, resolution, payload):
         workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_promptfix.json')
 
         nsfw_flag = openai.moderations.create(input=prompt).results[0].flagged
@@ -50,7 +65,7 @@ class TextToImageService(BaseService):
         newPrompts = TextToImageService.promptEnhance(prompt)
 
         # workflow.json dosyasını güncelle
-        updated_workflow = TextToImageService.update_workflow_with_prompt(workflow_path, newPrompts)
+        updated_workflow = TextToImageService.update_workflow_with_prompt(workflow_path, newPrompts, model_type, resolution)
         # Uygulama bağlamı içinde ayarları çek
         with app.app_context():
             runpod_url = app.config['RUNPOD_URL']
