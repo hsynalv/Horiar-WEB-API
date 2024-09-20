@@ -37,7 +37,6 @@ class TextToImageService(BaseService):
         workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = prompt[0]
         workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = prompt[1]
         workflow_data["input"]["workflow"]["112"]["inputs"]["noise_seed"] = random.randint(10**14, 10**15 - 1)
-        logging.warning(workflow_data["input"]["workflow"]["112"]["inputs"]["noise_seed"])
         return workflow_data
 
     @staticmethod
