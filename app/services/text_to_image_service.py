@@ -12,7 +12,7 @@ from app.services.base_service import BaseService
 from requests.exceptions import Timeout, ConnectionError, RequestException
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(dotenv_path="/var/www/Horiar-WEB-API/.env.production")
 openai.api_key = os.getenv("OPEN_AI_KEY")
 
 class TextToImageService(BaseService):
