@@ -1,13 +1,12 @@
 import os
-from flask import Flask, g, request
+from flask import Flask
 from flask_cors import CORS
-from flask_wtf import CSRFProtect
+from flask_login import LoginManager
 from flask_mongoengine import MongoEngine
 from dotenv import load_dotenv
-from flask_admin import Admin
-from flask_admin.contrib.mongoengine import ModelView  # Flask-Admin için ModelView
 
 from app.auth import configure_oauth
+from app.models.user_model import User
 from app.routes.text_to_image_routes import text_to_image_bp
 
 # Extensions ve helper fonksiyonları içe aktar
@@ -26,6 +25,9 @@ from app.config.production import ProductionConfig
 
 # MongoEngine örneği oluştur
 db = MongoEngine()
+
+# LoginManager oluştur
+login_manager = LoginManager()
 
 
 def create_app():
@@ -70,5 +72,14 @@ def create_app():
 
     # Global hata yönetimi
     register_error_handlers(app)
+
+    # LoginManager yapılandırması
+    login_manager.init_app(app)  # Uygulamaya login_manager'i ekliyoruz
+    login_manager.login_view = 'admin_auth_bp.login'  # Oturum açılmadığında yönlendirilecek sayfa
+
+    # Kullanıcıyı yüklemek için gerekli user_loader fonksiyonu
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.objects(id=user_id).first()
 
     return app

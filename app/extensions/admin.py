@@ -1,10 +1,9 @@
 import logging
-from flask import request, current_app, redirect, g
+from flask import redirect, session, url_for
 from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.mongoengine import ModelView
 from flask_admin.contrib.mongoengine.filters import FilterEqual
 
-from app.auth import verify_jwt_token
 from app.models.coupon_model import Coupon
 from app.models.discord_image_request_model import DiscordImageRequest
 from app.models.image_request_model import ImageRequest
@@ -14,38 +13,20 @@ from app.models.package_model import Package
 # Tüm admin paneli için global erişim kontrolü
 class AdminBaseView(ModelView):
     def is_accessible(self):
-        # Eğer istek bir statik dosya veya Flask-Admin'in dahili isteklerinden biri ise yetkilendirme kontrolünü atla
-        if request.endpoint in ('static', 'admin.static', 'admin.index', 'admin.css', 'admin.js' 'admin.index', 'admin.user'):
+        # `session`'da `admin_logged_in` işaretini kontrol ediyoruz
+        if session.get('admin_logged_in'):
             return True
-
-        # JWT token'ı Authorization başlığından al
-        auth_header = request.cookies.get('token')
-        if not auth_header or not auth_header.startswith("Bearer "):
-            logging.warning("Authorization header is missing or invalid. BaseView")
-            return False  # Authorization başlığı yoksa erişimi engelle
-
-        token = auth_header.split(" ")[1]
-        payload = verify_jwt_token(token, current_app.config['SECRET_KEY'])
-        logging.warning(payload)
-
-        # Kullanıcının rolünü kontrol ediyoruz
-        if payload and (payload.get('role') == 'admin' or payload.get('role') == '9951a9b2-f455-4940-931e-432bc057179a'):
-            # Kullanıcı bilgilerini loglama
-            logging.info(f"Admin paneline giriş yapan kullanıcı: {payload['username']} (ID: {payload['sub']})")
-            return True
-
-        logging.warning(f"Admin yetkisi olmayan kullanıcı erişim denedi: {payload['username']} (ID: {payload['sub']})")
-        return False  # Admin rolü olmayan kullanıcılar için erişim yok
+        return False
 
     def inaccessible_callback(self, name, **kwargs):
-        logging.warning("Kullanıcı admin değil, login sayfasına yönlendiriliyor.")
-        return redirect("https://horiar.com/explore")  # Giriş sayfasına yönlendir
+        return redirect(url_for('admin_auth_bp.login'))
 
 class AdminHomeView(AdminIndexView):
-    # Burada is_accessible fonksiyonuna gerek yok çünkü BaseView'da kontrol sağlanıyor
+    def is_accessible(self):
+        return session.get('admin_logged_in')
+
     def inaccessible_callback(self, name, **kwargs):
-        logging.warning("Kullanıcı admin değil, login sayfasına yönlendiriliyor.")
-        return redirect("https://horiar.com/explore")  # Giriş sayfasına yönlendir
+        return redirect(url_for('admin_auth_bp.login'))
 
 
 # AdminBaseView'i kullanarak diğer view'leri türetelim
@@ -84,8 +65,8 @@ class ImageRequestView(AdminBaseView):
     can_delete = True   # Admin panelde istekleri silebiliriz
 
 class UserView(AdminBaseView):
-    column_list = ('email', 'username', 'is_active', 'is_banned')  # Görüntülenecek sütunlar
-    form_columns = ('email', 'username', 'is_active', 'is_banned')  # Düzenlenebilir alanlar
+    column_list = ('email', 'username', 'is_enabled', 'is_banned')
+    form_columns = ('email', 'username', 'is_enabled', 'is_banned')   # Düzenlenebilir alanlar
     can_create = False  # Yeni kullanıcı oluşturma kapalı
     can_edit = True     # Kullanıcı düzenlenebilir
     can_delete = True   # Kullanıcı silinebilir

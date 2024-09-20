@@ -1,8 +1,9 @@
 # /app/models/user_model.py
 from mongoengine.fields import StringField, BooleanField, EmailField, ListField
 from flask_mongoengine import Document
+from flask_login import UserMixin
 
-class User(Document):
+class User(UserMixin,Document):
     email = EmailField(required=True, unique=True)
     username = StringField(required=True, max_length=50)
     password = StringField()
@@ -14,8 +15,9 @@ class User(Document):
     # Rol alanı ekliyoruz (örn. 'admin', 'user')
     roles = ListField(StringField(), default=["37fb8744-faf9-4f62-a729-a284c842bf0a"])  # Varsayılan rol 'user'
 
-    is_active = BooleanField(default=True)  # Kullanıcı aktif mi?
-    is_banned = BooleanField(default=False)  # Kullanıcı yasaklı mı?
+    # Veritabanı alanı olarak 'is_enabled' kullanılıyor
+    is_enabled = BooleanField(default=True)
+    is_banned = BooleanField(default=False)
 
     meta = {'collection': 'users'}
 
@@ -29,6 +31,16 @@ class User(Document):
             "discord_id": self.discord_id,
             "discord_username": self.discord_username,
             "roles": self.roles,
-            "is_active": self.is_active,
+            "is_enabled": self.is_enabled,
             "is_banned": self.is_banned
         }
+
+    # Flask-Login için metodlar
+    def get_id(self):
+        return str(self.id)
+    def is_authenticated(self):
+        return True
+    def is_active(self):  # Flask-Login için `is_active` metodu
+        return self.is_enabled
+    def is_anonymous(self):
+        return False
