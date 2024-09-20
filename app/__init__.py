@@ -31,6 +31,7 @@ db = MongoEngine()
 def create_app():
     app = Flask(__name__)
 
+
     # Loglama yapılandırmasını başlat
     setup_logging()
 
