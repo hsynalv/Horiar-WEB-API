@@ -91,7 +91,7 @@
       "106": {
         "inputs": {
           "scheduler": "beta",
-          "steps": 20,
+          "steps": 24,
           "denoise": 1,
           "model": [
             "65",

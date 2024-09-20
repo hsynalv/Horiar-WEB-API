@@ -4,6 +4,7 @@ import logging
 import os
 import requests
 import openai
+import random
 
 from app.models.dataset_model import Dataset
 from app.models.image_request_model import ImageRequest
@@ -35,6 +36,7 @@ class TextToImageService(BaseService):
         # JSON verisinde gerekli değişiklikleri yap
         workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = prompt[0]
         workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = prompt[1]
+        workflow_data["input"]["workflow"]["112"]["inputs"]["noise_seed"] = random.randint(10**14, 10**15 - 1)
         return workflow_data
 
     @staticmethod
