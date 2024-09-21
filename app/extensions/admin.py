@@ -1,10 +1,9 @@
 import logging
-from datetime import datetime, timedelta
 
 from flask import redirect, session, url_for
 from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.mongoengine import ModelView
-from flask_admin.contrib.mongoengine.filters import FilterEqual, BaseMongoEngineFilter
+from flask_admin.contrib.mongoengine.filters import FilterEqual
 
 from app.models.coupon_model import Coupon
 from app.models.discord_image_request_model import DiscordImageRequest
@@ -97,24 +96,6 @@ class GuildFilter(FilterEqual):
         guilds = DiscordImageRequest.objects.distinct('guild')
         return [(guild, guild) for guild in guilds]
 
-class DateRangeFilter(BaseMongoEngineFilter):
-    def apply(self, query, value, alias=None):
-        """
-        Verilen tarih aralığına göre sorguyu filtreler.
-        """
-        start_date, end_date = value
-        return query.filter(datetime__gte=start_date, datetime__lte=end_date)
-
-    def operation(self):
-        return 'Tarih aralığı'
-
-    def get_options(self, view):
-        # Seçenek olarak tarih aralıklarını sunar.
-        return [
-            ('Son 1 gün', (datetime.now() - timedelta(days=1), datetime.now())),
-            ('Son 7 gün', (datetime.now() - timedelta(days=7), datetime.now())),
-            ('Son 30 gün', (datetime.now() - timedelta(days=30), datetime.now()))
-        ]
 
 # Admin View'a tarih filtresi ekliyoruz
 class DiscordImageRequestView(AdminBaseView):
@@ -137,8 +118,7 @@ class DiscordImageRequestView(AdminBaseView):
 
     # Dinamik sunucu adı filtresi ve tarih aralığı filtresi ekliyoruz
     column_filters = [
-        GuildFilter(column=DiscordImageRequest.guild, name='Sunucu Adı'),
-        DateRangeFilter(DiscordImageRequest.datetime, name='Tarih Aralığı')
+        GuildFilter(column=DiscordImageRequest.guild, name='Sunucu Adı')
     ]
 
 class PackageView(AdminBaseView):
