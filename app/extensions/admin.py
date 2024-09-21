@@ -1,8 +1,11 @@
 import logging
+from datetime import datetime, timedelta
+
 from flask import redirect, session, url_for
+from wtforms import DateField
 from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.mongoengine import ModelView
-from flask_admin.contrib.mongoengine.filters import FilterEqual
+from flask_admin.contrib.mongoengine.filters import FilterEqual, BaseMongoEngineFilter
 
 from app.models.coupon_model import Coupon
 from app.models.discord_image_request_model import DiscordImageRequest
@@ -95,6 +98,41 @@ class GuildFilter(FilterEqual):
         guilds = DiscordImageRequest.objects.distinct('guild')
         return [(guild, guild) for guild in guilds]
 
+
+class DateRangeFilter(BaseMongoEngineFilter):
+    def apply(self, query, value, alias=None):
+        """
+        Verilen tarih aralığına göre sorguyu filtreler.
+        """
+        start_date, end_date = value
+        if start_date and end_date:
+            return query.filter(datetime__gte=start_date, datetime__lte=end_date)
+        elif start_date:
+            return query.filter(datetime__gte=start_date)
+        elif end_date:
+            return query.filter(datetime__lte=end_date)
+        return query
+
+    def operation(self):
+        return 'Tarih Aralığı'
+
+    def get_form(self):
+        """
+        Flask-Admin'deki filtre formu için tarih alanlarını ekliyoruz.
+        """
+
+        class DateRangeForm(self.form):
+            start_date = DateField('Başlangıç Tarihi', format='%Y-%m-%d', validators=[])
+            end_date = DateField('Bitiş Tarihi', format='%Y-%m-%d', validators=[])
+
+        return DateRangeForm
+
+    def clean(self, form):
+        """
+        Giriş yapılan tarihleri temizler ve filtre için kullanılır hale getirir.
+        """
+        return form.start_date.data, form.end_date.data
+
 class DiscordImageRequestView(AdminBaseView):
     column_list = ('user_id', 'username', 'prompt', 'datetime', 'guild', 'channel')  # Gösterilecek alanlar
     form_columns = ('user_id', 'username', 'prompt', 'datetime', 'guild', 'channel')  # Düzenlenebilir alanlar
@@ -113,8 +151,11 @@ class DiscordImageRequestView(AdminBaseView):
     # Sunucu adına göre sıralama ekliyoruz
     column_sortable_list = ['guild','datetime']  # Sunucu adına göre sıralanabilir liste
 
-    # Dinamik sunucu adı filtresi ekliyoruz
-    column_filters = [GuildFilter(column=DiscordImageRequest.guild, name='Sunucu Adı')]
+    # Dinamik sunucu adı filtresi ve tarih aralığı filtresi ekliyoruz
+    column_filters = [
+        GuildFilter(column=DiscordImageRequest.guild, name='Sunucu Adı'),
+        DateRangeFilter(DiscordImageRequest.datetime, name='Tarih Aralığı')
+    ]
 
 class PackageView(AdminBaseView):
     column_list = ('name', 'credits', 'price', 'discounted_price')  # Görüntülenecek alanlar
