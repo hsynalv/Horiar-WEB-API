@@ -147,5 +147,5 @@ def configure_admin(app):
     admin.add_view(UserView(User))
     admin.add_view(PackageView(Package))  # AdminBaseView'den türetildi
     admin.add_view(CouponView(Coupon))
-    admin.add_view(ImageRequestView(ImageRequest))
-    admin.add_view(DiscordImageRequestView(DiscordImageRequest))
+    admin.add_view(ImageRequestView(ImageRequest, name='Web Site Requests'))
+    admin.add_view(DiscordImageRequestView(DiscordImageRequest,  name='Discord Bot Requests'))
