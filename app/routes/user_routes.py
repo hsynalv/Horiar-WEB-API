@@ -224,3 +224,10 @@ def connect_discord_callback(payload):
 
     return redirect("https://horiar.com/explore")
 
+@user_bp.route('/logout', methods=['POST'])
+def logout():
+    response = make_response(redirect("https://horiar.com/explore"))
+    response.delete_cookie('token', domain='.horiar.com')
+    response.delete_cookie('userId', domain='.horiar.com')
+    return response
+
