@@ -51,6 +51,7 @@ def discord_callback():
     response = make_response(redirect("https://horiar.com/explore"))
     response.set_cookie('token', jwt_token, httponly=False, secure=True, samesite='None', domain='.horiar.com')
     response.set_cookie('userId', str(user_id), httponly=False, secure=True, samesite='None', domain='.horiar.com')
+    response.set_cookie('sn', user_data["roles"][0], httponly=False, secure=True, samesite='None', domain='.horiar.com')
 
     return response
 
