@@ -58,10 +58,11 @@ class TextToImageService(BaseService):
     def generate_image_directly(app, prompt, model_type, resolution, payload):
         workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_promptfix.json')
 
+        """
         nsfw_flag = openai.moderations.create(input=prompt).results[0].flagged
         if nsfw_flag:
             return jsonify({"warning: This prompt violates our safety policy"}), 404
-
+        """
         newPrompts = TextToImageService.promptEnhance(prompt)
 
         # workflow.json dosyasını güncelle
