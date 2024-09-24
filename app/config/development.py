@@ -17,4 +17,13 @@ class DevelopmentConfig:
     RUNPOD_URL = os.getenv("RUNPOD_URL")
     RUNPOD_API_KEY = os.getenv("RUNPOD_API_KEY")
     OPEN_AI_KEY = os.getenv("OPEN_AI_KEY")
+    MAIL_SERVER = os.getenv('MAIL_SERVER')
+    MAIL_PORT = int(os.getenv('MAIL_PORT'))
+    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS') == 'True'
+    MAIL_USE_SSL = os.getenv('MAIL_USE_SSL') == 'True'
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
+    MAIL_DEBUG = os.getenv('MAIL_DEBUG')
+    SMTP_DEBUG_LEVEL = os.getenv('SMTP_DEBUG_LEVEL')
 

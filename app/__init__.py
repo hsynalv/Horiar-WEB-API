@@ -2,6 +2,7 @@ import os
 from flask import Flask
 from flask_cors import CORS
 from flask_login import LoginManager
+from flask_mail import Mail
 from flask_mongoengine import MongoEngine
 from dotenv import load_dotenv
 
@@ -14,6 +15,7 @@ from app.extensions.errors import register_error_handlers
 from app.extensions.blueprints import register_blueprints
 from app.extensions.logging_config import setup_logging
 from app.extensions.admin import configure_admin
+from app.extensions.mail import mail
 
 # Ortam değişkenine göre doğru .env dosyasını yükle
 env_file = ".env.development" if os.getenv('FLASK_ENV') == 'development' else ".env.production"
@@ -60,6 +62,9 @@ def create_app():
 
     # MongoDB bağlantısını başlat
     db.init_app(app)
+
+    # Flask-Mail başlat
+    mail.init_app(app)
 
     # Flask-Admin'i yapılandır
     configure_admin(app)
