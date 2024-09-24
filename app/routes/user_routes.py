@@ -52,6 +52,7 @@ def discord_callback():
     response.set_cookie('token', jwt_token, httponly=False, secure=True, samesite='None', domain='.horiar.com')
     response.set_cookie('userId', str(user_id), httponly=False, secure=True, samesite='None', domain='.horiar.com')
     response.set_cookie('sn', user_data["roles"][0], httponly=False, secure=True, samesite='None', domain='.horiar.com')
+    response.set_cookie('logtype', "oauth-432bc057179a", httponly=False, secure=True, samesite='None', domain='.horiar.com')
 
     return response
 
@@ -98,6 +99,7 @@ def google_callback():
     response.set_cookie('token', jwt_token, httponly=False, secure=True, samesite='None', domain='.horiar.com')
     response.set_cookie('userId', str(user_id), httponly=False, secure=True, samesite='None', domain='.horiar.com')
     response.set_cookie('sn', user_data["roles"][0], httponly=False, secure=True, samesite='None', domain='.horiar.com')
+    response.set_cookie('logtype', "oauth-432bc057179a", httponly=False, secure=True, samesite='None', domain='.horiar.com')
 
 
     return response
@@ -232,5 +234,7 @@ def logout():
     response = make_response(redirect("https://horiar.com/explore"))
     response.delete_cookie('token', domain='.horiar.com')
     response.delete_cookie('userId', domain='.horiar.com')
+    response.delete_cookie('sn', domain='.horiar.com')
+    response.delete_cookie('logtype', domain='.horiar.com')
     return response
 
