@@ -16,7 +16,7 @@ class DiscordImageRequest(Document):
     model_type = StringField()  # Kullanılan model türü (Örnek: "clip_l" veya "t5xxl")
     re_request = BooleanField(default=False)  # Yeniden istek yapıldı mı?
     execution_time = FloatField()  #
-    spent_money = DecimalField(precision=20, rounding='ROUND_HALF_UP', required=False)  # Harcanan para ($)
+    spent_money = DecimalField(precision=20, rounding='ROUND_HALF_UP', required=False, db_field='spent_money($)')  # Harcanan para ($)
 
 
     meta = {
