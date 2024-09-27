@@ -44,17 +44,20 @@ def discord_callback():
         "roles": ["37fb8744-faf9-4f62-a729-a284c842bf0a"]  # Discord üzerinden gelenler 'user' rolüyle atanabilir
     }
 
-    user_id = UserService.add_or_update_user(user_data)
+    # Kullanıcıyı ekler veya günceller ve kullanıcı nesnesini alır
+    user = UserService.add_or_update_user(user_data)
 
-    jwt_token = create_jwt_token(str(user_id), user_info["username"], user_info["email"], user_data["roles"], current_app.config['SECRET_KEY'])
+    # JWT oluşturmak için kullanıcı bilgilerini kullan
+    jwt_token = create_jwt_token(str(user.id), user.username, user.email, user.roles, current_app.config['SECRET_KEY'])
 
     response = make_response(redirect("https://horiar.com/explore"))
     response.set_cookie('token', jwt_token, httponly=False, secure=True, samesite='None', domain='.horiar.com')
-    response.set_cookie('userId', str(user_id), httponly=False, secure=True, samesite='None', domain='.horiar.com')
-    response.set_cookie('sn', user_data["roles"][0], httponly=False, secure=True, samesite='None', domain='.horiar.com')
+    response.set_cookie('userId', str(user.id), httponly=False, secure=True, samesite='None', domain='.horiar.com')
+    response.set_cookie('sn', user.roles[0], httponly=False, secure=True, samesite='None', domain='.horiar.com')
     response.set_cookie('logtype', "oauth-432bc057179a", httponly=False, secure=True, samesite='None', domain='.horiar.com')
 
     return response
+
 
 @user_bp.route('/login/google')
 def login_google():
@@ -66,7 +69,7 @@ def login_google():
 def google_callback():
     google = oauth.create_client('google')
     try:
-        # Discord'dan yetkilendirme token'ını almayı deneyin
+        # Google'dan yetkilendirme token'ını almayı deneyin
         token = google.authorize_access_token()
     except Exception as e:
         # Eğer "access_denied" hatası gelirse kullanıcıyı istediğiniz yere yönlendirin
@@ -74,7 +77,7 @@ def google_callback():
         if "access_denied" in error_message:
             return redirect("https://horiar.com/explore")  # İptal durumunda yönlendirme
         else:
-            logging.error(f"Discord login sırasında hata meydana geldi: {error_message}")
+            logging.error(f"Google login sırasında hata meydana geldi: {error_message}")
             return redirect("https://horiar.com/explore")
 
     user_info = google.get('https://www.googleapis.com/oauth2/v1/userinfo').json()
@@ -91,18 +94,21 @@ def google_callback():
         "is_banned": False,  # Varsayılan olarak yasaklanmamış olabilir
         "roles": ["37fb8744-faf9-4f62-a729-a284c842bf0a"]  # Discord üzerinden gelenler 'user' rolüyle atanabilir
     }
-    user_id = UserService.add_or_update_user(user_data)
 
-    jwt_token = create_jwt_token(str(user_id), user_info["name"], user_info["email"],user_data["roles"], current_app.config['SECRET_KEY'])
+    # Kullanıcıyı ekler veya günceller ve kullanıcı nesnesini alır
+    user = UserService.add_or_update_user(user_data)
+
+    # JWT oluşturmak için kullanıcı bilgilerini kullan
+    jwt_token = create_jwt_token(str(user.id), user.username, user.email, user.roles, current_app.config['SECRET_KEY'])
 
     response = make_response(redirect("https://horiar.com/explore"))
     response.set_cookie('token', jwt_token, httponly=False, secure=True, samesite='None', domain='.horiar.com')
-    response.set_cookie('userId', str(user_id), httponly=False, secure=True, samesite='None', domain='.horiar.com')
-    response.set_cookie('sn', user_data["roles"][0], httponly=False, secure=True, samesite='None', domain='.horiar.com')
+    response.set_cookie('userId', str(user.id), httponly=False, secure=True, samesite='None', domain='.horiar.com')
+    response.set_cookie('sn', user.roles[0], httponly=False, secure=True, samesite='None', domain='.horiar.com')
     response.set_cookie('logtype', "oauth-432bc057179a", httponly=False, secure=True, samesite='None', domain='.horiar.com')
 
-
     return response
+
 
 @user_bp.route('/getuser/<user_id>', methods=['GET'])
 @jwt_required(pass_payload=False)

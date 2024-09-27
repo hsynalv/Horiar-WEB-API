@@ -16,26 +16,22 @@ class UserService(BaseService):
         """
         Kullanıcıyı ekler veya günceller.
         """
+        user = UserService.model.objects(email=user_data["email"]).first()
 
-        if UserService.model.objects(email=user_data["email"]).first():
-            user = User.objects(email=user_data["email"]).first()
+        if user:
             if user_data.get("google_id"):
                 user.google_id = user_data["google_id"]
                 user.google_username = user_data["google_username"]
             elif user_data.get("discord_id"):
                 user.discord_id = user_data["discord_id"]
                 user.discord_username = user_data["discord_username"]
-        else:
-            user = None
 
-        if user:
             user.save()  # Değişiklikleri kaydetmek için save() kullanılır
-            return str(user.id)
         else:
             user = User(**user_data)
             user.save()
 
-        return str(user.id)
+        return user  # Artık user id yerine tüm user nesnesini döndürüyoruz
 
     @staticmethod
     def find_user_by_email(email):
