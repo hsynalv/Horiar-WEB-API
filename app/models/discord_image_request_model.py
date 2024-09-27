@@ -1,5 +1,5 @@
 from flask_mongoengine import Document
-from mongoengine.fields import StringField, DateTimeField, IntField, BooleanField, FloatField
+from mongoengine.fields import StringField, DateTimeField, IntField, BooleanField, FloatField, DecimalField
 
 class DiscordImageRequest(Document):
     user_id = StringField(required=True)
