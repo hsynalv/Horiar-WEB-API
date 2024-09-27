@@ -4,6 +4,7 @@ from app.errors.not_found_error import NotFoundError
 from app.models.user_model import User
 from passlib.hash import pbkdf2_sha256  # passlib ile pbkdf2_sha256 kullanımı
 import re
+import datetime
 
 from app.services.base_service import BaseService
 
@@ -26,8 +27,11 @@ class UserService(BaseService):
                 user.discord_id = user_data["discord_id"]
                 user.discord_username = user_data["discord_username"]
 
+            # Son giriş tarihini güncelle
+            user.last_login_date = datetime.datetime.utcnow()
             user.save()  # Değişiklikleri kaydetmek için save() kullanılır
         else:
+            user_data["registration_date"] = datetime.datetime.utcnow()
             user = User(**user_data)
             user.save()
 
