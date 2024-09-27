@@ -1,5 +1,5 @@
 import logging
-
+import datetime
 from flask import Blueprint, jsonify, request, current_app, make_response, redirect, url_for
 from ..auth import create_jwt_token, jwt_required, oauth
 from app.services.user_service import UserService
@@ -153,6 +153,8 @@ def login():
         return jsonify({"message": "This user doesn't have a password. Please use Google or Discord login."}), 400
 
     if not UserService.check_password(user.password, password):
+        user.last_login_date = datetime.datetime.utcnow()
+        user.save()
         return jsonify({"message": "Invalid credentials"}), 401
 
     # Generate JWT token with email and user information
