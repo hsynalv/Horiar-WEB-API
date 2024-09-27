@@ -153,9 +153,10 @@ def login():
         return jsonify({"message": "This user doesn't have a password. Please use Google or Discord login."}), 400
 
     if not UserService.check_password(user.password, password):
-        user.last_login_date = datetime.datetime.utcnow()
-        user.save()
         return jsonify({"message": "Invalid credentials"}), 401
+
+    user.last_login_date = datetime.datetime.utcnow()
+    user.save()
 
     # Generate JWT token with email and user information
     token = create_jwt_token(str(user.id), user.username, user.email, user.roles, current_app.config['SECRET_KEY'])
