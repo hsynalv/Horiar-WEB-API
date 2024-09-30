@@ -1,13 +1,13 @@
-from mongoengine.fields import StringField, FloatField, ReferenceField, ListField
+from mongoengine.fields import StringField, IntField, FloatField, ListField
 from flask_mongoengine import Document
 
 class Package(Document):
-    title = StringField(required=True, max_length=100)
-    monthly_original_price = FloatField(required=True)
-    yearly_original_price = FloatField(required=True)
-    monthly_sale_price = FloatField()
-    yearly_sale_price = FloatField()
-    features = ListField(ReferenceField('Feature'))  # Özelliklere referans
+    title = StringField(required=True, max_length=100)  # Eski 'name' alanı 'title' olarak güncellendi
+    monthly_original_price = FloatField(required=True)  # Aylık orijinal fiyat
+    yearly_original_price = FloatField(required=True)  # Yıllık orijinal fiyat
+    monthly_sale_price = FloatField(required=False)  # Aylık indirimli fiyat (opsiyonel)
+    yearly_sale_price = FloatField(required=False)  # Yıllık indirimli fiyat (opsiyonel)
+    features = ListField(StringField(), required=True)  # Özellikler listesi (örneğin: "Limited Generations ( ~150/Month)")
 
     meta = {'collection': 'packages'}
 
@@ -15,9 +15,9 @@ class Package(Document):
         return {
             "id": str(self.id),
             "title": self.title,
-            "monthly_original_price": self.monthly_original_price,
-            "yearly_original_price": self.yearly_original_price,
-            "monthly_sale_price": self.monthly_sale_price,
-            "yearly_sale_price": self.yearly_sale_price,
-            "features": [str(feature.id) for feature in self.features] if self.features else []
+            "monthlyOriginalPrice": self.monthly_original_price,
+            "yearlyOriginalPrice": self.yearly_original_price,
+            "monthlySalePrice": self.monthly_sale_price,
+            "yearlySalePrice": self.yearly_sale_price,
+            "features": self.features
         }

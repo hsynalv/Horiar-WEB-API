@@ -125,25 +125,9 @@ class DiscordImageRequestView(AdminBaseView):
         GuildFilter(column=DiscordImageRequest.guild, name='Sunucu Adı')
     ]
 
-from flask_admin.contrib.mongoengine import ModelView
-
-class FeatureView(AdminBaseView):
-    column_list = ('name',)
-    form_columns = ('name',)
-
-    can_create = True  # Yeni özellikler oluşturulabilir
-    can_edit = True    # Mevcut özellikler düzenlenebilir
-    can_delete = True  # Özellikler silinebilir
-
-    # Kolon başlıklarını özelleştirme
-    column_labels = {
-        'name': 'Özellik Adı'
-    }
-
-    # Sıralanabilir alanlar
-    column_sortable_list = ['name']
 
 class PackageView(AdminBaseView):
+    # Görüntülenecek alanlar
     column_list = (
         'title',
         'monthly_original_price',
@@ -153,6 +137,7 @@ class PackageView(AdminBaseView):
         'features'
     )
 
+    # Düzenlenebilir alanlar
     form_columns = (
         'title',
         'monthly_original_price',
@@ -162,10 +147,11 @@ class PackageView(AdminBaseView):
         'features'
     )
 
-    can_create = True
-    can_edit = True
-    can_delete = True
+    can_create = True  # Admin panelden yeni paket eklenebilir
+    can_edit = True  # Admin panelde paket düzenlenebilir
+    can_delete = True  # Admin panelde paket silinebilir
 
+    # Kolon başlıklarını özelleştirme
     column_labels = {
         'title': 'Paket Başlığı',
         'monthly_original_price': 'Aylık Orijinal Fiyat',
@@ -175,6 +161,7 @@ class PackageView(AdminBaseView):
         'features': 'Özellikler'
     }
 
+    # Sıralanabilir alanlar
     column_sortable_list = [
         'title',
         'monthly_original_price',
@@ -192,17 +179,4 @@ def configure_admin(app):
     admin.add_view(CouponView(Coupon, name="Kuponlar"))
     admin.add_view(ImageRequestView(ImageRequest, name='Web Site Requests'))
     admin.add_view(DiscordImageRequestView(DiscordImageRequest,  name='Discord Bot Requests'))
-
-    # Dinamik olarak `features` alanını belirleyerek `PackageView` ekleyelim
-    feature_choices = [(str(feature.id), feature.name) for feature in Feature.objects()]
-    PackageView.form_extra_fields = {
-        'features': SelectMultipleField(
-            'Özellikler',
-            widget=Select2Widget(multiple=True),
-            choices=feature_choices,
-        )
-    }
-
-
-    admin.add_view(FeatureView(Feature, name="Paket Özellikleri"))
     admin.add_view(PackageView(Package, name="Paketler"))  # AdminBaseView'den türetildi
