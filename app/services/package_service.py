@@ -7,18 +7,23 @@ class PackageService(BaseService):
     model = Package
 
     @staticmethod
-    def validate_discount(price, discounted_price):
-        if discounted_price and discounted_price > price:
-            raise ValidationError("Discounted price is greater than the price")
+    def validate_discount(original_price, discounted_price):
+        if discounted_price and discounted_price > original_price:
+            raise ValidationError("Discounted price cannot be greater than the original price")
 
     @staticmethod
     def add_package(data):
         # Eksik alan kontrolü
-        if not data.get("name") or not data.get("credits") or not data.get("price"):
-            raise ValueError("Missing required fields")
+        required_fields = ["title", "monthly_original_price", "yearly_original_price", "features"]
+        for field in required_fields:
+            if not data.get(field):
+                raise ValueError(f"Missing required field: {field}")
 
         # İndirimli fiyat kontrolü
-        PackageService.validate_discount(data.get('price'), data.get('discounted_price'))
+        if data.get('monthly_sale_price'):
+            PackageService.validate_discount(data.get('monthly_original_price'), data.get('monthly_sale_price'))
+        if data.get('yearly_sale_price'):
+            PackageService.validate_discount(data.get('yearly_original_price'), data.get('yearly_sale_price'))
 
         # Model kullanarak paket oluşturma
         package = Package(**data)
@@ -34,7 +39,10 @@ class PackageService(BaseService):
             raise NotFoundError("Package not found")
 
         # İndirimli fiyat kontrolü
-        PackageService.validate_discount(data.get('price'), data.get('discounted_price'))
+        if data.get('monthly_sale_price'):
+            PackageService.validate_discount(data.get('monthly_original_price'), data.get('monthly_sale_price'))
+        if data.get('yearly_sale_price'):
+            PackageService.validate_discount(data.get('yearly_original_price'), data.get('yearly_sale_price'))
 
         # Paketi güncelleme
         package.update(**data)
@@ -65,4 +73,3 @@ class PackageService(BaseService):
         """
         packages = Package.objects()  # Tüm paketleri alır
         return [package.to_dict() for package in packages]  # Her paketi JSON formatına çevirir
-

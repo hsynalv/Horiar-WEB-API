@@ -4,9 +4,13 @@ from flask import redirect, session, url_for
 from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.mongoengine import ModelView
 from flask_admin.contrib.mongoengine.filters import FilterEqual
+from flask_admin.form import Select2Widget
+from wtforms import widgets
+from wtforms.fields.choices import SelectMultipleField
 
 from app.models.coupon_model import Coupon
 from app.models.discord_image_request_model import DiscordImageRequest
+from app.models.feature_model import Feature
 from app.models.image_request_model import ImageRequest
 from app.models.user_model import User
 from app.models.package_model import Package
@@ -121,31 +125,84 @@ class DiscordImageRequestView(AdminBaseView):
         GuildFilter(column=DiscordImageRequest.guild, name='Sunucu Adı')
     ]
 
-class PackageView(AdminBaseView):
-    column_list = ('name', 'credits', 'price', 'discounted_price')  # Görüntülenecek alanlar
-    form_columns = ('name', 'credits', 'price', 'discounted_price')  # Düzenlenebilir alanlar
-    can_create = True  # Admin panelden yeni paket eklenebilir
-    can_edit = True    # Admin panelde paket düzenlenebilir
-    can_delete = True  # Admin panelde paket silinebilir
+from flask_admin.contrib.mongoengine import ModelView
+
+class FeatureView(AdminBaseView):
+    column_list = ('name',)
+    form_columns = ('name',)
+
+    can_create = True  # Yeni özellikler oluşturulabilir
+    can_edit = True    # Mevcut özellikler düzenlenebilir
+    can_delete = True  # Özellikler silinebilir
 
     # Kolon başlıklarını özelleştirme
     column_labels = {
-        'name': 'Paket Adı',
-        'credits': 'Kredi',
-        'price': 'Fiyat',
-        'discounted_price': 'İndirimli Fiyat'
+        'name': 'Özellik Adı'
     }
 
     # Sıralanabilir alanlar
-    column_sortable_list = ['name', 'credits', 'price', 'discounted_price']
+    column_sortable_list = ['name']
+
+class PackageView(AdminBaseView):
+    column_list = (
+        'title',
+        'monthly_original_price',
+        'yearly_original_price',
+        'monthly_sale_price',
+        'yearly_sale_price',
+        'features'
+    )
+
+    form_columns = (
+        'title',
+        'monthly_original_price',
+        'yearly_original_price',
+        'monthly_sale_price',
+        'yearly_sale_price',
+        'features'
+    )
+
+    can_create = True
+    can_edit = True
+    can_delete = True
+
+    column_labels = {
+        'title': 'Paket Başlığı',
+        'monthly_original_price': 'Aylık Orijinal Fiyat',
+        'yearly_original_price': 'Yıllık Orijinal Fiyat',
+        'monthly_sale_price': 'Aylık İndirimli Fiyat',
+        'yearly_sale_price': 'Yıllık İndirimli Fiyat',
+        'features': 'Özellikler'
+    }
+
+    column_sortable_list = [
+        'title',
+        'monthly_original_price',
+        'yearly_original_price',
+        'monthly_sale_price',
+        'yearly_sale_price'
+    ]
 
 def configure_admin(app):
     # Flask-Admin'i başlat, AdminIndexView'i kullanarak home erişimini kontrol ediyoruz
     admin = Admin(app, name='Horiar Admin Paneli', template_mode='bootstrap3', index_view=AdminHomeView())
 
     # Modelleri admin paneline ekleyin
-    admin.add_view(UserView(User))
-    admin.add_view(PackageView(Package))  # AdminBaseView'den türetildi
-    admin.add_view(CouponView(Coupon))
+    admin.add_view(UserView(User, name="Kullanıcılar"))
+    admin.add_view(CouponView(Coupon, name="Kuponlar"))
     admin.add_view(ImageRequestView(ImageRequest, name='Web Site Requests'))
     admin.add_view(DiscordImageRequestView(DiscordImageRequest,  name='Discord Bot Requests'))
+
+    # Dinamik olarak `features` alanını belirleyerek `PackageView` ekleyelim
+    feature_choices = [(str(feature.id), feature.name) for feature in Feature.objects()]
+    PackageView.form_extra_fields = {
+        'features': SelectMultipleField(
+            'Özellikler',
+            widget=Select2Widget(multiple=True),
+            choices=feature_choices,
+        )
+    }
+
+
+    admin.add_view(FeatureView(Feature, name="Paket Özellikleri"))
+    admin.add_view(PackageView(Package, name="Paketler"))  # AdminBaseView'den türetildi
