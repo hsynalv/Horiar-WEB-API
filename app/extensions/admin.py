@@ -5,6 +5,7 @@ from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.mongoengine import ModelView
 from flask_admin.contrib.mongoengine.filters import FilterEqual
 from flask_admin.form import Select2Widget
+from markupsafe import Markup
 from wtforms import widgets
 from wtforms.fields.choices import SelectMultipleField
 
@@ -63,11 +64,17 @@ class ImageRequestView(AdminBaseView):
     column_labels = {
         'user_id': 'User Id',
         'username': 'User Name',
+        'image': 'Image',
     }
 
     can_create = False  # Admin panelden yeni istek oluşturma kapalı
     can_edit = False    # Admin panelden düzenleme kapalı
     can_delete = True   # Admin panelde istekleri silebiliriz
+
+    # 'image' alanını görsel olarak göstermek için column_formatter ekleyelim
+    column_formatters = {
+        'image': lambda v, c, m, p: Markup(f'<img src="{m.image}" style="max-height: 100px;">') if m.image else ""
+    }
 
 class UserView(AdminBaseView):
     column_list = ('email', 'username', 'is_enabled', 'is_banned')
