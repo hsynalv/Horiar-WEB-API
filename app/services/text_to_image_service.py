@@ -119,7 +119,7 @@ class TextToImageService(BaseService):
         """
         Veritabanından kullanıcı ID'sine göre istekleri getirir.
         """
-        return ImageRequest.objects(user_id=user_id).all()
+        return ImageRequest.objects(user_id=user_id).order_by('-request_time').all()
 
     def promptEnhance(input_text):
         clips = ["clip_l", "t5xxl"]
