@@ -88,20 +88,17 @@ class TextToImageService(BaseService):
                 logging.error(f"RunPod isteğinde bir hata oluştu: {str(e)}")
                 return {"message": f"RunPod isteğinde bir hata oluştu: {str(e)}"}, 500
 
-            result = response.json()
-
             # Eğer istek başarılı olduysa yanıtı döndür
-            if result.get("status") == "COMPLETED":
+            if response.status_code == 200:
+                result = response.json()
                 message = result.get("output", {}).get("message")
-
                 # API yanıtını veritabanına kaydet
                 user_id = payload["sub"]
                 username = payload["username"]
                 TextToImageService.save_request_to_db(user_id, username, prompt, message)
-
                 return result  # Yanıtı JSON olarak döndür
             else:
-                TextToImageService.generate_image_directly(app, prompt, model_type, resolution, payload)
+                response.raise_for_status()  # Bi
 
     @staticmethod
     def save_request_to_db(user_id, username, prompt, message):
