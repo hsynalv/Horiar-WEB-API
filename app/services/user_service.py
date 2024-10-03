@@ -109,3 +109,21 @@ class UserService(BaseService):
 
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
             raise ValueError("Invalid email format")
+
+    @staticmethod
+    def change_password(user_id, current_password, new_password):
+        """
+        Kullanıcının şifresini değiştirir.
+        """
+        # Kullanıcıyı al
+        user = User.objects(id=user_id).first()
+        if not user:
+            raise NotFoundError("User not found")
+
+        # Mevcut şifreyi doğrula
+        if not pbkdf2_sha256.verify(current_password, user.password):
+            raise ValueError("Current password is incorrect")
+
+        # Yeni şifreyi hash'le ve güncelle
+        user.password = pbkdf2_sha256.hash(new_password)
+        user.save()

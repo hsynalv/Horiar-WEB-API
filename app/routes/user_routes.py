@@ -247,3 +247,13 @@ def logout():
     response.delete_cookie('logtype', domain='.horiar.com')
     return response
 
+@user_bp.route('/change-password', methods=['POST'])
+@jwt_required(pass_payload=True)
+def change_password(payload):
+    data = request.json
+    try:
+        UserService.change_password(payload['sub'], data.get('current_password'), data.get('new_password'))
+        return jsonify({"message": "Password changed successfully"}), 200
+    except ValueError as e:
+        return jsonify({"message": str(e)}), 400
+
