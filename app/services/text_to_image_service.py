@@ -1,4 +1,3 @@
-from flask import jsonify
 import json
 import logging
 import os
@@ -17,12 +16,37 @@ openai.api_key = os.getenv("OPEN_AI_KEY")
 
 class TextToImageService(BaseService):
     model = None
-    Duty = """
-        Your job is to create a prompt according to the given clip model and inputs:
-            1-) First Translate the prompt to English if needed. Do not send anything and go to step 2.
-            2a-) If the given model is clip_l: Your job is to extract traits from translated prompt objects and create a new prompt by converting each trait to lowercase and separating them with commas and paying particular attention to styling prompts. Do not hallucinate and only type what is in the prompt.This prompt will be used for clip_l which is for stable diffusion. Just type the answer.
-            2b-) If the given model is t5xxl: Your task is to refine the given prompt. Avoid introducing new details (hallucinating). Focus on correcting and enhancing the existing prompt, cover all the objects from the original prompt and do not miss anything. paying particular attention to styling prompts. The prompt will be used with the t5xxl model which is closer to natural language. Just type the answer.
-        """
+    Duty = {
+        'clip_l': """
+                    Your job is to enhance given prompt according to clip_l text encoder and just return the new prompt:
+                    Attention: Ignore introductory phrases such as "New prompt:"
+                    Note: Always prioritize appearance, not the historical info
+                    1-) First Translate the prompt to English if needed and go to step 2, Do nothing if it is already English.
+                    2-) Follow these rules while creating a prompt:
+
+                    Avoid fancy or ambiguous words that might alter the meaning.
+                    If a trait in the given prompt is not detailed and not straightforward, redescribe that trait by adding appearance details and add to the new prompt.
+                    Separate each trait with commas.
+                    Rearrange the traits based on their importance.
+                    Reorganize the prompt according to the importance of all traits.(For general styling traits, they should be in <>. For example <realistic>, <anime>, etc. and use this for just main traits)
+                    Final Output: Provide only the enhanced prompt as your final output.
+                    """,
+        't5xxl': """
+                    Your job is enhance, refine and rewrite the given prompt according to t5xxl text encoder and just return the new prompt:
+                    Info: t5xxl text encoder is close to human language, it needs prompting closer to natural language.
+                    Note: Always prioritize appearance, not the historical info
+                    1-) First Translate the prompt to English if needed and go to step 2, Do nothing if it is already English.
+                    2-) Follow these rules while creating a prompt:
+
+                    Avoid fancy or ambiguous words that might alter the meaning.
+                    Add specific appearance details to make these traits more precise.
+                    If a trait in the given prompt is not detailed and not straightforward, redescribe that trait by adding straightforward appearance details and add to the new prompt.
+                    For traits that are already detailed and straightforward, include them with minimal changes.
+                    Make small fixes if needed to improve clarity.
+                    Reorganize the prompt according to the importance of all traits. Split them into paragraphs if needed.
+                    Final Output: Provide only the enhanced prompt as your final output.
+                    """
+    }
 
     @staticmethod
     def update_workflow_with_prompt(path, prompt, model_type, resolution):
@@ -130,7 +154,7 @@ class TextToImageService(BaseService):
                 model='gpt-4o-mini',
                 messages=[
                     {"role": "system",
-                     "content": f"You are a helpful assistant. Your job is to apply {TextToImageService.Duty} according to {clip}."},
+                     "content": f"You are a helpful assistant. Your job is to apply {TextToImageService.Duty[clip]} according to {clip}."},
                     {"role": "user", "content": input_text}
                 ]
             )
