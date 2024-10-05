@@ -257,3 +257,21 @@ def change_password(payload):
     except ValueError as e:
         return jsonify({"message": str(e)}), 400
 
+@user_bp.route('/update_user_status', methods=['POST'])
+#@jwt_required(pass_payload=False)
+def update_user_status():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    field = data.get('field')
+    value = data.get('value')
+
+    if not user_id or not field:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    try:
+        update_data = {field: value}
+        UserService.update_user_by_id(user_id, update_data)
+        return jsonify({"message": "User status updated successfully."}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+

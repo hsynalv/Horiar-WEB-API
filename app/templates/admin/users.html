@@ -35,8 +35,21 @@
                         <td>{{ ', '.join(user.roles) }}</td>
                         <td>{{ user.registration_date }}</td>
                         <td>{{ user.last_login_date }}</td>
-                        <td>{{ 'Evet' if user.is_enabled else 'Hayır' }}</td>
-                        <td>{{ 'Banlı' if user.is_banned else 'Aktif' }}</td>
+                        <td>
+                            <input type="checkbox" class="switch-status is_enabled"
+                                   data-user-id="{{ user.id }}" {% if user.is_enabled %}checked{% endif %}
+                                   data-off-color="danger" data-on-color="success"
+                                   data-on-text="Aktif" data-off-text="Pasif"
+                            >
+                        </td>
+                        <td>
+                            <input type="checkbox" class="switch-status is_banned"
+                                   data-user-id="{{ user.id }}" {% if user.is_banned %}checked{% endif %}
+                                   data-off-color="success" data-on-color="danger"
+                                    data-on-text="Ban" data-off-text="Aktif"
+                            >
+                        </td>
+                    </tr>
                     </tr>
                     {% endfor %}
                     </tbody>
@@ -61,6 +74,8 @@
 <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
 <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
 <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/bootstrap-switch/js/bootstrap-switch.min.js') }}"></script>
+
 
 <!-- Page specific script -->
 <script>
@@ -79,5 +94,35 @@
       "responsive": true,
     });
   });
+
+  $(document).ready(function() {
+        // Bootstrap Switch'i etkinleştirin
+        $(".switch-status").bootstrapSwitch();
+
+        // Switch butonunun değişikliklerini dinleyin
+        $(".switch-status").on('switchChange.bootstrapSwitch', function(event, state) {
+            var userId = $(this).data("user-id");
+            var field = $(this).hasClass("is_enabled") ? "is_enabled" : "is_banned";
+            var value = state;
+
+            // AJAX ile durumu güncelle
+            $.ajax({
+                url: "/user/update_user_status",  // Güncelleme endpoint'i
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    user_id: userId,
+                    field: field,
+                    value: value
+                }),
+                success: function(response) {
+                    console.log("Kullanıcı durumu başarıyla güncellendi.");
+                },
+                error: function(xhr) {
+                    alert("Kullanıcı durumu güncellenirken hata oluştu.");
+                }
+            });
+        });
+    });
 </script>
 {% endblock %}
