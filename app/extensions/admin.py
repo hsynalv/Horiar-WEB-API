@@ -29,7 +29,7 @@ class MyAdminIndexView(AdminIndexView):
         return False
 
     def inaccessible_callback(self, name, **kwargs):
-        return redirect(url_for('admin_auth_bp.login'))
+        return redirect(url_for('admin_routes_bp.login'))
 
 
 class AdminBaseView(ModelView):
@@ -40,14 +40,14 @@ class AdminBaseView(ModelView):
         return False
 
     def inaccessible_callback(self, name, **kwargs):
-        return redirect(url_for('admin_auth_bp.login'))
+        return redirect(url_for('admin_routes_bp.login'))
 
 class AdminHomeView(AdminIndexView):
     def is_accessible(self):
         return session.get('admin_logged_in')
 
     def inaccessible_callback(self, name, **kwargs):
-        return redirect(url_for('admin_auth_bp.login'))
+        return redirect(url_for('admin_routes_bp.login'))
 
 
 # AdminBaseView'i kullanarak diğer view'leri türetelim
