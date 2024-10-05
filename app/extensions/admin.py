@@ -194,8 +194,8 @@ class PackageView(AdminBaseView):
 
 def configure_admin(app):
     # Flask-Admin'i başlat, AdminIndexView'i kullanarak home erişimini kontrol ediyoruz
-    admin = Admin(app, index_view=MyAdminIndexView(), template_mode='bootstrap3')
-    #admin = Admin(app, name='Horiar Admin Paneli', template_mode='bootstrap3', index_view=AdminHomeView())
+    #admin = Admin(app, index_view=MyAdminIndexView(), template_mode='bootstrap3')
+    admin = Admin(app, name='Horiar Admin Paneli', template_mode='bootstrap3', index_view=AdminHomeView())
 
 
     # Modelleri admin paneline ekleyin
