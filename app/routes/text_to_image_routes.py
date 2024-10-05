@@ -47,3 +47,5 @@ def get_requests_by_user(user_id):
     except Exception as e:
         # Hata durumunda hata mesajı döndür
         return jsonify({"error": str(e)}), 500
+
+

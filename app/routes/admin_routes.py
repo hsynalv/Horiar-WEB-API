@@ -1,5 +1,7 @@
 from flask import render_template, redirect, url_for, flash, Blueprint, session
 from flask_login import login_user, logout_user
+
+from app.models.image_request_model import ImageRequest
 from app.models.user_model import User
 from app.services.user_service import UserService
 from app.forms.forms import LoginForm
@@ -47,3 +49,9 @@ def admin_users():
     # Tüm kullanıcıları veritabanından al
     users = UserService.get_all_users()
     return render_template('admin/users.html', users=users)
+
+@admin_routes_bp.route('/image-requests')
+def list_image_requests():
+    # Veritabanından tüm ImageRequest nesnelerini çekiyoruz
+    image_requests = ImageRequest.objects()
+    return render_template('admin/image_requests.html', image_requests=image_requests)
