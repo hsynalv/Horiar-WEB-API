@@ -1,4 +1,4 @@
-from app.routes.admin_auth import admin_auth_bp
+from app.routes.admin_routes import admin_routes_bp
 from app.routes.coupon_routes import coupon_bp
 from app.routes.mail_routes import mail_bp
 from app.routes.user_routes import user_bp
@@ -11,5 +11,5 @@ def register_blueprints(app):
     app.register_blueprint(text_to_image_bp, url_prefix='/create')
     app.register_blueprint(coupon_bp, url_prefix='/coupon')
     app.register_blueprint(mail_bp)
-    app.register_blueprint(admin_auth_bp)
+    app.register_blueprint(admin_routes_bp, url_prefix='/admin')
 

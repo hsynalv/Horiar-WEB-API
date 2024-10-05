@@ -16,7 +16,22 @@ from app.models.image_request_model import ImageRequest
 from app.models.user_model import User
 from app.models.package_model import Package
 
-# Tüm admin paneli için global erişim kontrolü
+
+class MyAdminIndexView(AdminIndexView):
+    def __init__(self, *args, **kwargs):
+        kwargs['template'] = 'admin/adminlte_index.html'
+        super(MyAdminIndexView, self).__init__(*args, **kwargs)
+
+    def is_accessible(self):
+        # `session`'da `admin_logged_in` işaretini kontrol ediyoruz
+        if session.get('admin_logged_in'):
+            return True
+        return False
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('admin_auth_bp.login'))
+
+
 class AdminBaseView(ModelView):
     def is_accessible(self):
         # `session`'da `admin_logged_in` işaretini kontrol ediyoruz
@@ -179,7 +194,9 @@ class PackageView(AdminBaseView):
 
 def configure_admin(app):
     # Flask-Admin'i başlat, AdminIndexView'i kullanarak home erişimini kontrol ediyoruz
+    #admin = Admin(app, index_view=MyAdminIndexView(), template_mode='bootstrap3')
     admin = Admin(app, name='Horiar Admin Paneli', template_mode='bootstrap3', index_view=AdminHomeView())
+
 
     # Modelleri admin paneline ekleyin
     admin.add_view(UserView(User, name="Kullanıcılar"))

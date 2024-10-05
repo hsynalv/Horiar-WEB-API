@@ -127,3 +127,10 @@ class UserService(BaseService):
         # Yeni şifreyi hash'le ve güncelle
         user.password = pbkdf2_sha256.hash(new_password)
         user.save()
+
+    @staticmethod
+    def get_all_users():
+        """
+        Tüm kullanıcıları döndürür.
+        """
+        return User.objects().all()
