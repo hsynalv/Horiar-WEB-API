@@ -40,7 +40,7 @@ def login():
 def logout():
     logout_user()
     session.pop('admin_logged_in', None)
-    return redirect(url_for('admin_auth_bp.login'))
+    return redirect(url_for('admin_routes_bp.login'))
 
 @admin_routes_bp.route('/users')
 def admin_users():
