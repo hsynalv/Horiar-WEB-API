@@ -63,6 +63,16 @@ def create_app():
     # MongoDB bağlantısını başlat
     db.init_app(app)
 
+    # Ortam değişkenlerinden ayarları yükle
+    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
+    app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
+    app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
+    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
+    app.config['MAIL_DEBUG'] = int(os.getenv('MAIL_DEBUG', 0))
+
     # Flask-Mail başlat
     mail.init_app(app)
 
