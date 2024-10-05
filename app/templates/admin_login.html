@@ -22,7 +22,7 @@
         {% endwith %}
 
         <!-- Giriş formu -->
-        <form method="POST" action="{{ url_for('admin_auth_bp.login') }}">
+        <form method="POST" action="{{ url_for('admin_routes_bp.login') }}">
             {{ form.hidden_tag() }}
             <div class="form-group">
                 {{ form.username.label }}<br>
