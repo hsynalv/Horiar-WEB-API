@@ -243,7 +243,10 @@ class TextToImageService(BaseService):
             messages=[
                 {"role": "system", "content": f"{TextToImageService.Duty['t5xxl']}"},
                 {"role": "user", "content": text}
-            ]
+            ],
+            temperature=0.7,          # Allows for creative enhancements
+            frequency_penalty=0.0,    # Doesn't penalize word repetition
+            presence_penalty=0.0      # Neutral towards new topics
         )
         prompts.append(response.choices[0].message.content)
 
@@ -252,7 +255,10 @@ class TextToImageService(BaseService):
             messages=[
                 {"role": "system", "content": f"{TextToImageService.Duty['clip_l']}"},
                 {"role": "user", "content": prompts[0]}
-            ]
+            ],
+            temperature=0.7,  # Allows for creative enhancements
+            frequency_penalty=0.0,  # Doesn't penalize word repetition
+            presence_penalty=0.0  # Neutral towards new topics
         )
         prompts.append(response.choices[0].message.content)
         prompts.reverse()
