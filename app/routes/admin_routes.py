@@ -199,7 +199,6 @@ def edit_coupon(coupon_id):
 """
 Admin Dashboard İçin Package Rotaları ------------------------------------------------------------------------------------
 """
-
 @admin_routes_bp.route('/packages', methods=['GET'])
 def list_packages():
     packages = Package.objects.all()
@@ -267,4 +266,14 @@ def delete_package(package_id):
     except Exception as e:
         logging.error(f"Paket silinirken hata: {e}")
         return jsonify({"error": "Paket silinirken hata oluştu."}), 500
+
+
+@admin_routes_bp.route('/send-mail-page', methods=['GET'])
+def send_mail_page():
+    users = User.objects()
+    return render_template('admin/mail/send_mail.html', users=users)
+
+
+
+
 

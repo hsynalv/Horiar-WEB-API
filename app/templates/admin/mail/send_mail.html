@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/fontawesome-free/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/summernote/summernote-bs4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dist/css/adminlte.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/simplemde/simplemde.min.css') }}">
+{% endblock %}
+
+
+{% block content %}
+<!--
+    <section class="content">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card card-outline card-info">
+            <div class="card-header">
+              <h3 class="card-title">
+                Summernote
+              </h3>
+            </div>
+            <div class="card-body">
+              <textarea id="summernote">
+                Place <em>some</em> <u>text</u> <strong>here</strong>
+              </textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+-->
+
+<section class="content">
+    <div class="card">
+        <div class="card-body">
+            <form id="sendMailForm">
+            <div class="form-group">
+                <label for="recipients">Alıcılar</label>
+                <select id="recipients" name="recipients" class="form-control" multiple>
+                    {% for user in users %}
+                        <option value="{{ user.email }}">{{ user.username }} ({{ user.email }})</option>
+                    {% endfor %}
+                </select>
+                <small class="form-text text-muted">CTRL veya SHIFT tuşlarına basarak birden fazla kullanıcı seçebilirsiniz.</small>
+            </div>
+                <div class="form-group">
+                    <label for="subject">Konu</label>
+                    <input type="text" id="subject" name="subject" class="form-control" placeholder="Konu" required>
+                </div>
+                <div class="form-group">
+                    <label for="body">Mesaj</label>
+                    <textarea id="body" name="body" class="form-control" rows="5" placeholder="Mesaj içeriği" required></textarea>
+                </div>
+                <div class="form-group" style="display: none">
+                    <label for="htmlBody">HTML Mesaj (Opsiyonel)</label>
+                    <textarea id="htmlBody" name="htmlBody" class="form-control" rows="5" placeholder="HTML mesaj içeriği (opsiyonel)"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Gönder</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='plugins/jquery/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/summernote/summernote-bs4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/adminlte.min.js') }}"></script>
+
+    <script>
+        $(function () {
+            // Summernote'u etkinleştirin
+            $('#summernote').summernote({
+                height: 300, // Editör yüksekliği
+                focus: true // Yükleme sırasında editöre odaklanma
+            });
+        });
+
+        $(document).ready(function () {
+        $('#sendMailForm').on('submit', function (event) {
+            event.preventDefault();
+            const recipients = $('#recipients').val();  // Seçilen e-posta adreslerini alır
+            const subject = $('#subject').val();
+            const body = $('#body').val();
+            const htmlBody = $('#htmlBody').val();
+
+            $.ajax({
+                url: "{{ url_for('admin_routes_bp.admin_send_mail') }}",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    recipients: recipients,
+                    subject: subject,
+                    body: body,
+                    html_body: htmlBody
+                }),
+                headers: {
+                    'Authorization': 'Bearer ' + '{{ jwt_token }}'  // JWT Token ekleme
+                },
+                success: function (response) {
+                    alert("Mail başarıyla gönderildi!");
+                },
+                error: function (xhr) {
+                    alert("Mail gönderilirken bir hata oluştu.");
+                }
+            });
+        });
+});
+    </script>
+{% endblock %}
+

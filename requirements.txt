@@ -16,3 +16,6 @@ flask-mongoengine~=1.0.0
 MarkupSafe~=2.0.1
 Flask-Admin~=1.6.1
 openai~=1.46.1
+WTForms~=3.1.2
+marshmallow~=3.22.0
+Markdown~=3.7
