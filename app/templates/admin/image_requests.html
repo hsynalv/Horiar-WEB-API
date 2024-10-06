@@ -32,12 +32,12 @@
                         <td>{{ request.request_time }}</td>
                         <td>{{ request.prompt }}</td>
                         <td>
-                            {% if request.image %}
+                            {% if request.image and "base64 verisi (yedeklendi)" not in request.image %}
                             <a href="{{ request.image }}" target="_blank">
                                 <img src="{{ request.image }}" alt="Image" style="width: 100px; height: auto;">
                             </a>
                             {% else %}
-                            Görüntü Yok
+                                Görüntü AWS S3'de mevcut değil
                             {% endif %}
                         </td>
                     </tr>
