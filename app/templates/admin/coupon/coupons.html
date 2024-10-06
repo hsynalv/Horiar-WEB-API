@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_page_styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/fontawesome-free/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/adminlte.min.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Kupon Listesi</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="card">
+        <div class="col-sm-6 text-right">
+            <!-- Kupon oluşturma sayfasına yönlendirecek bir buton -->
+            <a href="{{ url_for('admin_routes_bp.create_coupon') }}" class="btn bg-gradient-primary">Yeni Kupon Oluştur</a>
+        </div>
+        <div class="card-body">
+            <table id="couponTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Aksiyonlar</th>
+                        <th>Kupon Adı</th>
+                        <th>İndirim Oranı</th>
+                        <th>Geçerlilik Süresi</th>
+                        <th>Aktiflik Durumu</th>
+                        <th>Kullanım Sınırı</th>
+                        <th>Kullanım Sayısı</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for coupon in coupons %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('admin_routes_bp.edit_coupon', coupon_id=coupon.id) }}" class="btn btn-sm btn-warning">Düzenle</a>
+                            <button class="btn btn-sm btn-danger delete-coupon" data-coupon-id="{{ coupon.id }}">Sil</button>
+                        </td>
+                        <td>{{ coupon.name }}</td>
+                        <td>{{ coupon.discount_percentage }}%</td>
+                        <td>{{ coupon.valid_until }}</td>
+                        <td>
+                            <input type="checkbox" class="switch-status is_active" data-coupon-id="{{ coupon.id }}" {% if coupon.is_active %}checked{% endif %} data-off-color="danger" data-on-color="success">
+                        </td>
+                        <td>{{ coupon.max_usage }}</td>
+                        <td>{{ coupon.usage_count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='plugins/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/dataTables.buttons.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/jszip/jszip.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/pdfmake/pdfmake.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/pdfmake/vfs_fonts.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/bootstrap-switch/js/bootstrap-switch.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        // Bootstrap Switch'i etkinleştirin
+        $(".switch-status").bootstrapSwitch();
+
+        $(function () {
+            $("#couponTable").DataTable({
+                "responsive": true, "lengthChange": false, "autoWidth": false,
+                "buttons": ["csv", "excel", "print"]
+            }).buttons().container().appendTo('#couponTable_wrapper .col-md-6:eq(0)');
+        });
+
+        $(document).ready(function () {
+            // Switch durumunu değiştirildiğinde AJAX isteği gönder
+            $(".switch-status").on('switchChange.bootstrapSwitch', function(event, state) {
+                var couponId = $(this).data("coupon-id");
+
+                // Console'da couponId'nin null olup olmadığını kontrol edin
+                console.log("Coupon ID: ", couponId);
+
+                if (!couponId) {
+                    console.error("Coupon ID boş veya null, veri gönderilemiyor!");
+                    return;  // Coupon ID null ise işlemi durdurun
+                }
+
+                var field = $(this).hasClass("is_active") ? "is_active" : "other_field";  // 'is_active' alanını kullanıyoruz
+                var value = state;
+
+                // AJAX ile durumu güncelle
+                $.ajax({
+                    url: "/admin/coupons/update-status",  // Güncelleme endpoint'i
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        coupon_id: couponId,
+                        field: field,
+                        value: value
+                    }),
+                    headers: {
+                        'Authorization': 'Bearer ' + '{{ jwt_token }}'  // JWT Token'ı ekleyin
+                    },
+                    success: function(response) {
+                        console.log("Kupon durumu başarıyla güncellendi.");
+                    },
+                    error: function(xhr) {
+                        alert("Kupon durumu güncellenirken hata oluştu.");
+                    }
+                });
+            });
+
+            // Kuponu silme butonuna tıklanınca AJAX isteği gönder
+            $(".delete-coupon").on("click", function() {
+                var couponId = $(this).data("coupon-id");
+
+                if (!couponId) {
+                    console.error("Coupon ID boş veya null, veri gönderilemiyor!");
+                    return;
+                }
+
+                if (confirm("Bu kuponu silmek istediğinizden emin misiniz?")) {
+                    $.ajax({
+                        url: "/admin/coupons/delete",  // Silme endpoint'i
+                        method: "DELETE",
+                        contentType: "application/json",
+                        data: JSON.stringify({ coupon_id: couponId }),
+                        headers: {
+                            'Authorization': 'Bearer ' + '{{ jwt_token }}'  // JWT Token'ı ekleyin
+                        },
+                        success: function(response) {
+                            alert("Kupon başarıyla silindi.");
+                            location.reload();  // Sayfayı yeniden yükleyin
+                        },
+                        error: function(xhr) {
+                            alert("Kupon silinirken hata oluştu.");
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+{% endblock %}

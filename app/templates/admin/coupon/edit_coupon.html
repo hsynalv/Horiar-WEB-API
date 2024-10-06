@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Kupon Düzenle</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="card card-primary">
+        <div class="card-header">
+            <h3 class="card-title">Kupon Bilgilerini Düzenle</h3>
+        </div>
+        <!-- form start -->
+        <form method="post">
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="name">Kupon Adı</label>
+                    <input type="text" name="name" class="form-control" id="name" value="{{ coupon.name }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="discount_percentage">İndirim Oranı (%)</label>
+                    <input type="number" name="discount_percentage" class="form-control" id="discount_percentage" value="{{ coupon.discount_percentage }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="valid_until">Geçerlilik Süresi (YYYY-MM-DD)</label>
+                    <input type="text" name="valid_until" class="form-control" id="valid_until" value="{{ coupon.valid_until.strftime('%Y-%m-%d') }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="max_usage">Kullanım Sınırı</label>
+                    <input type="number" name="max_usage" class="form-control" id="max_usage" value="{{ coupon.max_usage }}" required>
+                </div>
+            </div>
+            <!-- /.card-body -->
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">Güncelle</button>
+                <a href="{{ url_for('admin_routes_bp.coupons') }}" class="btn btn-secondary">İptal</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

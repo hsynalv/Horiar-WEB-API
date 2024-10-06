@@ -1,9 +1,15 @@
-from flask import render_template, redirect, url_for, flash, Blueprint, session
+import logging
+from datetime import datetime
+
+from flask import render_template, redirect, url_for, flash, Blueprint, session, request, jsonify
 from flask_login import login_user, logout_user
 
+from app.auth import jwt_required
+from app.models.coupon_model import Coupon
 from app.models.discord_image_request_model import DiscordImageRequest
 from app.models.image_request_model import ImageRequest
 from app.models.user_model import User
+from app.services.coupon_service import CouponService
 from app.services.user_service import UserService
 from app.forms.forms import LoginForm
 
@@ -61,3 +67,127 @@ def list_image_requests():
 def discord_requests():
     discord_requests = DiscordImageRequest.objects.all()  # Discord isteklerini al
     return render_template('admin/discord_requests.html', discord_requests=discord_requests)
+
+@admin_routes_bp.route('/coupons')
+def coupons():
+    # Veritabanından tüm kuponları al
+    coupons = Coupon.objects.all()
+    return render_template('admin/coupon/coupons.html', coupons=coupons)
+
+@admin_routes_bp.route('/coupons/new', methods=['GET', 'POST'])
+def create_coupon():
+    try:
+        # Formdan gelen verileri al
+        name = request.form.get('name')
+        discount_percentage = float(request.form.get('discount_percentage'))
+        valid_until = request.form.get('valid_until')
+        max_usage = int(request.form.get('max_usage'))
+
+        # Yeni kupon oluştur
+        coupon = Coupon(
+            name=name,
+            discount_percentage=discount_percentage,
+            valid_until=datetime.strptime(valid_until, '%Y-%m-%d'),
+            max_usage=max_usage,
+            is_active=True,  # Varsayılan olarak aktif durumda olacak
+            usage_count=0     # Yeni kupon olduğundan kullanım sayısı 0
+        )
+        coupon.save()
+
+        # Kupon oluşturulduktan sonra kuponlar sayfasına yönlendirme
+        return redirect(url_for('admin_routes_bp.coupons'))
+
+    except Exception as e:
+        logging.error(f"Kupon oluşturulurken hata: {str(e)}")
+        return render_template('admin/coupon/new_coupon.html', error=str(e))
+
+@admin_routes_bp.route('/coupons/update-status', methods=['POST'])
+def update_coupon_status():
+    try:
+        data = request.get_json()
+        coupon_id = data.get('coupon_id')
+        is_active = data.get('value')
+
+        # Kuponu güncelle
+        coupon = Coupon.objects(id=coupon_id).first()
+        if not coupon:
+            return jsonify({"message": "Kupon bulunamadı"}), 404
+
+        coupon.update(is_active=is_active)
+
+        return jsonify({"message": "Kupon durumu güncellendi"}), 200
+    except Exception as e:
+        logging.error(f"Kupon durumu güncellenirken hata: {str(e)}")
+        return jsonify({"message": "Kupon durumu güncellenirken bir hata oluştu"}), 500
+
+@admin_routes_bp.route('/coupons/delete', methods=['DELETE'])
+def delete_coupon():
+    try:
+        data = request.get_json()
+        coupon_id = data.get('coupon_id')
+
+        # Coupon ID'nin varlığını kontrol et
+        if not coupon_id:
+            return jsonify({"error": "Coupon ID gerekli"}), 400
+
+        # Kuponu sil
+        deleted = CouponService.delete(coupon_id)
+        if not deleted:
+            return jsonify({"error": "Kupon bulunamadı veya silinemedi"}), 404
+
+        return jsonify({"message": "Kupon başarıyla silindi"}), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Kupon silinirken hata oluştu: {str(e)}"}), 500
+
+@admin_routes_bp.route('/coupons/edit/<coupon_id>', methods=['GET', 'POST'])
+def edit_coupon(coupon_id):
+    try:
+        # Kuponu veri tabanından al
+        coupon = CouponService.get_by_id(coupon_id)
+
+        if not coupon:
+            flash('Kupon bulunamadı veya erişilemedi.', 'danger')
+            return redirect(url_for('admin_routes_bp.coupons'))
+
+        if request.method == 'POST':
+            # Formdan gelen verileri al
+            name = request.form.get('name')
+            discount_percentage = request.form.get('discount_percentage')
+            valid_until = request.form.get('valid_until')
+            max_usage = request.form.get('max_usage')
+
+            # Formda eksik alan var mı kontrol et
+            if not all([name, discount_percentage, valid_until, max_usage]):
+                flash('Lütfen tüm alanları doldurun.', 'danger')
+                return render_template('admin/coupon/edit_coupon.html', coupon=coupon)
+
+            # Geçerlilik süresi doğru formatta değilse uyarı ver
+            try:
+                valid_until = datetime.strptime(valid_until, '%Y-%m-%d')
+            except ValueError:
+                flash('Geçerlilik süresi hatalı bir formatta (YYYY-MM-DD olmalı).', 'danger')
+                return render_template('admin/coupon/edit_coupon.html', coupon=coupon)
+
+            # Kuponu güncelle
+            updated_data = {
+                'name': name,
+                'discount_percentage': float(discount_percentage),
+                'valid_until': valid_until,
+                'max_usage': int(max_usage)
+            }
+            update_success = CouponService.update(coupon_id, **updated_data)
+
+            if update_success:
+                flash('Kupon başarıyla güncellendi.', 'success')
+            else:
+                flash('Kupon güncellenirken bir sorun oluştu.', 'danger')
+
+            return redirect(url_for('admin_routes_bp.coupons'))
+
+        return render_template('admin/coupon/edit_coupon.html', coupon=coupon)
+
+    except Exception as e:
+        flash(f'Kupon düzenlenirken bir hata oluştu: {str(e)}', 'danger')
+        return redirect(url_for('admin_routes_bp.coupons'))
+

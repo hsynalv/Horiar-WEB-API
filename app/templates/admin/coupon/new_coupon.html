@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Yeni Kupon Oluştur</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Kupon Bilgileri</h3>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('admin_routes_bp.create_coupon') }}" method="post">
+                <div class="form-group">
+                    <label for="name">Kupon Adı</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="discount_percentage">İndirim Oranı (%)</label>
+                    <input type="number" class="form-control" id="discount_percentage" name="discount_percentage" min="1" max="100" required>
+                </div>
+                <div class="form-group">
+                    <label for="valid_until">Geçerlilik Tarihi</label>
+                    <input type="date" class="form-control" id="valid_until" name="valid_until" required>
+                </div>
+                <div class="form-group">
+                    <label for="max_usage">Kullanım Sınırı</label>
+                    <input type="number" class="form-control" id="max_usage" name="max_usage" min="1" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Oluştur</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block page_specific_scripts %}
+<script src="{{ url_for('static', filename='plugins/datepicker/bootstrap-datepicker.js') }}"></script>
+<script>
+    $(function () {
+        // Datepicker kullanımı için
+        $('#valid_until').datepicker({
+            autoclose: true,
+            format: 'yyyy-mm-dd'
+        });
+    });
+</script>
+{% endblock %}
+
