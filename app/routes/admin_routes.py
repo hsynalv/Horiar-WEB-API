@@ -8,6 +8,7 @@ from app.auth import jwt_required
 from app.models.coupon_model import Coupon
 from app.models.discord_image_request_model import DiscordImageRequest
 from app.models.image_request_model import ImageRequest
+from app.models.package_model import Package
 from app.models.user_model import User
 from app.services.coupon_service import CouponService
 from app.services.user_service import UserService
@@ -68,6 +69,10 @@ def discord_requests():
     discord_requests = DiscordImageRequest.objects.all()  # Discord isteklerini al
     return render_template('admin/discord_requests.html', discord_requests=discord_requests)
 
+
+"""
+Admin Dashboard İçin Kupon Rotaları ------------------------------------------------------------------------------------
+"""
 @admin_routes_bp.route('/coupons')
 def coupons():
     # Veritabanından tüm kuponları al
@@ -190,4 +195,76 @@ def edit_coupon(coupon_id):
     except Exception as e:
         flash(f'Kupon düzenlenirken bir hata oluştu: {str(e)}', 'danger')
         return redirect(url_for('admin_routes_bp.coupons'))
+
+"""
+Admin Dashboard İçin Package Rotaları ------------------------------------------------------------------------------------
+"""
+
+@admin_routes_bp.route('/packages', methods=['GET'])
+def list_packages():
+    packages = Package.objects.all()
+    return render_template('admin/package/packages.html', packages=packages)
+
+@admin_routes_bp.route('/packages/new', methods=['GET', 'POST'])
+def create_package():
+    if request.method == 'POST':
+        data = request.form
+        title = data.get('title')
+        monthly_original_price = float(data.get('monthly_original_price'))
+        yearly_original_price = float(data.get('yearly_original_price'))
+        monthly_sale_price = float(data.get('monthly_sale_price', 0)) if data.get('monthly_sale_price') else None
+        yearly_sale_price = float(data.get('yearly_sale_price', 0)) if data.get('yearly_sale_price') else None
+        features = data.getlist('features')
+
+        try:
+            package = Package(
+                title=title,
+                monthly_original_price=monthly_original_price,
+                yearly_original_price=yearly_original_price,
+                monthly_sale_price=monthly_sale_price,
+                yearly_sale_price=yearly_sale_price,
+                features=features
+            )
+            package.save()
+            return redirect(url_for('admin_routes_bp.list_packages'))
+        except Exception as e:
+            logging.error(f"Paketi oluştururken hata: {e}")
+            return jsonify({"error": "Paketi oluştururken hata oluştu."}), 500
+
+    return render_template('admin/package/create_package.html')
+
+@admin_routes_bp.route('/packages/edit/<package_id>', methods=['GET', 'POST'])
+def edit_package(package_id):
+    package = Package.objects(id=package_id).first()
+    if not package:
+        return redirect(url_for('admin_routes_bp.list_packages'))
+
+    if request.method == 'POST':
+        data = request.form
+        package.title = data.get('title')
+        package.monthly_original_price = float(data.get('monthly_original_price'))
+        package.yearly_original_price = float(data.get('yearly_original_price'))
+        package.monthly_sale_price = float(data.get('monthly_sale_price', 0)) if data.get('monthly_sale_price') else None
+        package.yearly_sale_price = float(data.get('yearly_sale_price', 0)) if data.get('yearly_sale_price') else None
+        package.features = data.getlist('features')
+
+        try:
+            package.save()
+            return redirect(url_for('admin_routes_bp.list_packages'))
+        except Exception as e:
+            logging.error(f"Paketi güncellerken hata: {e}")
+            return jsonify({"error": "Paketi güncellerken hata oluştu."}), 500
+
+    return render_template('admin/package/edit_package.html', package=package)
+
+@admin_routes_bp.route('/packages/delete/<package_id>', methods=['POST'])
+def delete_package(package_id):
+    try:
+        package = Package.objects(id=package_id).first()
+        if package:
+            package.delete()
+        return jsonify({"message": "Paket başarıyla silindi."}), 200
+    except Exception as e:
+        logging.error(f"Paket silinirken hata: {e}")
+        return jsonify({"error": "Paket silinirken hata oluştu."}), 500
 

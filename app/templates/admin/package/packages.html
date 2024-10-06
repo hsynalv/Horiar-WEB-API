@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_page_styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/fontawesome-free/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/adminlte.min.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Paket Listesi</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="card">
+        <div class="col-sm-6 text-right">
+            <!-- Paket oluşturma sayfasına yönlendirecek bir buton -->
+            <a href="{{ url_for('admin_routes_bp.create_package') }}" class="btn bg-gradient-primary">Yeni Paket Oluştur</a>
+        </div>
+        <div class="card-body">
+            <table id="packageTable" class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>İşlemler</th>
+            <th>Paket Adı</th>
+            <th>Aylık Orijinal Fiyat</th>
+            <th>Yıllık Orijinal Fiyat</th>
+            <th>Aylık İndirimli Fiyat</th>
+            <th>Yıllık İndirimli Fiyat</th>
+            <th>Özellikler</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for package in packages %}
+        <tr>
+            <td>
+                <a href="{{ url_for('admin_routes_bp.edit_package', package_id=package.id) }}" class="btn btn-warning btn-sm">Düzenle</a>
+                <button class="btn btn-danger btn-sm delete-package" data-package-id="{{ package.id }}">Sil</button>
+            </td>
+            <td>{{ package.title }}</td>
+            <td>{{ package.monthly_original_price }}</td>
+            <td>{{ package.yearly_original_price }}</td>
+            <td>{{ package.monthly_sale_price if package.monthly_sale_price is not none else '' }}</td>
+            <td>{{ package.yearly_sale_price if package.yearly_sale_price is not none else '' }}</td>
+            <td>
+                {% if package.features %}
+                    <ul>
+                        {% for feature in package.features %}
+                            <li>{{ feature }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    Özellik Yok
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+        </div>
+    </div>
+</section>
+{% endblock %}
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='plugins/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/dataTables.buttons.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/jszip/jszip.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/pdfmake/pdfmake.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/pdfmake/vfs_fonts.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/bootstrap-switch/js/bootstrap-switch.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        // Paket silme işlemi
+        $(".delete-package").on('click', function() {
+            var packageId = $(this).data("package-id");
+
+            if (confirm("Bu paketi silmek istediğinizden emin misiniz?")) {
+                $.ajax({
+                    url: "/admin/packages/delete/" + packageId,
+                    method: "POST",
+                    headers: {
+                        'Authorization': 'Bearer ' + '{{ jwt_token }}'
+                    },
+                    success: function(response) {
+                        alert("Paket başarıyla silindi.");
+                        location.reload();
+                    },
+                    error: function(xhr) {
+                        alert("Paket silinirken hata oluştu.");
+                    }
+                });
+            }
+});
+
+
+    </script>
+{% endblock %}
