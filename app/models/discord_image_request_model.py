@@ -14,9 +14,12 @@ class DiscordImageRequest(Document):
     seed = IntField(required=False)  # Örnek: 2752667741 gibi bir sayı
     prompt_fix = StringField()  # Prompt düzeltmeleri
     model_type = StringField()  # Kullanılan model türü (Örnek: "clip_l" veya "t5xxl")
-    re_request = BooleanField(default=False)  # Yeniden istek yapıldı mı?
+    re_request = BooleanField(default=False, db_field="re-request")  # Yeniden istek yapıldı mı?
     execution_time = FloatField()  #
     spent_money = DecimalField(precision=20, rounding='ROUND_HALF_UP', required=False, db_field='spent_money($)')  # Harcanan para ($)
+    # Yeni eklenen alanlar
+    cost = DecimalField(precision=20, rounding='ROUND_HALF_UP', required=False)  # Bu işlem için toplam maliyet
+    time = FloatField(required=False)  # Bu işlem için geçen zaman
 
 
     meta = {
