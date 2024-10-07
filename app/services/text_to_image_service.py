@@ -248,6 +248,15 @@ class TextToImageService(BaseService):
         )
         text_to_image_record.save()
 
+        TextToImageService.model = ImageRequest
+        image_request = ImageRequest(
+            user_id=user_id,
+            username=username,
+            prompt=prompt,
+            image=response.get("output", {}).get("message")
+        )
+        image_request.save()
+
     @staticmethod
     def get_requests_by_user_id(user_id):
         """
