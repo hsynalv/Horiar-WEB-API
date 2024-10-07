@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import os
@@ -7,12 +8,14 @@ import random
 
 from app.models.dataset_model import Dataset
 from app.models.image_request_model import ImageRequest
+from app.models.text_to_image_model import TextToImage
 from app.services.base_service import BaseService
 from requests.exceptions import Timeout, ConnectionError, RequestException
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path="/var/www/Horiar-WEB-API/.env.production")
 openai.api_key = os.getenv("OPEN_AI_KEY")
+
 
 class TextToImageService(BaseService):
     model = None
@@ -146,11 +149,10 @@ class TextToImageService(BaseService):
         with open(path, 'r') as file:
             workflow_data = json.load(file)
 
-
         # JSON verisinde gerekli değişiklikleri yap
         workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = prompt[0]
         workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = prompt[1]
-        workflow_data["input"]["workflow"]["112"]["inputs"]["noise_seed"] = random.randint(10**14, 10**15 - 1)
+        workflow_data["input"]["workflow"]["112"]["inputs"]["noise_seed"] = random.randint(10 ** 14, 10 ** 15 - 1)
 
         if model_type:
             print(model_type)
@@ -170,7 +172,7 @@ class TextToImageService(BaseService):
 
     @staticmethod
     def generate_image_directly(app, prompt, model_type, resolution, payload):
-        workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_promptfix.json')
+        workflow_path = os.path.join(os.getcwd(), 'app/workflows/schnell_promptfix.json')
 
         """
         nsfw_flag = openai.moderations.create(input=prompt).results[0].flagged
@@ -180,7 +182,9 @@ class TextToImageService(BaseService):
         newPrompts = TextToImageService.promptEnhance(prompt)
 
         # workflow.json dosyasını güncelle
-        updated_workflow = TextToImageService.update_workflow_with_prompt(workflow_path, newPrompts, model_type, resolution)
+        updated_workflow = TextToImageService.update_workflow_with_prompt(workflow_path, newPrompts, model_type,
+                                                                          resolution)
+        seed = updated_workflow["input"]["workflow"]["112"]["inputs"]["noise_seed"]
         # Uygulama bağlamı içinde ayarları çek
         with app.app_context():
             runpod_url = app.config['RUNPOD_URL']
@@ -209,24 +213,40 @@ class TextToImageService(BaseService):
                 # API yanıtını veritabanına kaydet
                 user_id = payload["sub"]
                 username = payload["username"]
-                TextToImageService.save_request_to_db(user_id, username, prompt, message)
+                TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution)
                 return result  # Yanıtı JSON olarak döndür
             else:
                 response.raise_for_status()  # Bi
 
     @staticmethod
-    def save_request_to_db(user_id, username, prompt, message):
+    def save_request_to_db(user_id, username, prompt, response, seed, model_type, resolution):
         """
         Kullanıcı isteğini veritabanına kaydeder.
         """
-        TextToImageService.model=ImageRequest
-        image_request = ImageRequest(
-            user_id=user_id,
-            username=username,
+
+        execution_time = response.get("executionTime")
+
+        if execution_time is not None:
+            cost = float(execution_time) * 0.00031
+        else:
+            cost = 0.0  # veya başka bir varsayılan değer
+
+        TextToImageService.model = TextToImage
+        text_to_image_record = TextToImage(
+            datetime=datetime.datetime.utcnow(),
             prompt=prompt,
-            image=message
+            seed=seed,
+            model_type=model_type,
+            prompt_fix="on",
+            resolution=resolution,
+            image_url=response.get("output", {}).get("message"),
+            cost=cost,
+            execution_time=execution_time,
+            source="web",
+            user_id=user_id,
+            username=username
         )
-        image_request.save()
+        text_to_image_record.save()
 
     @staticmethod
     def get_requests_by_user_id(user_id):
@@ -244,9 +264,9 @@ class TextToImageService(BaseService):
                 {"role": "system", "content": f"{TextToImageService.Duty['t5xxl']}"},
                 {"role": "user", "content": text}
             ],
-            temperature=0.7,          # Allows for creative enhancements
-            frequency_penalty=0.0,    # Doesn't penalize word repetition
-            presence_penalty=0.0      # Neutral towards new topics
+            temperature=0.7,  # Allows for creative enhancements
+            frequency_penalty=0.0,  # Doesn't penalize word repetition
+            presence_penalty=0.0  # Neutral towards new topics
         )
         prompts.append(response.choices[0].message.content)
 
@@ -277,4 +297,3 @@ class TextToImageService(BaseService):
         )
 
         dataset.save()
-
