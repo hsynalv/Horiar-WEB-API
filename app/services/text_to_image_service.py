@@ -227,7 +227,7 @@ class TextToImageService(BaseService):
         execution_time = response.get("executionTime")
 
         if execution_time is not None:
-            cost = float(execution_time) * 0.00031
+            cost = float(execution_time) * 0.00031 * 1e-3
         else:
             cost = 0.0  # veya başka bir varsayılan değer
 
