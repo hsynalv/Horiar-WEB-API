@@ -1,5 +1,6 @@
 from flask_mongoengine import Document
-from mongoengine.fields import StringField, IntField, FloatField, DateTimeField
+from mongoengine.fields import StringField, IntField, FloatField, DateTimeField, DecimalField
+
 
 class TextToImage(Document):
     discord_id = StringField(required=False)
@@ -13,7 +14,7 @@ class TextToImage(Document):
     prompt_fix = StringField()
     resolution = StringField()
     image_url = StringField()
-    cost = FloatField()
+    cost = DecimalField(precision=20, rounding='ROUND_HALF_UP', required=False)
     execution_time = IntField()
     source = StringField()
     user_id = StringField()
