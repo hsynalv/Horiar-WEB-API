@@ -1,4 +1,4 @@
-from mongoengine.fields import StringField, DateTimeField
+from mongoengine.fields import StringField, DateTimeField, BooleanField
 from datetime import datetime
 from flask_mongoengine import Document
 import pytz
@@ -9,6 +9,7 @@ class ImageRequest(Document):
     prompt = StringField(required=True)
     image = StringField(required=True)
     request_time = DateTimeField(default=datetime.utcnow)
+    consistent = BooleanField(default=False)
 
     meta = {'collection': 'image_requests'}
 
@@ -19,5 +20,6 @@ class ImageRequest(Document):
             "username": self.username,
             "prompt": self.prompt,
             "image": self.image,
-            "request_time": self.request_time
+            "request_time": self.request_time,
+            "consistent":self.consistent
         }

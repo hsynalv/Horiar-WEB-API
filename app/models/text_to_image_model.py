@@ -1,5 +1,5 @@
 from flask_mongoengine import Document
-from mongoengine.fields import StringField, IntField, FloatField, DateTimeField, DecimalField
+from mongoengine.fields import StringField, IntField, FloatField, DateTimeField, DecimalField, BooleanField
 
 
 class TextToImage(Document):
@@ -19,6 +19,7 @@ class TextToImage(Document):
     source = StringField()
     user_id = StringField()
     username = StringField()
+    consistent = BooleanField(default=False)
 
     meta = {'collection': 'text_to_image'}
 
@@ -40,5 +41,6 @@ class TextToImage(Document):
             "execution_time": self.execution_time,
             "source": self.source,
             "user_id": self.user_id,
-            "username": self.username
+            "username": self.username,
+            "consistent":self.consistent
         }

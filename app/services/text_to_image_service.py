@@ -142,7 +142,7 @@ class TextToImageService(BaseService):
     }
 
     @staticmethod
-    def update_workflow_with_prompt(path, prompt, model_type, resolution):
+    def update_workflow_with_prompt(path, prompt, model_type, resolution, randomSeed):
         """
         workflow.json dosyasını okur ve verilen prompt ile günceller.
         """
@@ -152,8 +152,11 @@ class TextToImageService(BaseService):
         # JSON verisinde gerekli değişiklikleri yap
         workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = prompt[0]
         workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = prompt[1]
-        workflow_data["input"]["workflow"]["112"]["inputs"]["noise_seed"] = random.randint(10 ** 14, 10 ** 15 - 1)
-
+        if(randomSeed == True):
+            print("seed değişti")
+            workflow_data["input"]["workflow"]["112"]["inputs"]["noise_seed"] = random.randint(10 ** 14, 10 ** 15 - 1)
+        else:
+            print("seed değişmedi")
         if model_type:
             print(model_type)
             if model_type == "normal":
@@ -171,7 +174,7 @@ class TextToImageService(BaseService):
         return workflow_data
 
     @staticmethod
-    def generate_image_directly(app, prompt, model_type, resolution, payload):
+    def generate_image_directly_fixed_seed(app, prompt, model_type, resolution, payload):
         workflow_path = os.path.join(os.getcwd(), 'app/workflows/schnell_promptfix.json')
 
         """
@@ -183,7 +186,7 @@ class TextToImageService(BaseService):
 
         # workflow.json dosyasını güncelle
         updated_workflow = TextToImageService.update_workflow_with_prompt(workflow_path, newPrompts, model_type,
-                                                                          resolution)
+                                                                          resolution, False)
         seed = updated_workflow["input"]["workflow"]["112"]["inputs"]["noise_seed"]
         # Uygulama bağlamı içinde ayarları çek
         with app.app_context():
@@ -213,13 +216,61 @@ class TextToImageService(BaseService):
                 # API yanıtını veritabanına kaydet
                 user_id = payload["sub"]
                 username = payload["username"]
-                TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution)
+                TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, True)
                 return result  # Yanıtı JSON olarak döndür
             else:
                 response.raise_for_status()  # Bi
 
     @staticmethod
-    def save_request_to_db(user_id, username, prompt, response, seed, model_type, resolution):
+    def generate_image_directly(app, prompt, model_type, resolution, payload):
+        workflow_path = os.path.join(os.getcwd(), 'app/workflows/schnell_promptfix.json')
+
+        """
+        nsfw_flag = openai.moderations.create(input=prompt).results[0].flagged
+        if nsfw_flag:
+            return jsonify({"warning: This prompt violates our safety policy"}), 404
+        """
+        newPrompts = TextToImageService.promptEnhance(prompt)
+
+        # workflow.json dosyasını güncelle
+        updated_workflow = TextToImageService.update_workflow_with_prompt(workflow_path, newPrompts, model_type,
+                                                                          resolution, True)
+        seed = updated_workflow["input"]["workflow"]["112"]["inputs"]["noise_seed"]
+        # Uygulama bağlamı içinde ayarları çek
+        with app.app_context():
+            runpod_url = app.config['RUNPOD_URL']
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {app.config['RUNPOD_API_KEY']}",
+            }
+
+            try:
+                # RunPod API'sine POST isteği gönderme
+                response = requests.post(runpod_url, headers=headers, data=json.dumps(updated_workflow), timeout=60)
+            except Timeout:
+                logging.error("RunPod isteği zaman aşımına uğradı!")
+                return {"message": "RunPod isteği zaman aşımına uğradı."}, 500
+            except ConnectionError:
+                logging.error("RunPod bağlantı hatası!")
+                return {"message": "RunPod bağlantı hatası."}, 500
+            except RequestException as e:
+                logging.error(f"RunPod isteğinde bir hata oluştu: {str(e)}")
+                return {"message": f"RunPod isteğinde bir hata oluştu: {str(e)}"}, 500
+
+            # Eğer istek başarılı olduysa yanıtı döndür
+            if response.status_code == 200:
+                result = response.json()
+                message = result.get("output", {}).get("message")
+                # API yanıtını veritabanına kaydet
+                user_id = payload["sub"]
+                username = payload["username"]
+                TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, False)
+                return result  # Yanıtı JSON olarak döndür
+            else:
+                response.raise_for_status()  # Bi
+
+    @staticmethod
+    def save_request_to_db(user_id, username, prompt, response, seed, model_type, resolution, randomSeed):
         """
         Kullanıcı isteğini veritabanına kaydeder.
         """
@@ -244,7 +295,8 @@ class TextToImageService(BaseService):
             execution_time=execution_time,
             source="web",
             user_id=user_id,
-            username=username
+            username=username,
+            consistent=randomSeed
         )
         text_to_image_record.save()
 
@@ -253,7 +305,8 @@ class TextToImageService(BaseService):
             user_id=user_id,
             username=username,
             prompt=prompt,
-            image=response.get("output", {}).get("message")
+            image=response.get("output", {}).get("message"),
+            consistent=randomSeed
         )
         image_request.save()
 
@@ -262,7 +315,14 @@ class TextToImageService(BaseService):
         """
         Veritabanından kullanıcı ID'sine göre istekleri getirir.
         """
-        return ImageRequest.objects(user_id=user_id).order_by('-request_time').all()
+        return ImageRequest.objects(user_id=user_id, consistent=False).order_by('-request_time').all()
+
+    @staticmethod
+    def get_requests_by_user_id_consistent(user_id):
+        """
+        Veritabanından kullanıcı ID'sine göre istekleri getirir.
+        """
+        return ImageRequest.objects(user_id=user_id,consistent=True).order_by('-request_time').all()
 
     def promptEnhance(text):
         prompts = []
