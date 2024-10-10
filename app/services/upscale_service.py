@@ -81,7 +81,6 @@ class UpscaleService(BaseService):
             else:
                 response.raise_for_status()
 
-
     @staticmethod
     def get_upscale_request_by_userid(user_id):
         """

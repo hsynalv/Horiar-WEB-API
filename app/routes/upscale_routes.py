@@ -56,6 +56,24 @@ def get_upscale_by_user(user_id):
         # Hata durumunda hata mesajı döndür
         return jsonify({"error": str(e)}), 500
 
+@upscale_bp.route('/enhance/request/<upscale_id>', methods=['GET'])
+@jwt_required(pass_payload=False)
+def get_upscale_by_id(upscale_id):
+    """
+    Belirtilen ID'ye göre tek bir upscale talebini getirir.
+    """
+    try:
+        # ID'ye göre tek bir upscale talebini al
+        request = UpscaleService.get_by_id(upscale_id)
+
+        if request:
+            return jsonify(request.to_dict()), 200
+        else:
+            return jsonify({"error": "Upscale request not found"}), 404
+
+    except Exception as e:
+        # Hata durumunda hata mesajı döndür
+        return jsonify({"error": str(e)}), 500
 
 @upscale_bp.route('/upscales', methods=['GET'])
 def get_all_upscales():
