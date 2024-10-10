@@ -1,0 +1,257 @@
+{
+  "input": {
+    "workflow":
+    {
+  "5": {
+    "inputs": {
+      "use_tiled_vae": true,
+      "encoder_tile_size": 1024,
+      "decoder_tile_size": 1024,
+      "encoder_dtype": "auto",
+      "SUPIR_VAE": [
+        "21",
+        1
+      ],
+      "image": [
+        "13",
+        0
+      ]
+    },
+    "class_type": "SUPIR_first_stage",
+    "_meta": {
+      "title": "SUPIR First Stage (Denoiser)"
+    }
+  },
+  "7": {
+    "inputs": {
+      "seed": [
+        "29",
+        0
+      ],
+      "steps": 10,
+      "cfg_scale_start": 2,
+      "cfg_scale_end": 1.5,
+      "EDM_s_churn": 5,
+      "s_noise": 1.002,
+      "DPMPP_eta": 1,
+      "control_scale_start": 1,
+      "control_scale_end": 0.9,
+      "restore_cfg": 1,
+      "keep_model_loaded": false,
+      "sampler": "RestoreDPMPP2MSampler",
+      "sampler_tile_size": 1024,
+      "sampler_tile_stride": 512,
+      "SUPIR_model": [
+        "21",
+        0
+      ],
+      "latents": [
+        "11",
+        0
+      ],
+      "positive": [
+        "9",
+        0
+      ],
+      "negative": [
+        "9",
+        1
+      ]
+    },
+    "class_type": "SUPIR_sample",
+    "_meta": {
+      "title": "SUPIR Sampler"
+    }
+  },
+  "9": {
+    "inputs": {
+      "positive_prompt": "high quality, detailed, photograph",
+      "negative_prompt": "bad quality, blurry, messy",
+      "speak_and_recognation": true,
+      "SUPIR_model": [
+        "21",
+        0
+      ],
+      "latents": [
+        "5",
+        2
+      ]
+    },
+    "class_type": "SUPIR_conditioner",
+    "_meta": {
+      "title": "SUPIR Conditioner"
+    }
+  },
+  "10": {
+    "inputs": {
+      "use_tiled_vae": true,
+      "decoder_tile_size": 1024,
+      "SUPIR_VAE": [
+        "21",
+        1
+      ],
+      "latents": [
+        "7",
+        0
+      ]
+    },
+    "class_type": "SUPIR_decode",
+    "_meta": {
+      "title": "SUPIR Decode"
+    }
+  },
+  "11": {
+    "inputs": {
+      "use_tiled_vae": true,
+      "encoder_tile_size": 1024,
+      "encoder_dtype": "auto",
+      "SUPIR_VAE": [
+        "5",
+        0
+      ],
+      "image": [
+        "5",
+        1
+      ]
+    },
+    "class_type": "SUPIR_encode",
+    "_meta": {
+      "title": "SUPIR Encode"
+    }
+  },
+  "13": {
+        "inputs": {
+          "width": 2000,
+          "height": 2000,
+          "interpolation": "lanczos",
+          "method": "keep proportion",
+          "condition": "always",
+          "multiple_of": 32,
+          "image": [
+            "41",
+            0
+          ]
+        },
+        "class_type": "ImageResize+",
+        "_meta": {
+          "title": "🔧 Image Resize"
+        }
+      },
+  "14": {
+    "inputs": {
+      "method": "mkl",
+      "strength": 1,
+      "image_ref": [
+        "41",
+        0
+      ],
+      "image_target": [
+        "10",
+        0
+      ]
+    },
+    "class_type": "ColorMatch",
+    "_meta": {
+      "title": "Color Match"
+    }
+  },
+  "21": {
+    "inputs": {
+      "supir_model": "SUPIR-v0Q.ckpt",
+      "fp8_unet": false,
+      "diffusion_dtype": "auto",
+      "high_vram": false,
+      "model": [
+        "22",
+        0
+      ],
+      "clip": [
+        "22",
+        1
+      ],
+      "vae": [
+        "22",
+        2
+      ]
+    },
+    "class_type": "SUPIR_model_loader_v2",
+    "_meta": {
+      "title": "SUPIR Model Loader (v2)"
+    }
+  },
+  "22": {
+    "inputs": {
+      "ckpt_name": "juggernautXL_v9Rdphoto2Lightning.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "23": {
+    "inputs": {
+      "input": [
+        "13",
+        1
+      ],
+      "output": ""
+    },
+    "class_type": "Display Int (rgthree)",
+    "_meta": {
+      "title": "Display Int (rgthree)"
+    }
+  },
+  "24": {
+    "inputs": {
+      "input": [
+        "13",
+        2
+      ],
+      "output": ""
+    },
+    "class_type": "Display Int (rgthree)",
+    "_meta": {
+      "title": "Display Int (rgthree)"
+    }
+  },
+  "29": {
+    "inputs": {
+      "seed": -1
+    },
+    "class_type": "Seed (rgthree)",
+    "_meta": {
+      "title": "Seed (rgthree)"
+    }
+  },
+  "41": {
+        "inputs": {
+          "image": "example.png",
+          "upload": "image"
+        },
+        "class_type": "LoadImage",
+        "_meta": {
+          "title": "Load Image"
+        }
+      },
+  "42": {
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "14",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  }
+},
+    "images": [
+      {
+        "name": "example.png",
+        "image": ""
+      }
+    ]
+  }
+}

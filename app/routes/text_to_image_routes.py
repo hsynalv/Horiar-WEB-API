@@ -23,7 +23,7 @@ def generate_image_direct(payload):
 
     try:
         # Text to image işlemini kuyruk kullanmadan doğrudan yap
-        result = TextToImageService.generate_image_directly(current_app._get_current_object(), prompt, model_type, resolution,payload)
+        result = TextToImageService.generate_image_directly(current_app._get_current_object(), prompt, model_type, resolution, payload)
         # Eğer result JSON değilse, burada hata olabilir
         return jsonify(result), 200
     except Exception as e:
@@ -77,7 +77,6 @@ def get_requests_by_user(user_id):
 @text_to_image_bp.route('/requests/consistent/<user_id>', methods=['GET'])
 @jwt_required(pass_payload=False)
 def get_requests_by_user_consistent(user_id):
-    print("Consistent image")
     """
     JWT'den alınan kullanıcı ID'sine göre tüm istekleri döndürür.
     """

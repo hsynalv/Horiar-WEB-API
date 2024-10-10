@@ -266,7 +266,7 @@ class TextToImageService(BaseService):
                 TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, False)
                 return result  # Yanıtı JSON olarak döndür
             else:
-                response.raise_for_status()  # Bi
+                response.raise_for_status()
 
     @staticmethod
     def save_request_to_db(user_id, username, prompt, response, seed, model_type, resolution, randomSeed):
