@@ -174,7 +174,7 @@ class TextToImageService(BaseService):
 
     @staticmethod
     def generate_image_directly_fixed_seed(app, prompt, model_type, resolution, payload):
-        workflow_path = os.path.join(os.getcwd(), 'app/workflows/schnell_promptfix.json')
+        workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_promptfix.json')
 
         """
         nsfw_flag = openai.moderations.create(input=prompt).results[0].flagged
@@ -222,7 +222,7 @@ class TextToImageService(BaseService):
 
     @staticmethod
     def generate_image_directly(app, prompt, model_type, resolution, payload):
-        workflow_path = os.path.join(os.getcwd(), 'app/workflows/schnell_promptfix.json')
+        workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_promptfix.json')
 
         """
         nsfw_flag = openai.moderations.create(input=prompt).results[0].flagged
