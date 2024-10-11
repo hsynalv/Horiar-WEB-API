@@ -237,7 +237,7 @@ class PaymentService:
             try:
                 # Veritabanına kaydet
                 subscription.save()
-                # ProvisionService.delete(provision._id)
+                provision.delete()
                 print(f"Subscription created for user {provision.username} with merchant_oid {merchant_oid}")
                 return True
             except Exception as e:
