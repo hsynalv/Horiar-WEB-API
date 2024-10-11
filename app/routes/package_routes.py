@@ -12,7 +12,7 @@ def add_package():
     data = request.json
     try:
         # Gerekli alanları kontrol ediyoruz ve eksikse uygun hata mesajı döndürüyoruz
-        required_fields = ["title", "monthly_original_price", "yearly_original_price", "features"]
+        required_fields = ["title", "monthly_original_price", "yearly_original_price", "features", "credits"]
         for field in required_fields:
             if not data.get(field):
                 return jsonify({"message": f"Missing required field: {field}"}), 400

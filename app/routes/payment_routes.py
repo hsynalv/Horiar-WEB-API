@@ -34,35 +34,9 @@ def callback_ok():
     logging.info("callback fonksiyonuna girildi")
     post = request.form
 
-    # API Entegrasyon Bilgileri
-    merchant_key = b'tPXEJcsryeF34ER5'
-    merchant_salt = 'bS8chedC5bDcLC7s'
+    result = PaymentService.callback_ok_funciton(current_app._get_current_object(), post)
 
-    # POST değerleri ile hash oluştur.
-    hash_str = post['merchant_oid'] + merchant_salt + post['status'] + post['total_amount']
-    hash = base64.b64encode(hmac.new(merchant_key, hash_str.encode(), hashlib.sha256).digest()).decode()
-    logging.info("hash çıkartıldı")
-
-    # Oluşturulan hash'i, paytr'dan gelen post içindeki hash ile karşılaştır
-    if hash != post['hash']:
-        logging.info("hash geçersiz")
-        return 'PAYTR notification failed: bad hash', 400  # Bad Request
-
-    # Siparişin durumunu kontrol et
-    merchant_oid = post['merchant_oid']
-    status = post['status']
-
-    # Burada siparişi veritabanından sorgulayıp onaylayabilir veya iptal edebilirsiniz.
-    if status == 'success':  # Ödeme Onaylandı
-        # Siparişi onaylayın
-        print(f"Order {merchant_oid} has been approved.")
-        logging.info("Order {merchant_oid} has been approved.")
-        # Müşteriye bildirim yapabilirsiniz (SMS, e-posta vb.)
-        # Güncel tutarı post['total_amount'] değerinden alın.
+    if result:  # Ödeme Onaylandı
+        return 'OK', 200  # OK
     else:  # Ödemeye Onay Verilmedi
-        # Siparişi iptal edin
-        logging.info("Order {merchant_oid} has been declined.")
-        print(f"Order {merchant_oid} has been canceled. Reason: {post.get('failed_reason_msg', 'Unknown reason')}")
-
-    # Bildirimin alındığını PayTR sistemine bildir.
-    return 'OK', 200  # OK
+        return '', 404

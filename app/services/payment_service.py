@@ -5,11 +5,15 @@ import logging
 import random
 import time
 import hashlib
+from datetime import timedelta, datetime
 
 import requests
 
 from app.models.provision_model import Provision
+from app.models.subscription_model import Subscription
 from app.services.package_service import PackageService
+from app.services.provision_service import ProvisionService
+from app.services.subscription_service import SubscriptionService
 from app.services.user_service import UserService
 
 
@@ -83,7 +87,7 @@ class PaymentService:
 
             # Yanıttaki "status" alanını kontrol et
             if res.get("status") == "success":
-                resultForSave = PaymentService.save_provision(merchant_oid, user_id, user.username, package_id)
+                resultForSave = PaymentService.save_provision(merchant_oid, user_id, user.username, package_id, is_annual)
                 if resultForSave:
                     return res  # Başarılıysa yanıtı döndür
                 else:
@@ -144,9 +148,8 @@ class PaymentService:
         merchant_oid = f"HORIAR{timestamp}{random_number}PAYTR"
 
         return merchant_oid
-
     @staticmethod
-    def save_provision(merchant_oid, user_id, username, package_id):
+    def save_provision(merchant_oid, user_id, username, package_id, is_annual):
         """
         Verilen bilgileri kullanarak provizyon kaydı oluşturur ve veritabanına kaydeder.
         """
@@ -156,7 +159,8 @@ class PaymentService:
                 merchant_oid=merchant_oid,
                 user_id=user_id,  # ReferenceField'e uygun şekilde user_id ve package_id
                 username=username,
-                package_id=package_id
+                package_id=package_id,
+                is_annual=is_annual
             )
 
             # Veritabanına kaydet
@@ -164,4 +168,82 @@ class PaymentService:
             return True
         except Exception as e:
             logging.error(str(e))
+            return False
+
+    @staticmethod
+    def callback_ok_funciton(app, request):
+        with app.app_context():
+            merchant_key = app.config['MERCHANT_KEY']
+            merchant_salt = app.config['MERCHANT_SALT']
+
+        # POST değerleri ile hash oluştur.
+        hash_str = request['merchant_oid'] + merchant_salt + request['status'] + request['total_amount']
+        hash = base64.b64encode(hmac.new(merchant_key.encode(), hash_str.encode(), hashlib.sha256).digest()).decode()
+        logging.info("hash çıkartıldı")
+
+        # Oluşturulan hash'i, paytr'dan gelen post içindeki hash ile karşılaştır
+        if hash != request['hash']:
+            logging.info("hash geçersiz")
+            return False
+
+        # Siparişin durumunu kontrol et
+        merchant_oid = request['merchant_oid']
+        status = request['status']
+
+        # Burada siparişi veritabanından sorgulayıp onaylayabilir veya iptal edebilirsiniz.
+        if status == 'success':  # Ödeme Onaylandı
+            print(f"Order {merchant_oid} has been approved.")
+            logging.info("Order {merchant_oid} has been approved.")
+
+            result = PaymentService.success_payment(merchant_oid)
+            if result:
+                return True
+            else:
+                return False
+            # Müşteriye bildirim yapabilirsiniz (SMS, e-posta vb.)
+            # Güncel tutarı post['total_amount'] değerinden alın.
+        else:  # Ödemeye Onay Verilmedi
+            # Siparişi iptal edin
+            logging.info("Order {merchant_oid} has been declined.")
+            print(f"Order {merchant_oid} has been canceled. Reason: {request.get('failed_reason_msg', 'Unknown reason')}")
+            return False
+
+    @staticmethod
+    def success_payment(merchant_oid):
+        provision = ProvisionService.get_provision_by_merchant_oid(merchant_oid)
+        package = PackageService.get_package_by_id(provision.package_id)
+
+        # Eğer provision bulunduysa, abonelik kaydı yap
+        if provision:
+            # Abonelik tarihlerini ayarla
+            subscription_date = datetime.utcnow()
+
+            if provision.is_annual:
+                subscription_end_date = subscription_date + timedelta(days=365)  # 30 gün sonrasına bitiş tarihi ekleniyor
+            else:
+                subscription_end_date = subscription_date + timedelta(days=30)  # 30 gün sonrasına bitiş tarihi ekleniyor
+
+            # Yeni Subscription kaydı oluştur
+            subscription = Subscription(
+                subscription_date=subscription_date,
+                subscription_end_date=subscription_end_date,
+                credit_balance=package["credits"],  # Başlangıç için varsayılan kredi bakiyesi
+                discord_id=None,
+                discord_username=None,
+                user_id=provision.user_id,
+                username=provision.username
+            )
+
+            try:
+                # Veritabanına kaydet
+                subscription.save()
+                # ProvisionService.delete(provision._id)
+                print(f"Subscription created for user {provision.username} with merchant_oid {merchant_oid}")
+                return True
+            except Exception as e:
+                print(f"Error saving subscription: {str(e)}")
+                return False
+
+        else:
+            logging.error(f"Provision not found for merchant_oid: {merchant_oid}")
             return False

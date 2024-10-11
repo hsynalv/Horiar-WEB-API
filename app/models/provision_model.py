@@ -1,5 +1,5 @@
 from flask_mongoengine import Document
-from mongoengine import StringField, ReferenceField
+from mongoengine import StringField, BooleanField
 
 from app.models.package_model import Package
 from app.models.user_model import User
@@ -10,6 +10,7 @@ class Provision(Document):
     username = StringField(required=True, max_length=100)
     user_id = StringField(required=True)
     package_id = StringField(required=True)
+    is_annual = BooleanField(default=False)
 
     meta = {'collection': 'provision'}
 
@@ -18,5 +19,6 @@ class Provision(Document):
             "merchant_oid": self.merchant_oid,
             "username": self.username,
             "user_id": str(self.user_id.id),
-            "package_id": str(self.package_id.id)
+            "package_id": str(self.package_id.id),
+            "is_annual": self.is_annual
         }
