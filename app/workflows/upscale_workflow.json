@@ -158,9 +158,9 @@
   "21": {
     "inputs": {
       "supir_model": "SUPIR-v0Q.ckpt",
-      "fp8_unet": false,
+      "fp8_unet": true,
       "diffusion_dtype": "auto",
-      "high_vram": false,
+      "high_vram": true,
       "model": [
         "22",
         0

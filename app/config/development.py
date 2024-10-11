@@ -31,4 +31,9 @@ class DevelopmentConfig:
     AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
     S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
     S3_FOLDER = os.getenv('S3_FOLDER')
+    MERCHANT_ID = os.getenv('MERCHANT_ID')
+    MERCHANT_KEY = os.getenv('MERCHANT_KEY')
+    MERCHANT_SALT = os.getenv('MERCHANT_SALT')
+    MERCHANT_OK_URL = os.getenv('MERCHANT_OK_URL')
+    MERCHANT_FAIL_URL = os.getenv('MERCHANT_FAIL_URL')
 

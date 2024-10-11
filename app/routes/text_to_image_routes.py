@@ -35,9 +35,7 @@ def generate_image_direct(payload):
 @daily_request_limit
 @ban_check
 def generate_image_direct_consistent(payload):
-    print("consistent image")
     data = request.json
-    print(data)
     prompt = data.get('prompt')
     model_type = data.get('model_type', None)
     resolution = data.get('resolution', None)
