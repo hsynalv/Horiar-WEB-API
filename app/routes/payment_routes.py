@@ -1,3 +1,5 @@
+import logging
+
 from flask import Blueprint, current_app, request, jsonify
 from flask_wtf import CSRFProtect
 from app.auth import jwt_required
@@ -27,10 +29,7 @@ def get_token(payload):
 @payment_bp.route('/callback-ok', methods=['POST'])
 @csrf.exempt  # CSRF korumasını devre dışı bırak
 def callback_ok():
-    # Sadece POST isteklerini kabul et
-    if request.method != 'POST':
-        return '', 400  # Bad Request
-
+    logging.info("callback fonksiyonuna girildi")
     post = request.form
 
     # API Entegrasyon Bilgileri
@@ -40,9 +39,11 @@ def callback_ok():
     # POST değerleri ile hash oluştur.
     hash_str = post['merchant_oid'] + merchant_salt + post['status'] + post['total_amount']
     hash = base64.b64encode(hmac.new(merchant_key, hash_str.encode(), hashlib.sha256).digest()).decode()
+    logging.info("hash çıkartıldı")
 
     # Oluşturulan hash'i, paytr'dan gelen post içindeki hash ile karşılaştır
     if hash != post['hash']:
+        logging.info("hash geçersiz")
         return 'PAYTR notification failed: bad hash', 400  # Bad Request
 
     # Siparişin durumunu kontrol et
@@ -53,10 +54,12 @@ def callback_ok():
     if status == 'success':  # Ödeme Onaylandı
         # Siparişi onaylayın
         print(f"Order {merchant_oid} has been approved.")
+        logging.info("Order {merchant_oid} has been approved.")
         # Müşteriye bildirim yapabilirsiniz (SMS, e-posta vb.)
         # Güncel tutarı post['total_amount'] değerinden alın.
     else:  # Ödemeye Onay Verilmedi
         # Siparişi iptal edin
+        logging.info("Order {merchant_oid} has been declined.")
         print(f"Order {merchant_oid} has been canceled. Reason: {post.get('failed_reason_msg', 'Unknown reason')}")
 
     # Bildirimin alındığını PayTR sistemine bildir.
