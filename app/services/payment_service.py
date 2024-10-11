@@ -78,8 +78,6 @@ class PaymentService:
         except requests.exceptions.RequestException as e:
             raise Exception(f"Error occurred during the request: {str(e)}")
 
-
-
     @staticmethod
     def get_country_code_by_ip(ip_address):
         """Kullanıcının IP adresine göre ülke kodunu döndürür"""
