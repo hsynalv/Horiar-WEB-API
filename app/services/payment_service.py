@@ -1,12 +1,14 @@
 import base64
 import hmac
 import json
+import logging
 import random
 import time
 import hashlib
 
 import requests
 
+from app.models.provision_model import Provision
 from app.services.package_service import PackageService
 from app.services.user_service import UserService
 
@@ -14,14 +16,18 @@ from app.services.user_service import UserService
 class PaymentService:
 
     @staticmethod
-    def get_token(app, payload, package_id, user_address, user_phone, user_ip):
+    def get_token(app, payload, package_id, user_address, user_phone, user_ip, is_annual, name_surname):
         user_id = payload['sub']
         user = UserService.get_user_by_id(user_id)
         package = PackageService.get_package_by_id(package_id)
         country_code = PaymentService.get_country_code_by_ip(user_ip) or "TL"
         print(country_code)
 
-        price = package["monthlyOriginalPrice"]
+        if is_annual:
+            price = package.get("yearlySalePrice") or package["yearlyOriginalPrice"]
+        else:
+            price = package.get("monthlySalePrice") or package["monthlyOriginalPrice"]
+
         #currency = 'USD'
         #if country_code == "TR":  # Eğer IP adresi Türkiye'ye aitse, fiyatı TL'ye çevir
         price = PaymentService.convert_to_tl(price)
@@ -61,7 +67,7 @@ class PaymentService:
             'debug_on': debug_on,
             'no_installment': no_installment,
             'max_installment': max_installment,
-            'user_name': user.username,
+            'user_name': name_surname,
             'user_address': user_address,
             'user_phone': user_phone,
             'merchant_ok_url': merchant_ok_url,
@@ -74,7 +80,20 @@ class PaymentService:
         try:
             result = requests.post('https://www.paytr.com/odeme/api/get-token', params, timeout=30)
             res = result.json()
-            return res
+
+            # Yanıttaki "status" alanını kontrol et
+            if res.get("status") == "success":
+                resultForSave = PaymentService.save_provision(merchant_oid, user_id, user.username, package_id)
+                if resultForSave:
+                    return res  # Başarılıysa yanıtı döndür
+                else:
+                    logging.error("Provizyon veritabanına kaydedilemedi")
+                    raise Exception(f"Payment request failed: Provizyon veritabanına kaydedilemedi")
+            else:
+                # Başarısız durumda hata mesajı döndür
+                error_message = res.get("reason", "Unknown error occurred")
+                raise Exception(f"Payment request failed: {error_message}")
+
         except requests.exceptions.RequestException as e:
             raise Exception(f"Error occurred during the request: {str(e)}")
 
@@ -125,3 +144,24 @@ class PaymentService:
         merchant_oid = f"HORIAR{timestamp}{random_number}PAYTR"
 
         return merchant_oid
+
+    @staticmethod
+    def save_provision(merchant_oid, user_id, username, package_id):
+        """
+        Verilen bilgileri kullanarak provizyon kaydı oluşturur ve veritabanına kaydeder.
+        """
+        try:
+            # Yeni bir Provizyon nesnesi oluştur
+            provision = Provision(
+                merchant_oid=merchant_oid,
+                user_id=user_id,  # ReferenceField'e uygun şekilde user_id ve package_id
+                username=username,
+                package_id=package_id
+            )
+
+            # Veritabanına kaydet
+            provision.save()
+            return True
+        except Exception as e:
+            logging.error(str(e))
+            return False

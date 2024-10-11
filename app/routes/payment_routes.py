@@ -22,7 +22,9 @@ def get_token(payload):
     package_id = data.get('package_id')
     user_address = data.get('user_address')
     user_phone = data.get('user_phone')
-    result = PaymentService.get_token(current_app._get_current_object(), payload, package_id, user_address, user_phone, user_ip)
+    is_annual = data.get('is_annual')
+    name_surname = data.get('name_surname')
+    result = PaymentService.get_token(current_app._get_current_object(), payload, package_id, user_address, user_phone, user_ip, is_annual, name_surname)
     return result
 
 
