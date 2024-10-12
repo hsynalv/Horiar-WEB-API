@@ -14,7 +14,7 @@ class PackageService(BaseService):
     @staticmethod
     def add_package(data):
         # Eksik alan kontrolü
-        required_fields = ["title", "monthly_original_price", "yearly_original_price", "features"]
+        required_fields = ["title", "monthly_original_price", "yearly_original_price", "features", "credits"]
         for field in required_fields:
             if not data.get(field):
                 raise ValueError(f"Missing required field: {field}")

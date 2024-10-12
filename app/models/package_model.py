@@ -8,7 +8,7 @@ class Package(Document):
     monthly_sale_price = FloatField(required=False)  # Aylık indirimli fiyat (opsiyonel)
     yearly_sale_price = FloatField(required=False)  # Yıllık indirimli fiyat (opsiyonel)
     features = ListField(StringField(), required=True)  # Özellikler listesi (örneğin: "Limited Generations ( ~150/Month)")
-    credits = ListField(IntField(), required=True)
+    credits = IntField(required=True)
 
     meta = {'collection': 'packages'}
 
