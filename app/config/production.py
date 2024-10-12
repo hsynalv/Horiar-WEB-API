@@ -36,4 +36,6 @@ class ProductionConfig:
     MERCHANT_SALT = os.getenv('MERCHANT_SALT')
     MERCHANT_OK_URL = os.getenv('MERCHANT_OK_URL')
     MERCHANT_FAIL_URL = os.getenv('MERCHANT_FAIL_URL')
+    ENTERPRISE_ENCRYPTION_KEY = os.environ.get('ENTERPRISE_ENCRYPTION_KEY')
+
 

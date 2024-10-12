@@ -1,5 +1,6 @@
 from app.routes.admin_routes import admin_routes_bp
 from app.routes.coupon_routes import coupon_bp
+from app.routes.enterprise.enterprise_routes import enterprise_bp
 from app.routes.mail_routes import mail_bp
 from app.routes.payment_routes import payment_bp
 from app.routes.upscale_routes import upscale_bp
@@ -16,4 +17,5 @@ def register_blueprints(app):
     app.register_blueprint(mail_bp)
     app.register_blueprint(admin_routes_bp, url_prefix='/admin')
     app.register_blueprint(payment_bp, url_prefix='/payment')
+    app.register_blueprint(enterprise_bp, url_prefix='/enterprise')
 

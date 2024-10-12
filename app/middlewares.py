@@ -4,8 +4,10 @@ from datetime import datetime, timedelta
 import pytz
 
 from app.auth import verify_jwt_token
+from app.models.enterprise.enterprise_customer_model import EnterpriseCustomer
 from app.models.image_request_model import ImageRequest  # MongoEngine modelini içe aktar
 from app.models.user_model import User
+from app.services.enterprise.enterprise_service import EnterpriseService
 from app.services.subscription_service import SubscriptionService
 from app.services.user_service import UserService
 
@@ -115,4 +117,21 @@ def check_credits(required_credits: int):
 
         return decorated_function
     return decorator
+
+def api_key_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            api_key = auth_header.split(" ")[1]
+        else:
+            return jsonify({"message": "API key is missing"}), 401
+
+        customer = EnterpriseCustomer.objects(api_key=api_key).first()
+        if not customer:
+            return jsonify({"message": "Invalid API key"}), 401
+
+        # Müşteri objesini route fonksiyonuna parametre olarak geçiyoruz
+        return f(customer, *args, **kwargs)
+    return decorated_function
 
