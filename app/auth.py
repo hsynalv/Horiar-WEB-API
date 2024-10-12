@@ -70,7 +70,6 @@ def verify_jwt_token(token, secret_key):
     except jwt.InvalidTokenError:
         return None  # Geçersiz token
 
-
 def jwt_required(pass_payload=False):
     """
     JWT doğrulaması yapan middleware.

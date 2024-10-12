@@ -6,6 +6,8 @@ import pytz
 from app.auth import verify_jwt_token
 from app.models.image_request_model import ImageRequest  # MongoEngine modelini içe aktar
 from app.models.user_model import User
+from app.services.subscription_service import SubscriptionService
+from app.services.user_service import UserService
 
 
 def daily_request_limit(f):
@@ -74,3 +76,43 @@ def ban_check(f):
         return f(*args, **kwargs)
 
     return decorated_function
+def check_credits(required_credits: int):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # JWT'den kullanıcı bilgilerini alalım
+            auth_header = request.headers.get('Authorization')
+            if not auth_header:
+                return jsonify({"message": "Token is missing!"}), 403
+
+            token = auth_header.split(" ")[1]
+            payload = verify_jwt_token(token, current_app.config['SECRET_KEY'])
+            if payload is None:
+                return jsonify({"message": "Invalid or expired token!"}), 403
+
+            # user_id'yi string formatında alıyoruz
+            user_id = payload.get('sub')
+            user = UserService.get_user_by_id(user_id)
+            subscription = SubscriptionService.get_subscription_by_id(user_id)
+
+            # Fonksiyonu çalıştır
+            result = f(*args, **kwargs)
+
+            # Fonksiyon başarılı bir şekilde çalıştıysa kredi kontrolü yap
+            if isinstance(result, tuple) and result[1] == 200:  # Eğer başarılı bir sonuç dönerse
+                if subscription is None:
+                    if user.base_credits < required_credits:
+                        return jsonify({"message": "Your credit is insufficient. Please buy a pack"}), 403
+                    user.base_credits -= required_credits
+                    user.save()
+                else:
+                    if subscription.credit_balance < required_credits:
+                        return jsonify({"message": "Insufficient credits!"}), 403
+                    subscription.credit_balance -= required_credits
+                    subscription.save()
+
+            return result  # Sonucu döndür
+
+        return decorated_function
+    return decorator
+

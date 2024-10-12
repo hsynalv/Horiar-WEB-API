@@ -3,7 +3,7 @@ import datetime
 from flask import Blueprint, jsonify, request, current_app, make_response, redirect, url_for
 from ..auth import create_jwt_token, jwt_required, oauth
 from app.services.user_service import UserService
-
+from ..services.subscription_service import SubscriptionService
 
 user_bp = Blueprint('user_bp', __name__)
 
@@ -160,6 +160,11 @@ def login():
 
     # Generate JWT token with email and user information
     token = create_jwt_token(str(user.id), user.username, user.email, user.roles, current_app.config['SECRET_KEY'])
+    subscription = SubscriptionService.get_subscription_by_id(str(user.id))
+    if subscription is None:
+        credits = user.base_credits
+    else:
+        credits = subscription.credit_balance
 
     response_data = {
         "message": "Login successful",
@@ -167,6 +172,7 @@ def login():
         "userId": str(user.id),
         "username": user.username,
         "email": user.email,
+        "credits": credits
     }
     return jsonify(response_data), 200
 

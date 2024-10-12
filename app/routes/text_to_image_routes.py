@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
 from app.services.text_to_image_service import TextToImageService
-from app.middlewares import daily_request_limit, ban_check
+from app.middlewares import daily_request_limit, ban_check, check_credits
 
 from ..auth import jwt_required
 import logging
@@ -11,6 +11,7 @@ text_to_image_bp = Blueprint('text_to_image_bp', __name__)
 @jwt_required(pass_payload=True)
 @daily_request_limit
 @ban_check
+#@check_credits(1)
 def generate_image_direct(payload):
     data = request.json
     print(data)
@@ -34,6 +35,7 @@ def generate_image_direct(payload):
 @jwt_required(pass_payload=True)
 @daily_request_limit
 @ban_check
+#@check_credits(1)
 def generate_image_direct_consistent(payload):
     data = request.json
     prompt = data.get('prompt')

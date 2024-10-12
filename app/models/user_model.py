@@ -1,7 +1,9 @@
-from mongoengine.fields import StringField, BooleanField, EmailField, ListField, DateTimeField
+from mongoengine.fields import StringField, BooleanField, EmailField, ListField, DateTimeField, IntField
 from flask_mongoengine import Document
 from flask_login import UserMixin
 import datetime
+
+
 
 class User(UserMixin, Document):
     email = EmailField(required=True, unique=True)
@@ -11,6 +13,7 @@ class User(UserMixin, Document):
     google_username = StringField()
     discord_id = StringField()
     discord_username = StringField()
+    base_credits = IntField(default=15)
 
     # Rol alanı ekliyoruz (örn. 'admin', 'user')
     roles = ListField(StringField(), default=["37fb8744-faf9-4f62-a729-a284c842bf0a"])  # Varsayılan rol 'user'
@@ -38,7 +41,8 @@ class User(UserMixin, Document):
             "is_enabled": self.is_enabled,
             "is_banned": self.is_banned,
             "registration_date": self.registration_date.isoformat() if self.registration_date else None,
-            "last_login_date": self.last_login_date.isoformat() if self.last_login_date else None
+            "last_login_date": self.last_login_date.isoformat() if self.last_login_date else None,
+            "base_credits": self.base_credits,
         }
 
     # Flask-Login için metodlar

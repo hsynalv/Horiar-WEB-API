@@ -3,6 +3,7 @@
 from flask import Blueprint, jsonify, request, current_app
 
 from app.auth import jwt_required
+from app.middlewares import check_credits
 from app.services.upscale_service import UpscaleService
 
 # Blueprint oluşturuluyor
@@ -11,6 +12,7 @@ upscale_bp = Blueprint('upscale_bp', __name__)
 
 @upscale_bp.route('/enhance', methods=['POST'])
 @jwt_required(pass_payload=True)
+#@check_credits(5)
 def create_upscale(payload):
     """
     Yeni bir upscale talebi oluşturur.
