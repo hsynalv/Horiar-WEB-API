@@ -23,7 +23,6 @@ def add_package():
         return jsonify({"message": str(e)}), 400
 
 @package_bp.route('/packages', methods=['GET'])
-@jwt_required(pass_payload=False)
 def get_packages():
     packages = PackageService.get_all_packages()
     return jsonify(packages), 200
