@@ -228,6 +228,7 @@ class EnterpriseService(BaseService):
     def get_all_text_to_images(self, customer):
         # Define the fields you want to include
         fields_to_include = [
+            'id',
             'prompt',
             'image',
             'seed',
@@ -243,6 +244,7 @@ class EnterpriseService(BaseService):
     def get_all_text_to_images_consistent(self, customer):
         # Define the fields you want to include
         fields_to_include = [
+            'id',
             'prompt',
             'image',
             'seed',
@@ -259,13 +261,17 @@ class EnterpriseService(BaseService):
     def get_all_upscale_enhances(self, customer):
         # Define the fields you want to include
         fields_to_include = [
+            'id',
             'image',
             'low_res_url',
             'created_at',
         ]
 
-        requests_list = self.get_company_requests(customer_id=str(customer.id), request_type="upscale",
-                                                  fields=fields_to_include)
+        requests_list = self.get_company_requests(
+            customer_id=str(customer.id),
+            request_type="upscale",
+            fields=fields_to_include
+        )
 
         return requests_list
 
@@ -284,12 +290,97 @@ class EnterpriseService(BaseService):
                 value = getattr(req, field, None)
                 if field == 'id':
                     # Convert ObjectId to string
-                    req_dict['_id'] = str(value)
+                    req_dict['id'] = str(value)
                 elif isinstance(value, datetime.datetime):
                     # Format datetime fields
-                    req_dict[field] = {'$date': value.isoformat()}
+                    req_dict[field] = value.isoformat()
                 else:
                     req_dict[field] = value
             requests_list.append(req_dict)
 
         return requests_list
+
+    def get_one_text_to_image(self, customer, request_id):
+        # Dönmek istediğiniz alanları tanımlayın
+        fields_to_include = [
+            'id',
+            'prompt',
+            'image',
+            'seed',
+            'model_type',
+            'resolution',
+            'created_at',
+        ]
+
+        request = self.get_company_request_by_id(
+            customer_id=str(customer.id),
+            request_type="text-to-image",
+            fields=fields_to_include,
+            request_id=request_id
+        )
+
+        return request
+
+    def get_one_text_to_image_consistent(self, customer, request_id):
+        # Dönmek istediğiniz alanları tanımlayın
+        fields_to_include = [
+            'id',
+            'prompt',
+            'image',
+            'seed',
+            'model_type',
+            'resolution',
+            'created_at',
+        ]
+
+        request = self.get_company_request_by_id(
+            customer_id=str(customer.id),
+            request_type="text-to-image-consistent",
+            fields=fields_to_include,
+            request_id=request_id
+        )
+
+        return request
+
+    def get_one_upscale_enhance(self, customer, request_id):
+        # Dönmek istediğiniz alanları tanımlayın
+        fields_to_include = [
+            'id',
+            'image',
+            'low_res_url',
+            'created_at',
+        ]
+
+        request = self.get_company_request_by_id(
+            customer_id=str(customer.id),
+            request_type="upscale",
+            fields=fields_to_include,
+            request_id=request_id
+        )
+
+        return request
+
+    def get_company_request_by_id(self, customer_id, request_type, fields, request_id):
+        # Veritabanından belirli isteği sorgulayın
+        request = EnterpriseRequest.objects(
+            company_id=customer_id,
+            request_type=request_type,
+            id=request_id
+        ).only(*fields).first()
+
+        if not request:
+            return None  # Veya uygun bir hata mesajı döndürebilirsiniz
+
+        # Sonucu sözlüğe dönüştürün
+        req_dict = {}
+        for field in fields:
+            value = getattr(request, field, None)
+            if field == 'id':
+                # ObjectId'yi string'e çevirin
+                req_dict['id'] = str(value)
+            elif isinstance(value, datetime.datetime):
+                # datetime alanlarını formatlayın
+                req_dict[field] = value.isoformat()
+            else:
+                req_dict[field] = value
+        return req_dict

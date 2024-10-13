@@ -141,9 +141,48 @@ def get_text_to_images_consistent(customer):
     return jsonify(list)
 
 
-@enterprise_bp.route('/upscale-enhances', methods=['GET'])
+@enterprise_bp.route('/upscale-enhance', methods=['GET'])
 @api_key_required
 def get_upscale_enhances(customer):
     service = EnterpriseService()
     list = service.get_all_upscale_enhances(customer)
     return jsonify(list)
+
+@enterprise_bp.route('/text-to-image/<request_id>', methods=['GET'])
+@api_key_required
+def get_one_text_to_image(customer, request_id):
+    service = EnterpriseService()
+    try:
+        request = service.get_one_text_to_image(customer, request_id)
+        if not request:
+            return jsonify({"message": "Request not found"}), 404
+        return jsonify(request), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"message": str(e)}), 500
+
+@enterprise_bp.route('/text-to-image-consistent/<request_id>', methods=['GET'])
+@api_key_required
+def get_one_text_to_images_consistent(customer, request_id):
+    service = EnterpriseService()
+    try:
+        request = service.get_one_text_to_image_consistent(customer, request_id)
+        if not request:
+            return jsonify({"message": "Request not found"}), 404
+        return jsonify(request), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"message": str(e)}), 500
+
+@enterprise_bp.route('/upscale-enhance/<request_id>', methods=['GET'])
+@api_key_required
+def get_one_upscale_enhance(customer, request_id):
+    service = EnterpriseService()
+    try:
+        request = service.get_one_upscale_enhance(customer, request_id)
+        if not request:
+            return jsonify({"message": "Request not found"}), 404
+        return jsonify(request), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"message": str(e)}), 500
