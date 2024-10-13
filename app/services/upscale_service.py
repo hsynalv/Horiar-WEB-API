@@ -23,6 +23,7 @@ class UpscaleService(BaseService):
 
     @staticmethod
     def create_upscale_request(app,low_res_image, payload):
+        logging.info("upscale servis girildi")
         # Parametrelerin varlığını kontrol et
         if not low_res_image:
             raise ValueError("Low resolution image is required.")

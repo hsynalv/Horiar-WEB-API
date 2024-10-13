@@ -1,4 +1,5 @@
 # upscale_routes.py
+import logging
 
 from flask import Blueprint, jsonify, request, current_app
 
@@ -18,6 +19,8 @@ def create_upscale(payload):
     Yeni bir upscale talebi oluşturur.
     Bu rota, front-end'den gelen düşük çözünürlüklü bir resmi alır ve upscale işlemini başlatır.
     """
+    logging.info("upscale route girildi")
+
     try:
         # İmajı request'ten almak
         if 'image' not in request.files:
