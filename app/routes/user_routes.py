@@ -27,7 +27,7 @@ def discord_callback():
             return redirect("https://horiar.com/explore")  # İptal durumunda yönlendirme
         else:
             logging.error(f"Discord login sırasında hata meydana geldi: {error_message}")
-            return redirect("https://horiar.com/explore")
+            return redirect("https://horiar.com")
 
     user_info = discord.get('https://discord.com/api/users/@me').json()
 
@@ -51,7 +51,7 @@ def discord_callback():
     # JWT oluşturmak için kullanıcı bilgilerini kullan
     jwt_token = create_jwt_token(str(user.id), user.username, user.email, user.roles, current_app.config['SECRET_KEY'])
 
-    response = make_response(redirect("https://horiar.com/explore"))
+    response = make_response(redirect("https://horiar.com"))
     response.set_cookie('token', jwt_token, httponly=False, secure=True, samesite='None', domain='.horiar.com')
     response.set_cookie('userId', str(user.id), httponly=False, secure=True, samesite='None', domain='.horiar.com')
     response.set_cookie('sn', user.roles[0], httponly=False, secure=True, samesite='None', domain='.horiar.com')
@@ -79,7 +79,7 @@ def google_callback():
             return redirect("https://horiar.com/explore")  # İptal durumunda yönlendirme
         else:
             logging.error(f"Google login sırasında hata meydana geldi: {error_message}")
-            return redirect("https://horiar.com/explore")
+            return redirect("https://horiar.com")
 
     user_info = google.get('https://www.googleapis.com/oauth2/v1/userinfo').json()
 
@@ -103,7 +103,7 @@ def google_callback():
     # JWT oluşturmak için kullanıcı bilgilerini kullan
     jwt_token = create_jwt_token(str(user.id), user.username, user.email, user.roles, current_app.config['SECRET_KEY'])
 
-    response = make_response(redirect("https://horiar.com/explore"))
+    response = make_response(redirect("https://horiar.com"))
     response.set_cookie('token', jwt_token, httponly=False, secure=True, samesite='None', domain='.horiar.com')
     response.set_cookie('userId', str(user.id), httponly=False, secure=True, samesite='None', domain='.horiar.com')
     response.set_cookie('sn', user.roles[0], httponly=False, secure=True, samesite='None', domain='.horiar.com')
@@ -210,7 +210,7 @@ def connect_google_callback(payload):
     }
     UserService.update_user_by_id(user_id, user_data)
 
-    return redirect("https://horiar.com/explore")
+    return redirect("https://horiar.com")
 
 @user_bp.route('/connect/discord')
 @jwt_required(pass_payload=True)
