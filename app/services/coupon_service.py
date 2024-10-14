@@ -9,26 +9,32 @@ class CouponService(BaseService):
     model = Coupon
 
     @staticmethod
-    def use_coupon(coupon_id, user_id):
-        coupon = Coupon.objects(id=coupon_id).first()
+    def use_coupon(coupon_name, user_id):
+        coupon = Coupon.objects(name=coupon_name).first()
         if not coupon:
             raise NotFoundError("Coupon not found")
+        print("serviste kupon bulundu")
 
         if coupon.usage_count >= coupon.max_usage:
             raise ValidationError("Coupon has reached its maximum usage limit")
 
-        # Kuponu kullanan kullanıcıyı ekle
+        # Kuponu kullanan kullanıcıyı bul
         user = User.objects(id=user_id).first()
+        print("serviste user bulundu")
         if not user:
             raise NotFoundError("User not found")
 
         if user in coupon.used_by:
             raise ValidationError("User has already used this coupon")
 
+        print("serviste kullanım detayı öncesi")
+
         # Kupon kullanım sayısını arttır
         coupon.usage_count += 1
         coupon.used_by.append(user)
         coupon.save()
+
+        print("servis return öncesi")
 
         return coupon.to_dict()
 
