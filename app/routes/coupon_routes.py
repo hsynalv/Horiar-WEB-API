@@ -24,3 +24,19 @@ def use_coupon(payload):  # JWT'den gelen payload'u alıyoruz
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
+@coupon_bp.route('/check-coupon', methods=['POST'])
+@jwt_required(pass_payload=False)
+def check_coupon():
+    try:
+        data = request.json
+        coupon_name = data.get('coupon_name')  # Kupon adını body'den alıyoruz
+
+        if not coupon_name:
+            return jsonify({"message": "Coupon name is required"}), 400
+
+        coupon = CouponService.check_coupon(coupon_name)  # Kuponu kontrol ediyoruz
+        return jsonify({"message": "Coupon found", "coupon": coupon}), 200
+    except ValueError as e:
+        return jsonify({"message": str(e)}), 404
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
