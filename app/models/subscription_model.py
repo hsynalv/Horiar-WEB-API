@@ -1,4 +1,5 @@
-from mongoengine import Document, StringField, DateTimeField, FloatField
+from mongoengine import Document, StringField, DateTimeField, FloatField, IntField
+
 
 class Subscription(Document):
     subscription_date = DateTimeField(required=True)  # Abonelik başlangıç tarihi
@@ -10,6 +11,7 @@ class Subscription(Document):
     username = StringField(required=True)  # Kullanıcı adı
     email = StringField(required=True)
     merchant_oid = StringField(required=True)
+    max_credit_balance = IntField(default=0.0)
 
     meta = {'collection': 'subscriptions'}
 
@@ -24,5 +26,6 @@ class Subscription(Document):
             "user_id": self.user_id,
             "username": self.username,
             "email": self.email,
-            "merchant_oid": self.merchant_oid
+            "merchant_oid": self.merchant_oid,
+            "max_credit_balance": self.max_credit_balance,
         }

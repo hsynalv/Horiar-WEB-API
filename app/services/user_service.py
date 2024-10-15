@@ -141,7 +141,13 @@ class UserService(BaseService):
         subscription = SubscriptionService.get_subscription_by_id(user_id)
 
         if subscription:
-            return {"credit": int(subscription.credit_balance)}
+            return {
+                    "currentCredit": int(subscription.credit_balance),
+                    "maxCredit":int(subscription.max_credit_balance)
+            }
 
         user = UserService.get_user_by_id(user_id)
-        return {"credit": int(user.base_credits)}
+        return {
+                    "currentCredit": int(subscription.credit_balance),
+                    "maxCredit": 15
+        }

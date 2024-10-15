@@ -254,7 +254,8 @@ class PaymentService:
                 user_id=provision.user_id,
                 username=provision.username,
                 merchant_oid=merchant_oid,
-                email=provision.email
+                email=provision.email,
+                max_credit_balance=package["credits"]
             )
 
             try:
