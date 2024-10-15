@@ -64,6 +64,11 @@ class UpscaleService(BaseService):
             if response.status_code == 200:
                 result = response.json()
 
+                message = result.get("output", {}).get("message")
+
+                if message is None:
+                    raise KeyError("An error occurred while generating the image, please try again ")
+
                 # S3'e yükleme işlemi
                 try:
                     low_res_image_url = UpscaleService.upload_image_to_s3(app=app, image_bytes=low_res_image,

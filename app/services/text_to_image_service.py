@@ -212,6 +212,10 @@ class TextToImageService(BaseService):
             if response.status_code == 200:
                 result = response.json()
                 message = result.get("output", {}).get("message")
+
+                if message is None:
+                    raise KeyError("An error occurred while generating the image, please try again ")
+
                 # API yanıtını veritabanına kaydet
                 user_id = payload["sub"]
                 username = payload["username"]
@@ -260,6 +264,10 @@ class TextToImageService(BaseService):
             if response.status_code == 200:
                 result = response.json()
                 message = result.get("output", {}).get("message")
+
+                if message is None:
+                    raise KeyError("An error occurred while generating the image, please try again ")
+
                 # API yanıtını veritabanına kaydet
                 user_id = payload["sub"]
                 username = payload["username"]
