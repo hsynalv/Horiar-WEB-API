@@ -107,7 +107,7 @@ class PaymentService:
 
             # Yanıttaki "status" alanını kontrol et
             if res.get("status") == "success":
-                resultForSave = PaymentService.save_provision(merchant_oid, user_id, user.username, package_id, is_annual)
+                resultForSave = PaymentService.save_provision(merchant_oid, user_id, user.username, package_id, is_annual, email=user.email)
                 if resultForSave:
                     return res  # Başarılıysa yanıtı döndür
                 else:
@@ -169,7 +169,7 @@ class PaymentService:
 
         return merchant_oid
     @staticmethod
-    def save_provision(merchant_oid, user_id, username, package_id, is_annual):
+    def save_provision(merchant_oid, user_id, username, package_id, is_annual, email):
         """
         Verilen bilgileri kullanarak provizyon kaydı oluşturur ve veritabanına kaydeder.
         """
@@ -180,7 +180,8 @@ class PaymentService:
                 user_id=user_id,  # ReferenceField'e uygun şekilde user_id ve package_id
                 username=username,
                 package_id=package_id,
-                is_annual=is_annual
+                is_annual=is_annual,
+                email = email
             )
 
             # Veritabanına kaydet
@@ -251,17 +252,19 @@ class PaymentService:
                 discord_id=None,
                 discord_username=None,
                 user_id=provision.user_id,
-                username=provision.username
+                username=provision.username,
+                merchant_oid=merchant_oid,
+                email=provision.email
             )
 
             try:
                 # Veritabanına kaydet
                 subscription.save()
                 provision.delete()
-                print(f"Subscription created for user {provision.username} with merchant_oid {merchant_oid}")
+                logging.info(f"Subscription created for user {provision.username} with merchant_oid {merchant_oid}")
                 return True
             except Exception as e:
-                print(f"Error saving subscription: {str(e)}")
+                logging.info(f"Error saving subscription: {str(e)}")
                 return False
 
         else:

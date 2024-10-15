@@ -8,6 +8,8 @@ class Subscription(Document):
     discord_username = StringField(required=False)  # Discord kullanıcı adı
     user_id = StringField(required=True)  # Kullanıcı ID'si
     username = StringField(required=True)  # Kullanıcı adı
+    email = StringField(required=True)
+    merchant_oid = StringField(required=True)
 
     meta = {'collection': 'subscriptions'}
 
@@ -20,5 +22,7 @@ class Subscription(Document):
             "discord_id": self.discord_id,
             "discord_username": self.discord_username,
             "user_id": self.user_id,
-            "username": self.username
+            "username": self.username,
+            "email": self.email,
+            "merchant_oid": self.merchant_oid
         }

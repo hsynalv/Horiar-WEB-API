@@ -28,47 +28,6 @@ def get_token(payload):
     result = PaymentService.get_token(current_app._get_current_object(), payload, package_id, user_address, user_phone, user_ip, is_annual, name_surname, coupon_name)
     return result
 
-
-@payment_bp.route('/callback-ok', methods=['POST'])
-@csrf.exempt  # CSRF korumasını devre dışı bırak
-def callback_ok():
-    logging.info("callback ok girildi")
-    # Sadece POST isteklerini kabul et
-    if request.method != 'POST':
-        return '', 400  # Bad Request
-
-    logging.info("method post methodu")
-
-    post = request.form
-    # API Entegrasyon Bilgileri
-    merchant_key = b'tPXEJcsryeF34ER5'
-    merchant_salt = 'bS8chedC5bDcLC7s'
-    # POST değerleri ile hash oluştur.
-    hash_str = post['merchant_oid'] + merchant_salt + post['status'] + post['total_amount']
-    hash = base64.b64encode(hmac.new(merchant_key, hash_str.encode(), hashlib.sha256).digest()).decode()
-
-    logging.info("hash çıkartıldı")
-
-    # Oluşturulan hash'i, paytr'dan gelen post içindeki hash ile karşılaştır
-    if hash != post['hash']:
-        return 'PAYTR notification failed: bad hash', 400  # Bad Request
-    # Siparişin durumunu kontrol et
-    merchant_oid = post['merchant_oid']
-    status = post['status']
-    # Burada siparişi veritabanından sorgulayıp onaylayabilir veya iptal edebilirsiniz.
-    if status == 'success':  # Ödeme Onaylandı
-        # Siparişi onaylayın
-        logging.info(f"Order {merchant_oid} has been approved.")
-        # Müşteriye bildirim yapabilirsiniz (SMS, e-posta vb.)
-        # Güncel tutarı post['total_amount'] değerinden alın.
-    else:  # Ödemeye Onay Verilmedi
-        # Siparişi iptal edin
-        logging.info(f"Order {merchant_oid} has been canceled. Reason: {post.get('failed_reason_msg', 'Unknown reason')}")
-    # Bildirimin alındığını PayTR sistemine bildir.
-    return 'OK', 200  # OK
-
-
-"""
 @payment_bp.route('/callback-ok', methods=['POST'])
 @csrf.exempt  # CSRF korumasını devre dışı bırak
 def callback_ok():
@@ -81,4 +40,3 @@ def callback_ok():
         return 'OK', 200  # OK
     else:  # Ödemeye Onay Verilmedi
         return '', 404
-"""

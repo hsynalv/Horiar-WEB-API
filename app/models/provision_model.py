@@ -11,6 +11,7 @@ class Provision(Document):
     user_id = StringField(required=True)
     package_id = StringField(required=True)
     is_annual = BooleanField(default=False)
+    email = StringField(required=True)
 
     meta = {'collection': 'provision'}
 
@@ -20,5 +21,6 @@ class Provision(Document):
             "username": self.username,
             "user_id": str(self.user_id.id),
             "package_id": str(self.package_id.id),
-            "is_annual": self.is_annual
+            "is_annual": self.is_annual,
+            "email": self.email,
         }
