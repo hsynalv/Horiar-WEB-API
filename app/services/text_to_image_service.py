@@ -197,7 +197,7 @@ class TextToImageService(BaseService):
 
             try:
                 # RunPod API'sine POST isteği gönderme
-                response = requests.post(runpod_url, headers=headers, data=json.dumps(updated_workflow), timeout=60)
+                response = requests.post(runpod_url, headers=headers, data=json.dumps(updated_workflow), timeout=360)
             except Timeout:
                 logging.error("RunPod isteği zaman aşımına uğradı!")
                 return {"message": "RunPod isteği zaman aşımına uğradı."}, 500
@@ -249,7 +249,7 @@ class TextToImageService(BaseService):
 
             try:
                 # RunPod API'sine POST isteği gönderme
-                response = requests.post(runpod_url, headers=headers, data=json.dumps(updated_workflow), timeout=60)
+                response = requests.post(runpod_url, headers=headers, data=json.dumps(updated_workflow), timeout=360)
             except Timeout:
                 logging.error("RunPod isteği zaman aşımına uğradı!")
                 return {"message": "RunPod isteği zaman aşımına uğradı."}, 500
