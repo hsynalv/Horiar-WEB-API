@@ -148,6 +148,6 @@ class UserService(BaseService):
 
         user = UserService.get_user_by_id(user_id)
         return {
-                    "currentCredit": int(subscription.base_credits),
+                    "currentCredit": int(user.base_credits),
                     "maxCredit": 15
         }
