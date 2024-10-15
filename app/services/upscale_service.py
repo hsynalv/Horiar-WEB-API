@@ -67,7 +67,7 @@ class UpscaleService(BaseService):
                 message = result.get("output", {}).get("message")
 
                 if message is None:
-                    raise KeyError("An error occurred while generating the image, please try again ")
+                    raise KeyError("An error occurred while upscaling the image, please try again.")
 
                 # S3'e yükleme işlemi
                 try:
