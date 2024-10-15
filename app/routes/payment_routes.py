@@ -24,7 +24,8 @@ def get_token(payload):
     user_phone = data.get('user_phone')
     is_annual = data.get('is_annual')
     name_surname = data.get('name_surname')
-    result = PaymentService.get_token(current_app._get_current_object(), payload, package_id, user_address, user_phone, user_ip, is_annual, name_surname)
+    coupon_name = data.get('coupon_name')
+    result = PaymentService.get_token(current_app._get_current_object(), payload, package_id, user_address, user_phone, user_ip, is_annual, name_surname, coupon_name)
     return result
 
 

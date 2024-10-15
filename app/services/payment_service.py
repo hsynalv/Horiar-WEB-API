@@ -11,6 +11,7 @@ import requests
 
 from app.models.provision_model import Provision
 from app.models.subscription_model import Subscription
+from app.services.coupon_service import CouponService
 from app.services.package_service import PackageService
 from app.services.provision_service import ProvisionService
 from app.services.subscription_service import SubscriptionService
@@ -20,7 +21,7 @@ from app.services.user_service import UserService
 class PaymentService:
 
     @staticmethod
-    def get_token(app, payload, package_id, user_address, user_phone, user_ip, is_annual, name_surname):
+    def get_token(app, payload, package_id, user_address, user_phone, user_ip, is_annual, name_surname, coupon_name):
         user_id = payload['sub']
         user = UserService.get_user_by_id(user_id)
         package = PackageService.get_package_by_id(package_id)
@@ -36,8 +37,27 @@ class PaymentService:
         #if country_code == "TR":  # Eğer IP adresi Türkiye'ye aitse, fiyatı TL'ye çevir
         price = PaymentService.convert_to_tl(price)
         currency = 'TL'
-        price = int(price * 100)
         print(f"price {price}")
+
+        if coupon_name:
+            # Kuponu al
+            coupon = CouponService.check_coupon(coupon_name)
+
+            if not coupon:
+                raise ValueError("Invalid coupon code")  # Kupon bulunamazsa hata fırlatıyoruz
+
+            CouponService.use_coupon(coupon_name, user_id)
+
+            # Kuponun indirim oranını alıyoruz
+            discount_rate = coupon.get("discount_percentage") or 0
+
+            # İndirimi fiyat üzerinden uyguluyoruz
+            discount_amount = (price * discount_rate) / 100
+            price -= discount_amount  # İndirimi fiyat üzerinden düşüyoruz
+
+            print(f"Discount applied: {discount_amount}, New price: {price}")
+        price = int(price * 100)
+        print(f"gönderilmeden önce price: {price}")
 
         with app.app_context():
             merchant_id = app.config['MERCHANT_ID']
@@ -47,7 +67,7 @@ class PaymentService:
             merchant_fail_url = app.config['MERCHANT_FAIL_URL']
 
         basket = base64.b64encode(json.dumps([[package["title"], str(price), 1],]).encode())
-        user_ip = '104.28.216.174'
+        user_ip = user_ip
         timeout_limit = '30' # İşlem zaman aşımı süresi - dakika cinsinden
         debug_on = '1' # Hata mesajlarının ekrana basılması için entegrasyon ve test sürecinde 1 olarak bırakın. Daha sonra 0 yapabilirsiniz.
         test_mode = '1' # Mağaza canlı modda iken test işlem yapmak için 1 olarak gönderilebilir.
