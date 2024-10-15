@@ -283,3 +283,9 @@ def update_user_status():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@user_bp.route('/get-user-credit', methods=['GET'])
+@jwt_required(pass_payload=True)
+def get_user_credit(payload):
+    user_id = payload['sub']
+    credit = UserService.get_user_credit(user_id)
+    return credit

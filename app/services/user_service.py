@@ -7,6 +7,7 @@ import re
 import datetime
 
 from app.services.base_service import BaseService
+from app.services.subscription_service import SubscriptionService
 
 
 class UserService(BaseService):
@@ -134,3 +135,13 @@ class UserService(BaseService):
         Tüm kullanıcıları döndürür.
         """
         return User.objects().all()
+
+    @staticmethod
+    def get_user_credit(user_id):
+        subscription = SubscriptionService.get_subscription_by_id(user_id)
+
+        if subscription:
+            return {"credit": int(subscription.credit_balance)}
+
+        user = UserService.get_user_by_id(user_id)
+        return {"credit": int(user.base_credits)}
