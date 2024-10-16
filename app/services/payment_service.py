@@ -67,7 +67,6 @@ class PaymentService:
             merchant_fail_url = app.config['MERCHANT_FAIL_URL']
 
         basket = base64.b64encode(json.dumps([[package["title"], str(price), 1],]).encode())
-        user_ip = user_ip
         timeout_limit = '30' # İşlem zaman aşımı süresi - dakika cinsinden
         debug_on = '1' # Hata mesajlarının ekrana basılması için entegrasyon ve test sürecinde 1 olarak bırakın. Daha sonra 0 yapabilirsiniz.
         test_mode = '1' # Mağaza canlı modda iken test işlem yapmak için 1 olarak gönderilebilir.

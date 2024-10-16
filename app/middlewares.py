@@ -97,19 +97,23 @@ def check_credits(required_credits: int):
             user = UserService.get_user_by_id(user_id)
             subscription = SubscriptionService.get_subscription_by_id(user_id)
 
-            # Fonksiyonu çalıştır
+            # Fonksiyonu çalıştırmadan önce kredi kontrolü yap
+            if subscription is None:
+                if user.base_credits < required_credits:
+                    return jsonify({"message": "Your credit is insufficient. Please buy a pack"}), 403
+            else:
+                if subscription.credit_balance < required_credits:
+                    return jsonify({"message": "Insufficient credits!"}), 403
+
+            # Kredi yeterliyse, fonksiyonu çalıştır
             result = f(*args, **kwargs)
 
-            # Fonksiyon başarılı bir şekilde çalıştıysa kredi kontrolü yap
+            # Fonksiyon başarılı bir şekilde çalıştıysa kredi azaltma işlemini yap
             if isinstance(result, tuple) and result[1] == 200:  # Eğer başarılı bir sonuç dönerse
                 if subscription is None:
-                    if user.base_credits < required_credits:
-                        return jsonify({"message": "Your credit is insufficient. Please buy a pack"}), 403
                     user.base_credits -= required_credits
                     user.save()
                 else:
-                    if subscription.credit_balance < required_credits:
-                        return jsonify({"message": "Insufficient credits!"}), 403
                     subscription.credit_balance -= required_credits
                     subscription.save()
 
@@ -117,6 +121,7 @@ def check_credits(required_credits: int):
 
         return decorated_function
     return decorator
+
 
 def api_key_required(f):
     @wraps(f)
