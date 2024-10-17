@@ -1,11 +1,7 @@
 import json
-import logging
 import os
-import requests
 import datetime
-from requests.exceptions import Timeout, ConnectionError, RequestException
 
-from flask import current_app
 from app.models.enterprise.enterprise_customer_model import EnterpriseCustomer
 from app.models.enterprise.enterprise_request_model import EnterpriseRequest
 from app.services.base_service import BaseService

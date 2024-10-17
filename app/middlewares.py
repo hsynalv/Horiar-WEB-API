@@ -1,3 +1,4 @@
+import logging
 from functools import wraps
 from flask import request, jsonify, current_app
 from datetime import datetime, timedelta
@@ -110,12 +111,17 @@ def check_credits(required_credits: int):
 
             # Fonksiyon başarılı bir şekilde çalıştıysa kredi azaltma işlemini yap
             if isinstance(result, tuple) and result[1] == 200:  # Eğer başarılı bir sonuç dönerse
-                if subscription is None:
-                    user.base_credits -= required_credits
-                    user.save()
+
+                if "6a1b395f-0e6f-4096-add2-364fa5f15eac" in user.roles:
+                    logging.info("kullanıcı creator")
+                    print("kullanıcı creator")
                 else:
-                    subscription.credit_balance -= required_credits
-                    subscription.save()
+                    if subscription is None:
+                        user.base_credits -= required_credits
+                        user.save()
+                    else:
+                        subscription.credit_balance -= required_credits
+                        subscription.save()
 
             return result  # Sonucu döndür
 
