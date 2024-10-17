@@ -13,6 +13,7 @@ import secrets
 
 from app.services.text_to_image_service import TextToImageService
 from app.services.upscale_service import UpscaleService
+from app.utils.runpod_requets import send_runpod_request
 
 
 class EnterpriseService(BaseService):
@@ -71,39 +72,16 @@ class EnterpriseService(BaseService):
         updated_workflow = TextToImageService.update_workflow_with_prompt(workflow_path, newPrompts, model_type,
                                                                           resolution, True)
         seed = updated_workflow["input"]["workflow"]["112"]["inputs"]["noise_seed"]
-        # Uygulama bağlamı içinde ayarları çek
-        with app.app_context():
-            runpod_url = app.config['RUNPOD_URL']
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {app.config['RUNPOD_API_KEY']}",
-            }
 
-            try:
-                # RunPod API'sine POST isteği gönderme
-                response = requests.post(runpod_url, headers=headers, data=json.dumps(updated_workflow), timeout=60)
-            except Timeout:
-                logging.error("RunPod isteği zaman aşımına uğradı!")
-                return {"message": "RunPod isteği zaman aşımına uğradı."}, 500
-            except ConnectionError:
-                logging.error("RunPod bağlantı hatası!")
-                return {"message": "RunPod bağlantı hatası."}, 500
-            except RequestException as e:
-                logging.error(f"RunPod isteğinde bir hata oluştu: {str(e)}")
-                return {"message": f"RunPod isteğinde bir hata oluştu: {str(e)}"}, 500
+        result, status_code = send_runpod_request(app=app, user_id=str(customer.id), username=f"Enterprise: {customer.company_name}",
+                                                  data=json.dumps(updated_workflow), runpod_url="RUNPOD_URL",
+                                                  timeout=360)
 
-            # Eğer istek başarılı olduysa yanıtı döndür
-            if response.status_code == 200:
-                result = response.json()
-                message = result.get("output", {}).get("message")
+        # API yanıtını veritabanına kaydet
+        self.save_request_to_db(customer_id=str(customer.id), company_name=customer.company_name, request_type="text-to-image-consistent",
+                                prompt=prompt, response=result, low_res_url=None, seed=str(seed), model_type=model_type, resolution=resolution)
 
-                # API yanıtını veritabanına kaydet
-                self.save_request_to_db(customer_id=str(customer.id), company_name=customer.company_name, request_type="text-to-image",
-                                        prompt=prompt, result=str(message), low_res_url=None, seed=str(seed),
-                                        model_type=model_type, resolution=resolution)
-                return result  # Yanıtı JSON olarak döndür
-            else:
-                response.raise_for_status()
+        return result  # Yanıtı JSON olarak döndür
 
     def text_to_image_consistent(self, app, prompt, model_type, resolution, customer):
         workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_promptfix.json')
@@ -120,36 +98,15 @@ class EnterpriseService(BaseService):
                                                                           resolution, False)
         seed = updated_workflow["input"]["workflow"]["112"]["inputs"]["noise_seed"]
         # Uygulama bağlamı içinde ayarları çek
-        with app.app_context():
-            runpod_url = app.config['RUNPOD_URL']
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {app.config['RUNPOD_API_KEY']}",
-            }
 
-            try:
-                # RunPod API'sine POST isteği gönderme
-                response = requests.post(runpod_url, headers=headers, data=json.dumps(updated_workflow), timeout=60)
-            except Timeout:
-                logging.error("RunPod isteği zaman aşımına uğradı!")
-                return {"message": "RunPod isteği zaman aşımına uğradı."}, 500
-            except ConnectionError:
-                logging.error("RunPod bağlantı hatası!")
-                return {"message": "RunPod bağlantı hatası."}, 500
-            except RequestException as e:
-                logging.error(f"RunPod isteğinde bir hata oluştu: {str(e)}")
-                return {"message": f"RunPod isteğinde bir hata oluştu: {str(e)}"}, 500
+        result, status_code = send_runpod_request(app=app, user_id=str(customer.id), username=f"Enterprise: {customer.company_name}",
+                                                  data=json.dumps(updated_workflow), runpod_url="RUNPOD_URL",
+                                                  timeout=360)
+        # API yanıtını veritabanına kaydet
+        self.save_request_to_db(customer_id=str(customer.id), company_name=customer.company_name, request_type="text-to-image-consistent",
+                                prompt=prompt, response=result, low_res_url=None, seed=str(seed), model_type=model_type, resolution=resolution)
+        return result  # Yanıtı JSON olarak döndür
 
-            # Eğer istek başarılı olduysa yanıtı döndür
-            if response.status_code == 200:
-                result = response.json()
-                message = result.get("output", {}).get("message")
-                # API yanıtını veritabanına kaydet
-                self.save_request_to_db(customer_id=str(customer.id), company_name=customer.company_name, request_type="text-to-image-consistent",
-                                        prompt=prompt, result=message, low_res_url=None, seed=str(seed), model_type=model_type, resolution=resolution)
-                return result  # Yanıtı JSON olarak döndür
-            else:
-                response.raise_for_status()  # Bi
 
     def upscale_enhance(self, app, low_res_image, customer):
         # Parametrelerin varlığını kontrol et
@@ -161,55 +118,28 @@ class EnterpriseService(BaseService):
         # workflow.json dosyasını güncelle
         updated_workflow = UpscaleService.update_workflow(workflow_path, low_res_image)
 
-        with app.app_context():
-            runpod_url = app.config['RUNPOD_UPSCALE_URL']
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {app.config['RUNPOD_API_KEY']}",
-            }
-            print("runpod istek atıldı")
+        result, status_code = send_runpod_request(app=app, user_id=str(customer.id),
+                                                  username=f"Enterprise: {customer.company_name}",
+                                                  data=json.dumps(updated_workflow), runpod_url="RUNPOD_UPSCALE_URL",
+                                                  timeout=600)
 
-            try:
-                # RunPod API'sine POST isteği gönderme
-                response = requests.post(runpod_url, headers=headers, data=json.dumps(updated_workflow), timeout=600)
-            except Timeout:
-                logging.error("RunPod isteği zaman aşımına uğradı!")
-                return {"message": "RunPod isteği zaman aşımına uğradı."}, 500
-            except ConnectionError:
-                logging.error("RunPod bağlantı hatası!")
-                return {"message": "RunPod bağlantı hatası."}, 500
-            except RequestException as e:
-                logging.error(f"RunPod isteğinde bir hata oluştu: {str(e)}")
-                return {"message": f"RunPod isteğinde bir hata oluştu: {str(e)}"}, 500
+        low_res_image_url = UpscaleService.upload_image_to_s3(app=app, image_bytes=low_res_image,
+                                                                      userid=str(customer.id))
 
-            # Eğer istek başarılı olduysa yanıtı döndür
-            if response.status_code == 200:
-                result = response.json()
-                message = result.get("output", {}).get("message")
+        self.save_request_to_db(customer_id=str(customer.id), company_name=customer.company_name, request_type="upscale",
+                                prompt=None, response=result, low_res_url=low_res_image_url, seed=None, model_type=None,
+                                resolution=None)
+        return {
+            "result": result,
+            "low_res_image_url": low_res_image_url
+        }
 
-                # S3'e yükleme işlemi
-                try:
-                    low_res_image_url = UpscaleService.upload_image_to_s3(app=app, image_bytes=low_res_image,
-                                                                          userid=str(customer.id))
-                except Exception as e:
-                    raise Exception(f"Failed to upload image to S3: {str(e)}")
 
-                # API yanıtını veritabanına kaydet
-                self.save_request_to_db(customer_id=str(customer.id), company_name=customer.company_name, request_type="upscale",
-                                        prompt=None, result=message, low_res_url=low_res_image_url,seed=None, model_type=None,
-                                        resolution=None)
-
-                return {
-                    "result": result,
-                    "low_res_image_url": low_res_image_url
-                }
-            else:
-                response.raise_for_status()
-
-    def save_request_to_db(self, customer_id, company_name, request_type, prompt, result, low_res_url,seed, model_type, resolution):
+    def save_request_to_db(self, customer_id, company_name, request_type, prompt, response, low_res_url,seed, model_type, resolution):
         """
         Saves a request to the database.
         """
+        result = response.get("output", {}).get("message")
         if ".png" in result:
             result = result.split(".png")[0] + ".png"  # Sadece .png'ye kadar olan kısmı al
 
