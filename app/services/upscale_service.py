@@ -162,6 +162,9 @@ class UpscaleService(BaseService):
 
         execution_time = response.get("executionTime")
         high_res_image = response.get("output", {}).get("message")
+        # '.png' ile biten kısmı yakalayıp sonrasını silme
+        if ".png" in high_res_image:
+            high_res_image = high_res_image.split(".png")[0] + ".png"  # Sadece .png'ye kadar olan kısmı al
 
         if execution_time is not None:
             cost = float(execution_time) * 0.00031 * 1e-3

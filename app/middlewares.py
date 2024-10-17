@@ -100,7 +100,7 @@ def check_credits(required_credits: int):
             # Fonksiyonu çalıştırmadan önce kredi kontrolü yap
             if subscription is None:
                 if user.base_credits < required_credits:
-                    return jsonify({"message": "Your credit is insufficient. Please buy a pack"}), 403
+                    return jsonify({"message": "Your credit is insufficient. Please buy a plan"}), 403
             else:
                 if subscription.credit_balance < required_credits:
                     return jsonify({"message": "Insufficient credits!"}), 403

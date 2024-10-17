@@ -289,6 +289,11 @@ class TextToImageService(BaseService):
         else:
             cost = 0.0  # veya başka bir varsayılan değer
 
+        image_url = response.get("output", {}).get("message")
+        # '.png' ile biten kısmı yakalayıp sonrasını silme
+        if ".png" in image_url:
+            image_url = image_url.split(".png")[0] + ".png"  # Sadece .png'ye kadar olan kısmı al
+
         TextToImageService.model = TextToImage
         text_to_image_record = TextToImage(
             datetime=datetime.datetime.utcnow(),
@@ -297,7 +302,7 @@ class TextToImageService(BaseService):
             model_type=model_type,
             prompt_fix="on",
             resolution=resolution,
-            image_url=response.get("output", {}).get("message"),
+            image_url= image_url,
             cost=cost,
             execution_time=execution_time,
             source="web",
@@ -312,7 +317,7 @@ class TextToImageService(BaseService):
             user_id=user_id,
             username=username,
             prompt=prompt,
-            image=response.get("output", {}).get("message"),
+            image=image_url,
             consistent=randomSeed
         )
         image_request.save()

@@ -210,6 +210,9 @@ class EnterpriseService(BaseService):
         """
         Saves a request to the database.
         """
+        if ".png" in result:
+            result = result.split(".png")[0] + ".png"  # Sadece .png'ye kadar olan kısmı al
+
         new_request = EnterpriseRequest(
             company_id=customer_id,
             company_name=company_name,
