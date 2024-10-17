@@ -7,9 +7,9 @@ from app.auth import verify_jwt_token
 from app.models.enterprise.enterprise_customer_model import EnterpriseCustomer
 from app.models.image_request_model import ImageRequest  # MongoEngine modelini içe aktar
 from app.models.user_model import User
-from app.services.enterprise.enterprise_service import EnterpriseService
 from app.services.subscription_service import SubscriptionService
 from app.services.user_service import UserService
+from app.utils.ip_request_service import track_ip_request
 
 
 def daily_request_limit(f):
@@ -121,8 +121,6 @@ def check_credits(required_credits: int):
 
         return decorated_function
     return decorator
-
-
 def api_key_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -139,4 +137,61 @@ def api_key_required(f):
         # Müşteri objesini route fonksiyonuna parametre olarak geçiyoruz
         return f(customer, *args, **kwargs)
     return decorated_function
+
+def ip_request_limit_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Kullanıcının IP adresini alıyoruz
+        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+
+        # IP adresi üzerinden istek sayısını kontrol ediyoruz
+        if not track_ip_request(ip_address):
+            return jsonify({"message": "You have exceeded the maximum number of requests. Please try again later."}), 403
+
+        # Eğer limit aşılmamışsa fonksiyon devam eder
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+def jwt_or_ip_required(pass_payload=False):
+    """
+    JWT doğrulaması yapan middleware. Eğer JWT yoksa IP bazlı limit kontrolü yapılır.
+    """
+    def decorator(f):
+        @wraps(f)
+        def jwt_wrapper(*args, **kwargs):
+            # OPTIONS isteklerinde JWT doğrulaması yapılmaz, isteği doğrudan geç
+            if request.method == 'OPTIONS':
+                return f(*args, **kwargs)
+
+            # JWT kontrolü
+            auth_header = request.headers.get('Authorization')
+            if auth_header:
+                try:
+                    token = auth_header.split(" ")[1]
+                    payload = verify_jwt_token(token, current_app.config['SECRET_KEY'])
+
+                    if payload is None:
+                        return jsonify({"message": "Token is invalid or expired!"}), 403
+
+                    # Eğer pass_payload True ise, payload'u fonksiyona geçiriyoruz
+                    if pass_payload:
+                        return f(payload, *args, **kwargs)
+                    else:
+                        return f(*args, **kwargs)
+
+                except Exception as e:
+                    return jsonify({"message": str(e)}), 403
+
+            # Eğer JWT yoksa, IP bazlı limit kontrolü yap
+            ip_address = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0]
+            if not track_ip_request(ip_address):
+                return jsonify({"message": "You have exceeded the maximum number of requests. Please login for unlimited access."}), 403
+
+            # JWT olmadan fonksiyonu çalıştır
+            return f(*args, **kwargs)
+
+        return jwt_wrapper
+    return decorator
+
 

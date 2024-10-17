@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
 from app.services.text_to_image_service import TextToImageService
-from app.middlewares import daily_request_limit, ban_check, check_credits
+from app.middlewares import daily_request_limit, ban_check, check_credits, jwt_or_ip_required
 
 from ..auth import jwt_required
 import logging
@@ -9,7 +9,6 @@ text_to_image_bp = Blueprint('text_to_image_bp', __name__)
 
 @text_to_image_bp.route('/generate-image-direct', methods=['POST'])
 @jwt_required(pass_payload=True)
-@daily_request_limit
 @ban_check
 @check_credits(1)
 def generate_image_direct(payload):
@@ -33,7 +32,6 @@ def generate_image_direct(payload):
 
 @text_to_image_bp.route('/generate-image-direct-consistent', methods=['POST'])
 @jwt_required(pass_payload=True)
-@daily_request_limit
 @ban_check
 @check_credits(1)
 def generate_image_direct_consistent(payload):
@@ -53,9 +51,6 @@ def generate_image_direct_consistent(payload):
     except Exception as e:
         print(f"Error: {e}")  # Hata mesajı
         return jsonify({"message": str(e)}), 500
-
-
-
 
 @text_to_image_bp.route('/requests/<user_id>', methods=['GET'])
 @jwt_required(pass_payload=False)
