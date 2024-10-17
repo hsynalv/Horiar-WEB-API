@@ -13,6 +13,8 @@ from app.services.base_service import BaseService
 from requests.exceptions import Timeout, ConnectionError, RequestException
 from dotenv import load_dotenv
 
+from app.utils.runpod_requets import send_runpod_request
+
 load_dotenv(dotenv_path="/var/www/Horiar-WEB-API/.env.production")
 openai.api_key = os.getenv("OPEN_AI_KEY")
 
@@ -187,42 +189,16 @@ class TextToImageService(BaseService):
         updated_workflow = TextToImageService.update_workflow_with_prompt(workflow_path, newPrompts, model_type,
                                                                           resolution, False)
         seed = updated_workflow["input"]["workflow"]["112"]["inputs"]["noise_seed"]
-        # Uygulama bağlamı içinde ayarları çek
-        with app.app_context():
-            runpod_url = app.config['RUNPOD_URL']
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {app.config['RUNPOD_API_KEY']}",
-            }
 
-            try:
-                # RunPod API'sine POST isteği gönderme
-                response = requests.post(runpod_url, headers=headers, data=json.dumps(updated_workflow), timeout=360)
-            except Timeout:
-                logging.error("RunPod isteği zaman aşımına uğradı!")
-                return {"message": "RunPod isteği zaman aşımına uğradı."}, 500
-            except ConnectionError:
-                logging.error("RunPod bağlantı hatası!")
-                return {"message": "RunPod bağlantı hatası."}, 500
-            except RequestException as e:
-                logging.error(f"RunPod isteğinde bir hata oluştu: {str(e)}")
-                return {"message": f"RunPod isteğinde bir hata oluştu: {str(e)}"}, 500
+        user_id = payload["sub"]
+        username = payload["username"]
 
-            # Eğer istek başarılı olduysa yanıtı döndür
-            if response.status_code == 200:
-                result = response.json()
-                message = result.get("output", {}).get("message")
+        # runpod isteği
+        result, status_code = send_runpod_request(app=app, user_id=user_id, username=username, data=json.dumps(updated_workflow), runpod_url="RUNPOD_URL",timeout=360)
 
-                if message is None:
-                    raise KeyError("An error occurred while generating the image, please try again ")
-
-                # API yanıtını veritabanına kaydet
-                user_id = payload["sub"]
-                username = payload["username"]
-                TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, True)
-                return result  # Yanıtı JSON olarak döndür
-            else:
-                response.raise_for_status()  # Bi
+        # API yanıtını veritabanına kaydet
+        TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, True)
+        return result
 
     @staticmethod
     def generate_image_directly(app, prompt, model_type, resolution, payload):
@@ -239,42 +215,17 @@ class TextToImageService(BaseService):
         updated_workflow = TextToImageService.update_workflow_with_prompt(workflow_path, newPrompts, model_type,
                                                                           resolution, True)
         seed = updated_workflow["input"]["workflow"]["112"]["inputs"]["noise_seed"]
-        # Uygulama bağlamı içinde ayarları çek
-        with app.app_context():
-            runpod_url = app.config['RUNPOD_URL']
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {app.config['RUNPOD_API_KEY']}",
-            }
 
-            try:
-                # RunPod API'sine POST isteği gönderme
-                response = requests.post(runpod_url, headers=headers, data=json.dumps(updated_workflow), timeout=360)
-            except Timeout:
-                logging.error("RunPod isteği zaman aşımına uğradı!")
-                return {"message": "RunPod isteği zaman aşımına uğradı."}, 500
-            except ConnectionError:
-                logging.error("RunPod bağlantı hatası!")
-                return {"message": "RunPod bağlantı hatası."}, 500
-            except RequestException as e:
-                logging.error(f"RunPod isteğinde bir hata oluştu: {str(e)}")
-                return {"message": f"RunPod isteğinde bir hata oluştu: {str(e)}"}, 500
+        user_id = payload["sub"]
+        username = payload["username"]
 
-            # Eğer istek başarılı olduysa yanıtı döndür
-            if response.status_code == 200:
-                result = response.json()
-                message = result.get("output", {}).get("message")
+        # runpod isteği
+        result, status_code = send_runpod_request(app=app, user_id=user_id, username=username, data=json.dumps(updated_workflow), runpod_url="RUNPOD_URL", timeout=360)
 
-                if message is None:
-                    raise KeyError("An error occurred while generating the image, please try again ")
+        # API yanıtını veritabanına kaydet
+        TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, False)
+        return result
 
-                # API yanıtını veritabanına kaydet
-                user_id = payload["sub"]
-                username = payload["username"]
-                TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, False)
-                return result  # Yanıtı JSON olarak döndür
-            else:
-                response.raise_for_status()
 
     @staticmethod
     def save_request_to_db(user_id, username, prompt, response, seed, model_type, resolution, randomSeed):

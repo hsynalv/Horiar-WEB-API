@@ -13,6 +13,7 @@ from requests.exceptions import Timeout, ConnectionError, RequestException
 
 from app.models.upscale_model import Upscale
 from app.services.base_service import BaseService
+from app.utils.runpod_requets import send_runpod_request
 
 
 class UpscaleService(BaseService):
@@ -39,53 +40,15 @@ class UpscaleService(BaseService):
         # workflow.json dosyasını güncelle
         updated_workflow = UpscaleService.update_workflow(workflow_path, low_res_image)
 
-        with app.app_context():
-            runpod_url = app.config['RUNPOD_UPSCALE_URL']
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {app.config['RUNPOD_API_KEY']}",
-            }
+        result, status_code = send_runpod_request(app=app, user_id=user_id, username=username, data=json.dumps(updated_workflow), runpod_url="RUNPOD_UPSCALE_URL",timeout=600)
+        print(f"runpod istek sonrası {result}")
 
-            try:
-                # RunPod API'sine POST isteği gönderme
-                response = requests.post(runpod_url, headers=headers, data=json.dumps(updated_workflow), timeout=900)
-            except Timeout:
-                logging.error("RunPod isteği zaman aşımına uğradı!")
-                return {"message": "RunPod isteği zaman aşımına uğradı."}, 500
-            except ConnectionError:
-                logging.error("RunPod bağlantı hatası!")
-                return {"message": "RunPod bağlantı hatası."}, 500
-            except RequestException as e:
-                logging.error(f"RunPod isteğinde bir hata oluştu: {str(e)}")
-                return {"message": f"RunPod isteğinde bir hata oluştu: {str(e)}"}, 500
+        low_res_image_url = UpscaleService.upload_image_to_s3(app=app, image_bytes=low_res_image,
+                                                              userid=user_id)
+        UpscaleService.save_request_to_db(response=result, user_id=user_id, username=username,
+                                          low_res_image=low_res_image_url)
+        return result
 
-
-            # Eğer istek başarılı olduysa yanıtı döndür
-            if response.status_code == 200:
-                result = response.json()
-
-                message = result.get("output", {}).get("message")
-
-                if message is None:
-                    raise KeyError("An error occurred while upscaling the image, please try again.")
-
-                # S3'e yükleme işlemi
-                try:
-                    low_res_image_url = UpscaleService.upload_image_to_s3(app=app, image_bytes=low_res_image,
-                                                                          userid=user_id)
-                except Exception as e:
-                    raise Exception(f"Failed to upload image to S3: {str(e)}")
-
-                # API yanıtını veritabanına kaydet
-                UpscaleService.save_request_to_db(response=result, user_id=user_id, username=username,
-                                                  low_res_image=low_res_image_url)
-
-                return {
-                    "result": result,
-                    "low_res_image_url": low_res_image_url
-                }
-            else:
-                response.raise_for_status()
 
     @staticmethod
     def get_upscale_request_by_userid(user_id):
