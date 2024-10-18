@@ -45,18 +45,11 @@ def create_app():
     else:
         app.config.from_object(DevelopmentConfig)
 
-    # CORS ayarları
     if app.config['ENV'] == 'production':
-        def get_origin():
-            origin = request.headers.get('Origin')
-            allowed_origins = ["https://www.horiar.com", "https://horiar.com"]
-            if origin in allowed_origins:
-                return origin
-            return None
-
-        CORS(app, origins=get_origin(), supports_credentials=True, automatic_options=True)
+        CORS(app, resources={
+            r"/*": {"origins": ["https://www.horiar.com", "https://horiar.com"], "supports_credentials": True}})
     else:
-        CORS(app, supports_credentials=True)
+        CORS(app, resources={r"/*": {"origins": "*", "supports_credentials": True}})
 
     # MongoDB bağlantı ayarları .env'den çekiliyor
     mongo_uri = os.getenv('MONGO_URI')
