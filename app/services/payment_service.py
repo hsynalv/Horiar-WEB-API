@@ -20,6 +20,9 @@ from app.services.user_service import UserService
 
 class PaymentService:
 
+    # Özel logger'ı alıyoruz
+    paytr_logger = logging.getLogger("paytr")
+
     @staticmethod
     def get_token(app, payload, package_id, user_address, user_phone, user_ip, is_annual, name_surname, coupon_name):
         user_id = payload['sub']
@@ -110,7 +113,7 @@ class PaymentService:
                 if resultForSave:
                     return res  # Başarılıysa yanıtı döndür
                 else:
-                    logging.error("Provizyon veritabanına kaydedilemedi")
+                    PaymentService.paytr_logger.error("Provizyon veritabanına kaydedilemedi")
                     raise Exception(f"Payment request failed: Provizyon veritabanına kaydedilemedi")
             else:
                 # Başarısız durumda hata mesajı döndür
@@ -187,7 +190,7 @@ class PaymentService:
             provision.save()
             return True
         except Exception as e:
-            logging.error(str(e))
+            PaymentService.paytr_logger.error(str(e))
             return False
 
     @staticmethod
@@ -199,11 +202,11 @@ class PaymentService:
         # POST değerleri ile hash oluştur.
         hash_str = request['merchant_oid'] + merchant_salt + request['status'] + request['total_amount']
         hash = base64.b64encode(hmac.new(merchant_key.encode(), hash_str.encode(), hashlib.sha256).digest()).decode()
-        logging.info("hash çıkartıldı")
+        PaymentService.paytr_logger.info("hash çıkartıldı")
 
         # Oluşturulan hash'i, paytr'dan gelen post içindeki hash ile karşılaştır
         if hash != request['hash']:
-            logging.info("hash geçersiz")
+            PaymentService.paytr_logger.info("hash geçersiz")
             return False
 
         # Siparişin durumunu kontrol et
@@ -213,7 +216,7 @@ class PaymentService:
         # Burada siparişi veritabanından sorgulayıp onaylayabilir veya iptal edebilirsiniz.
         if status == 'success':  # Ödeme Onaylandı
             print(f"Order {merchant_oid} has been approved.")
-            logging.info("Order {merchant_oid} has been approved.")
+            PaymentService.paytr_logger.info("Order {merchant_oid} has been approved.")
 
             result = PaymentService.success_payment(merchant_oid)
             if result:
@@ -224,7 +227,7 @@ class PaymentService:
             # Güncel tutarı post['total_amount'] değerinden alın.
         else:  # Ödemeye Onay Verilmedi
             # Siparişi iptal edin
-            logging.info("Order {merchant_oid} has been declined.")
+            PaymentService.paytr_logger.info("Order {merchant_oid} has been declined.")
             print(f"Order {merchant_oid} has been canceled. Reason: {request.get('failed_reason_msg', 'Unknown reason')}")
             return False
 
@@ -261,12 +264,12 @@ class PaymentService:
                 # Veritabanına kaydet
                 subscription.save()
                 provision.delete()
-                logging.info(f"Subscription created for user {provision.username} with merchant_oid {merchant_oid}")
+                PaymentService.paytr_logger.info(f"Subscription created for user {provision.username} with merchant_oid {merchant_oid}")
                 return True
             except Exception as e:
-                logging.info(f"Error saving subscription: {str(e)}")
+                PaymentService.paytr_logger.info(f"Error saving subscription: {str(e)}")
                 return False
 
         else:
-            logging.error(f"Provision not found for merchant_oid: {merchant_oid}")
+            PaymentService.paytr_logger.error(f"Provision not found for merchant_oid: {merchant_oid}")
             return False

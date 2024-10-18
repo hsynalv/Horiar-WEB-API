@@ -31,7 +31,7 @@ def get_token(payload):
 @payment_bp.route('/callback-ok', methods=['POST'])
 @csrf.exempt  # CSRF korumasını devre dışı bırak
 def callback_ok():
-    logging.info("callback fonksiyonuna girildi")
+    PaymentService.paytr_logger.info("callback fonksiyonuna girildi")
     post = request.form
 
     result = PaymentService.callback_ok_funciton(current_app._get_current_object(), post)

@@ -21,6 +21,12 @@ def setup_logging():
     runpod_file_handler.setLevel(logging.ERROR)  # Sadece ERROR seviyesindeki loglar
     runpod_file_handler.setFormatter(formatter)
 
+    # PayTR özel log dosyası yapılandırması
+    paytr_log_file = os.path.join(log_dir, "paytr.log")
+    paytr_file_handler = RotatingFileHandler(paytr_log_file, maxBytes=10 * 1024 * 1024, backupCount=5)
+    paytr_file_handler.setLevel(logging.INFO)  # Sadece ERROR seviyesindeki loglar
+    paytr_file_handler.setFormatter(formatter)
+
     # Konsol logları için stream handler
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.DEBUG)
@@ -36,5 +42,10 @@ def setup_logging():
     runpod_logger = logging.getLogger("runpod")
     runpod_logger.setLevel(logging.ERROR)  # Sadece ERROR seviyesindeki loglar
     runpod_logger.addHandler(runpod_file_handler)
+
+    # PayTR logları için ayrı logger
+    paytr_logger = logging.getLogger("paytr")
+    paytr_logger.setLevel(logging.ERROR)  # Sadece ERROR seviyesindeki loglar
+    paytr_logger.addHandler(paytr_file_handler)
 
     logging.info("Logging setup complete.")
