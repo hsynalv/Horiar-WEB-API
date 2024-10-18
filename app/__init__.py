@@ -47,13 +47,12 @@ def create_app():
 
     # CORS ayarları
     if app.config['ENV'] == 'production':
-        CORS(app, resources={
-            r"/*": {
-                "origins": ["https://horiar.com", "https://horiar.com/", "https://www.horiar.com",
-                            "https://www.horiar.com/"],
-                "supports_credentials": True
-            }},
-             automatic_options=True)
+        def get_origin():
+            origin = request.headers.get('Origin')
+            allowed_origins = ["https://www.horiar.com", "https://horiar.com", "https://www.horiar.com/", "https://horiar.com/"]
+            return origin if origin in allowed_origins else None
+
+        CORS(app, origins=get_origin, supports_credentials=True, automatic_options=True)
     else:
         CORS(app, supports_credentials=True)
 
