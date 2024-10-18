@@ -48,4 +48,7 @@ def setup_logging():
     paytr_logger.setLevel(logging.INFO)  # Sadece ERROR seviyesindeki loglar
     paytr_logger.addHandler(paytr_file_handler)
 
+    # Propagate'i False yaparak PayTR loglarının root logger'a gitmesini engelliyoruz
+    paytr_logger.propagate = False
+
     logging.info("Logging setup complete.")
