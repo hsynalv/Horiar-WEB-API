@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, request
 from flask_cors import CORS
 from flask_login import LoginManager
 from flask_mail import Mail
@@ -47,9 +47,12 @@ def create_app():
 
     # CORS ayarları
     if app.config['ENV'] == 'production':
-        CORS(app, resources={r"/*": {
-            "origins": ["https://www.horiar.com", "https://horiar.com", "https://accounts.google.com",
-                        "https://discord.com"], "supports_credentials": True}})
+        def get_origin():
+            origin = request.headers.get('Origin')
+            allowed_origins = ["https://www.horiar.com", "https://horiar.com"]
+            return origin if origin in allowed_origins else None
+
+        CORS(app, origins=get_origin, supports_credentials=True)
     else:
         CORS(app, supports_credentials=True)
 
