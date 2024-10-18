@@ -49,10 +49,12 @@ def create_app():
     if app.config['ENV'] == 'production':
         def get_origin():
             origin = request.headers.get('Origin')
-            allowed_origins = ["https://www.horiar.com", "https://horiar.com", "https://www.horiar.com/", "https://horiar.com/"]
-            return origin if origin in allowed_origins else None
+            allowed_origins = ["https://www.horiar.com", "https://horiar.com"]
+            if origin in allowed_origins:
+                return origin
+            return None
 
-        CORS(app, origins=get_origin, supports_credentials=True, automatic_options=True)
+        CORS(app, origins=get_origin(), supports_credentials=True, automatic_options=True)
     else:
         CORS(app, supports_credentials=True)
 
