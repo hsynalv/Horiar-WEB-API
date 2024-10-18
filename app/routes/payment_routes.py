@@ -28,7 +28,7 @@ def get_token(payload):
     result = PaymentService.get_token(current_app._get_current_object(), payload, package_id, user_address, user_phone, user_ip, is_annual, name_surname, coupon_name)
     return result
 
-@payment_bp.route('/callback', methods=['POST'])
+@payment_bp.route('/callback-ok', methods=['POST'])
 @csrf.exempt  # CSRF korumasını devre dışı bırak
 def callback_ok():
     logging.info("callback fonksiyonuna girildi")
