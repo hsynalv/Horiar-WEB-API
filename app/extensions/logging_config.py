@@ -45,7 +45,7 @@ def setup_logging():
 
     # PayTR logları için ayrı logger
     paytr_logger = logging.getLogger("paytr")
-    paytr_logger.setLevel(logging.ERROR)  # Sadece ERROR seviyesindeki loglar
+    paytr_logger.setLevel(logging.INFO)  # Sadece ERROR seviyesindeki loglar
     paytr_logger.addHandler(paytr_file_handler)
 
     logging.info("Logging setup complete.")
