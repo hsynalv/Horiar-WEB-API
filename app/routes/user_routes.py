@@ -71,7 +71,7 @@ def google_callback():
     google = oauth.create_client('google')
     try:
         # Google'dan yetkilendirme token'ını almayı deneyin
-        token = google.authorize_access_token()
+        token = google.authorize_access_token(timeout=30)
     except Exception as e:
         # Eğer "access_denied" hatası gelirse kullanıcıyı istediğiniz yere yönlendirin
         error_message = str(e)
@@ -81,7 +81,7 @@ def google_callback():
             logging.error(f"Google login sırasında hata meydana geldi: {error_message}")
             return redirect("https://horiar.com")
 
-    user_info = google.get('https://www.googleapis.com/oauth2/v1/userinfo').json()
+    user_info = google.get('https://www.googleapis.com/oauth2/v1/userinfo', timeout=10).json()
 
     user_data = {
         "google_id": user_info["id"],
