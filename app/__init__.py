@@ -48,7 +48,7 @@ def create_app():
     # CORS ayarları
     if app.config['ENV'] == 'production':
         CORS(app, resources={
-            r"/*": {"origins": ["https://www.horiar.com", "https://horiar.com"], "supports_credentials": True}},
+            r"/*": {"origins": ["https://horiar.com"], "supports_credentials": True}},
              automatic_options=True)
     else:
         CORS(app, supports_credentials=True)
