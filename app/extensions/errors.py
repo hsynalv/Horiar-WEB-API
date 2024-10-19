@@ -1,9 +1,11 @@
 import logging
 import traceback
-from flask import jsonify, request
+from flask import jsonify, request, current_app
 from app.errors.unauthorized_error import UnauthorizedError
 from app.errors.not_found_error import NotFoundError
 from app.errors.validation_error import ValidationError
+from app.utils.mail_utils import send_error_email
+
 
 def register_error_handlers(app):
     @app.errorhandler(UnauthorizedError)
@@ -30,10 +32,8 @@ def register_error_handlers(app):
         code = 500
         if hasattr(e, 'code'):
             code = e.code
-
         # Hata yığın izini almak
         error_trace = traceback.format_exc()
-
         # Hatanın türüne göre farklı loglama seviyeleri kullanma
         if isinstance(e, ValueError) and "Kullanıcının şifresi yok" in str(e):
             # Şifreyle ilgili hataları WARNING olarak logla
@@ -43,13 +43,18 @@ def register_error_handlers(app):
                             f"IP: {request.remote_addr}\n"
                             f"Traceback: {error_trace}")
         else:
-            # Diğer tüm hataları CRITICAL olarak logla
+            # Diğer tüm hataları CRITICAL olarak logla ve e-posta gönder
             logging.critical(f"Unhandled exception occurred: {str(e)}\n"
                              f"URL: {request.url}\n"
                              f"Method: {request.method}\n"
                              f"IP: {request.remote_addr}\n"
                              f"Traceback: {error_trace}")
-
+        error_details = f"Unhandled exception occurred: {str(e)}\n" \
+                        f"URL: {request.url}\n" \
+                        f"Method: {request.method}\n" \
+                        f"IP: {request.remote_addr}\n" \
+                        f"Traceback: {error_trace}"
+        send_error_email(subject="Critical Error in Application", error_details=error_details)
         # Hata cevabı döndürme
         return jsonify({
             "error": "Internal Server Error",
