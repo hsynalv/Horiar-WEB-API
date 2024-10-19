@@ -42,6 +42,14 @@ class PaymentService:
         currency = 'TL'
         print(f"price {price}")
 
+        # KDV oranını belirliyoruz (örneğin %20 KDV)
+        kdv_rate = 20
+
+        # KDV'yi kupon uygulanmadan önceki fiyattan hesaplıyoruz
+        kdv_amount = (price * kdv_rate) / 100
+        PaymentService.paytr_logger.info(f"KDV applied: {kdv_amount}")
+
+        # İndirim varsa kuponu al ve uygula
         if coupon_name:
             # Kuponu al
             coupon = CouponService.check_coupon(coupon_name)
@@ -58,9 +66,14 @@ class PaymentService:
             discount_amount = (price * discount_rate) / 100
             price -= discount_amount  # İndirimi fiyat üzerinden düşüyoruz
 
-            print(f"Discount applied: {discount_amount}, New price: {price}")
+            PaymentService.paytr_logger.info(f"Discount applied: {discount_amount}, New price: {price}")
+
+        # KDV'yi indirimsiz fiyat üzerinden ekliyoruz
+        price += kdv_amount  # KDV ekleniyor
+        PaymentService.paytr_logger.info(f"Price after KDV: {price}")
+
         price = int(price * 100)
-        print(f"gönderilmeden önce price: {price}")
+        PaymentService.paytr_logger.info(f"gönderilmeden önce price: {price}")
 
         with app.app_context():
             merchant_id = app.config['MERCHANT_ID']
