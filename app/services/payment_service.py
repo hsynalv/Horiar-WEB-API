@@ -46,8 +46,8 @@ class PaymentService:
         kdv_rate = 20
 
         # KDV'yi kupon uygulanmadan önceki fiyattan hesaplıyoruz
-        kdv_amount = (price * kdv_rate) / 100
-        PaymentService.paytr_logger.info(f"KDV applied: {kdv_amount}")
+        #kdv_amount = (price * kdv_rate) / 100
+        #PaymentService.paytr_logger.info(f"KDV applied: {kdv_amount}")
 
         # İndirim varsa kuponu al ve uygula
         if coupon_name:
@@ -69,8 +69,8 @@ class PaymentService:
             PaymentService.paytr_logger.info(f"Discount applied: {discount_amount}, New price: {price}")
 
         # KDV'yi indirimsiz fiyat üzerinden ekliyoruz
-        price += kdv_amount  # KDV ekleniyor
-        PaymentService.paytr_logger.info(f"Price after KDV: {price}")
+        #price += kdv_amount  # KDV ekleniyor
+        #PaymentService.paytr_logger.info(f"Price after KDV: {price}")
 
         price = int(price * 100)
         PaymentService.paytr_logger.info(f"gönderilmeden önce price: {price}")
