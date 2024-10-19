@@ -11,7 +11,8 @@ class Subscription(Document):
     username = StringField(required=True)  # Kullanıcı adı
     email = StringField(required=True)
     merchant_oid = StringField(required=True)
-    max_credit_balance = IntField(default=0.0)
+    max_credit_balance = IntField(default=0.0),
+    used_coupon = StringField(required=False)
 
     meta = {'collection': 'subscriptions'}
 
@@ -28,4 +29,5 @@ class Subscription(Document):
             "email": self.email,
             "merchant_oid": self.merchant_oid,
             "max_credit_balance": self.max_credit_balance,
+            "used_coupon": self.used_coupon,
         }

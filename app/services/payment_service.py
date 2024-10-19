@@ -86,7 +86,7 @@ class PaymentService:
         timeout_limit = '30' # İşlem zaman aşımı süresi - dakika cinsinden
         debug_on = '0' # Hata mesajlarının ekrana basılması için entegrasyon ve test sürecinde 1 olarak bırakın. Daha sonra 0 yapabilirsiniz.
         test_mode = '1' # Mağaza canlı modda iken test işlem yapmak için 1 olarak gönderilebilir.
-        no_installment = '1'  # Taksit yapılmasını istemiyorsanız, sadece tek çekim sunacaksanız 1 yapın
+        no_installment = '0'  # Taksit yapılmasını istemiyorsanız, sadece tek çekim sunacaksanız 1 yapın
         max_installment = '1' # Sayfada görüntülenecek taksit adedini sınırlamak istiyorsanız uygun şekilde değiştirin. Sıfır (0) gönderilmesi durumunda yürürlükteki en fazla izin verilen taksit geçerli olur.
         merchant_oid = PaymentService.generate_merchant_oid()
 
@@ -122,7 +122,14 @@ class PaymentService:
 
             # Yanıttaki "status" alanını kontrol et
             if res.get("status") == "success":
-                resultForSave = PaymentService.save_provision(merchant_oid, user_id, user.username, package_id, is_annual, email=user.email)
+                if coupon_name:
+                    resultForSave = PaymentService.save_provision(merchant_oid=merchant_oid, user_id=user_id, username=user.username,
+                                                                  package_id=package_id, is_annual=is_annual, email=user.email, coupon_name=coupon["name"])
+                    print("kupon varken revizyon kaydedildi")
+                else:
+                    resultForSave = PaymentService.save_provision(merchant_oid=merchant_oid, user_id=user_id, username=user.username,
+                                                                  package_id=package_id, is_annual=is_annual, email=user.email, coupon_name=None)
+                    print("kupon yokken revizyon kaydedildi")
                 if resultForSave:
                     return res  # Başarılıysa yanıtı döndür
                 else:
@@ -184,7 +191,7 @@ class PaymentService:
 
         return merchant_oid
     @staticmethod
-    def save_provision(merchant_oid, user_id, username, package_id, is_annual, email):
+    def save_provision(merchant_oid, user_id, username, package_id, is_annual, email, coupon_name):
         """
         Verilen bilgileri kullanarak provizyon kaydı oluşturur ve veritabanına kaydeder.
         """
@@ -196,7 +203,8 @@ class PaymentService:
                 username=username,
                 package_id=package_id,
                 is_annual=is_annual,
-                email = email
+                email=email,
+                used_coupon=coupon_name
             )
 
             # Veritabanına kaydet
@@ -259,6 +267,11 @@ class PaymentService:
             else:
                 subscription_end_date = subscription_date + timedelta(days=30)  # 30 gün sonrasına bitiş tarihi ekleniyor
 
+            if provision.used_coupon:
+                used_coupon = provision.used_coupon
+            else:
+                used_coupon = None
+
             # Yeni Subscription kaydı oluştur
             subscription = Subscription(
                 subscription_date=subscription_date,
@@ -270,7 +283,8 @@ class PaymentService:
                 username=provision.username,
                 merchant_oid=merchant_oid,
                 email=provision.email,
-                max_credit_balance=package["credits"]
+                max_credit_balance=package["credits"],
+                used_coupon=used_coupon
             )
 
             try:

@@ -34,25 +34,26 @@ def register_error_handlers(app):
             code = e.code
         # Hata yığın izini almak
         error_trace = traceback.format_exc()
+        client_ip = get_client_ip()
         # Hatanın türüne göre farklı loglama seviyeleri kullanma
         if isinstance(e, ValueError) and "Kullanıcının şifresi yok" in str(e):
             # Şifreyle ilgili hataları WARNING olarak logla
             logging.warning(f"Handled exception: {str(e)}\n"
                             f"URL: {request.url}\n"
                             f"Method: {request.method}\n"
-                            f"IP: {request.remote_addr}\n"
+                            f"IP: {client_ip}\n"
                             f"Traceback: {error_trace}")
         else:
             # Diğer tüm hataları CRITICAL olarak logla ve e-posta gönder
             logging.critical(f"Unhandled exception occurred: {str(e)}\n"
                              f"URL: {request.url}\n"
                              f"Method: {request.method}\n"
-                             f"IP: {request.remote_addr}\n"
+                             f"IP: {client_ip}\n"
                              f"Traceback: {error_trace}")
         error_details = f"Unhandled exception occurred: {str(e)}\n" \
                         f"URL: {request.url}\n" \
                         f"Method: {request.method}\n" \
-                        f"IP: {request.remote_addr}\n" \
+                        f"IP: {client_ip}\n" \
                         f"Traceback: {error_trace}"
         send_error_email(subject="Critical Error in Application", error_details=error_details)
         # Hata cevabı döndürme
@@ -61,3 +62,11 @@ def register_error_handlers(app):
             "message": str(e),
             "code": code
         }), code
+
+    # Gerçek istemci IP adresini almak için fonksiyon
+    def get_client_ip():
+        if request.headers.get('X-Forwarded-For'):
+            ip_address = request.headers.get('X-Forwarded-For').split(',')[0]
+        else:
+            ip_address = request.remote_addr
+        return ip_address

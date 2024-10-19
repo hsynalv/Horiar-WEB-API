@@ -12,6 +12,7 @@ class Provision(Document):
     package_id = StringField(required=True)
     is_annual = BooleanField(default=False)
     email = StringField(required=True)
+    used_coupon = StringField(required=False)
 
     meta = {'collection': 'provision'}
 
@@ -23,4 +24,5 @@ class Provision(Document):
             "package_id": str(self.package_id.id),
             "is_annual": self.is_annual,
             "email": self.email,
+            "used_coupon": self.used_coupon,
         }
