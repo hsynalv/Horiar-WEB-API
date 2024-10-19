@@ -1,3 +1,7 @@
+import os
+
+from flask import send_from_directory
+
 from app.routes.admin_routes import admin_routes_bp
 from app.routes.coupon_routes import coupon_bp
 from app.routes.enterprise.enterprise_routes import enterprise_bp
@@ -18,4 +22,10 @@ def register_blueprints(app):
     app.register_blueprint(admin_routes_bp, url_prefix='/admin')
     app.register_blueprint(payment_bp, url_prefix='/payment')
     app.register_blueprint(enterprise_bp, url_prefix='/enterprise')
+
+    @app.route('/favicon.ico')
+    def favicon():
+        return send_from_directory(os.path.join(app.root_path, 'static'),
+                                   'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 
