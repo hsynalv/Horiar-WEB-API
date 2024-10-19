@@ -235,8 +235,7 @@ class PaymentService:
 
         # Burada siparişi veritabanından sorgulayıp onaylayabilir veya iptal edebilirsiniz.
         if status == 'success':  # Ödeme Onaylandı
-            print(f"Order {merchant_oid} has been approved.")
-            PaymentService.paytr_logger.info("Order {merchant_oid} has been approved.")
+            PaymentService.paytr_logger.info(f"Order {merchant_oid} has been approved.")
 
             result = PaymentService.success_payment(merchant_oid)
             if result:
