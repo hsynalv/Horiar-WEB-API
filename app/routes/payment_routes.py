@@ -38,4 +38,4 @@ def callback_ok():
     if result:  # Ödeme Onaylandı
         return 'OK', 200  # OK
     else:  # Ödemeye Onay Verilmedi
-        return '', 404
+        return 'OK', 200

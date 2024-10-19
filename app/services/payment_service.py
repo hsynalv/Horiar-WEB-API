@@ -237,6 +237,7 @@ class PaymentService:
                 return False
             # Müşteriye bildirim yapabilirsiniz (SMS, e-posta vb.)
             # Güncel tutarı post['total_amount'] değerinden alın.
+
         else:  # Ödemeye Onay Verilmedi
             # Siparişi iptal edin
             PaymentService.paytr_logger.info(f"Order {merchant_oid} has been declined.")
