@@ -283,7 +283,7 @@ class PaymentService:
                 username=provision.username,
                 merchant_oid=merchant_oid,
                 email=provision.email,
-                max_credit_balance=package["credits"],
+                max_credit_balance=int(package["credits"]),
                 used_coupon=used_coupon
             )
 
