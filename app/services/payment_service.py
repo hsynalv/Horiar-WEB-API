@@ -215,11 +215,10 @@ class PaymentService:
         # POST değerleri ile hash oluştur.
         hash_str = request['merchant_oid'] + merchant_salt + request['status'] + request['total_amount']
         hash = base64.b64encode(hmac.new(merchant_key.encode(), hash_str.encode(), hashlib.sha256).digest()).decode()
-        PaymentService.paytr_logger.info("hash çıkartıldı")
 
         # Oluşturulan hash'i, paytr'dan gelen post içindeki hash ile karşılaştır
         if hash != request['hash']:
-            PaymentService.paytr_logger.info("hash geçersiz")
+            PaymentService.paytr_logger.info(f"hash geçersiz {hash} : {request['hash']}")
             return False
 
         # Siparişin durumunu kontrol et
@@ -240,8 +239,8 @@ class PaymentService:
             # Güncel tutarı post['total_amount'] değerinden alın.
         else:  # Ödemeye Onay Verilmedi
             # Siparişi iptal edin
-            PaymentService.paytr_logger.info("Order {merchant_oid} has been declined.")
-            print(f"Order {merchant_oid} has been canceled. Reason: {request.get('failed_reason_msg', 'Unknown reason')}")
+            PaymentService.paytr_logger.info(f"Order {merchant_oid} has been declined.")
+            PaymentService.paytr_logger.info(f"Order {merchant_oid} has been canceled. Reason: {request.get('failed_reason_msg', 'Unknown reason')}")
             return False
 
     @staticmethod
