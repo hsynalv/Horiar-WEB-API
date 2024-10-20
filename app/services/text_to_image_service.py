@@ -283,11 +283,13 @@ class TextToImageService(BaseService):
         .skip(skip).limit(per_page))
 
     @staticmethod
-    def get_requests_by_user_id_consistent(user_id):
+    def get_requests_by_user_id_consistent(user_id, page=1, per_page=8):
         """
         Veritabanından kullanıcı ID'sine göre istekleri getirir.
         """
-        return ImageRequest.objects(user_id=user_id,consistent=True).order_by('-request_time').all()
+        skip = (page - 1) * per_page
+        return (ImageRequest.objects(user_id=user_id,consistent=True).order_by('-request_time')
+                .skip(skip).limit(per_page))
 
     def promptEnhance(text):
         prompts = []
