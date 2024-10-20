@@ -3,40 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Giriş</title>
+    <title>Horiar | Admin</title>
     <!-- Bootstrap CDN -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+      <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/adminlte.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/fontawesome-free/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/icheck-bootstrap/icheck-bootstrap.min.css') }}">
 </head>
-<body>
+<body class="hold-transition login-page">
+<div class="login-box">
+  <div class="login-logo">
+    <a href="#"><b>HORİAR</b> | Admin Giriş</a>
+  </div>
+  <!-- /.login-logo -->
+  <div class="card">
+    <div class="card-body login-card-body">
+      <p class="login-box-msg">Oturum açmak için bilgilerinizi giriniz</p>
 
-    <div class="container mt-5">
-        <h1>Admin Giriş</h1>
+      <!-- Eğer flash mesajı varsa burada gösterelim -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+              {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}">{{ message }}</div>
+              {% endfor %}
+          {% endif %}
+      {% endwith %}
 
-        <!-- Eğer flash mesajı varsa burada gösterelim -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <!-- Giriş formu -->
-        <form method="POST" action="{{ url_for('admin_routes_bp.login') }}">
-            {{ form.hidden_tag() }}
-            <div class="form-group">
-                {{ form.username.label }}<br>
-                {{ form.username(class="form-control", size=32) }}
+      <!-- Giriş formu -->
+      <form method="POST" action="{{ url_for('admin_routes_bp.login') }}">
+        {{ form.hidden_tag() }}
+        <div class="input-group mb-3">
+          {{ form.username(class="form-control", placeholder="Kullanıcı Adı") }}
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas fa-user"></span>
             </div>
-            <div class="form-group">
-                {{ form.password.label }}<br>
-                {{ form.password(class="form-control", size=32) }}
+          </div>
+        </div>
+        <div class="input-group mb-3">
+          {{ form.password(class="form-control", placeholder="Şifre") }}
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas fa-lock"></span>
             </div>
-            <div class="form-group">
-                {{ form.submit(class="btn btn-primary") }}
-            </div>
-        </form>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12">
+            {{ form.submit(class="btn btn-primary btn-block", value="Giriş Yap") }}
+          </div>
+        </div>
+      </form>
     </div>
+    <!-- /.login-card-body -->
+  </div>
+</div>
+<!-- /.login-box -->
 
+<script src="{{ url_for('static', filename='plugins/jquery/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/adminlte.min.js') }}"></script>
 </body>
 </html>
