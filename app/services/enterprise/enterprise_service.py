@@ -10,6 +10,7 @@ import secrets
 from app.services.text_to_image_service import TextToImageService
 from app.services.upscale_service import UpscaleService
 from app.utils.runpod_requets import send_runpod_request
+from app.utils.convert_to_webp import upload_image_to_s3, process_and_save_image
 
 
 class EnterpriseService(BaseService):
@@ -74,8 +75,8 @@ class EnterpriseService(BaseService):
                                                   timeout=360)
 
         # API yanıtını veritabanına kaydet
-        self.save_request_to_db(customer_id=str(customer.id), company_name=customer.company_name, request_type="text-to-image-consistent",
-                                prompt=prompt, response=result, low_res_url=None, seed=str(seed), model_type=model_type, resolution=resolution)
+        self.save_request_to_db(customer_id=str(customer.id), company_name=customer.company_name, request_type="text-to-image",
+                                prompt=prompt, response=result, low_res_url=None, seed=str(seed), model_type=model_type, resolution=resolution, app=app)
 
         return result  # Yanıtı JSON olarak döndür
 
@@ -100,7 +101,7 @@ class EnterpriseService(BaseService):
                                                   timeout=360)
         # API yanıtını veritabanına kaydet
         self.save_request_to_db(customer_id=str(customer.id), company_name=customer.company_name, request_type="text-to-image-consistent",
-                                prompt=prompt, response=result, low_res_url=None, seed=str(seed), model_type=model_type, resolution=resolution)
+                                prompt=prompt, response=result, low_res_url=None, seed=str(seed), model_type=model_type, resolution=resolution, app=app)
         return result  # Yanıtı JSON olarak döndür
 
 
@@ -119,25 +120,29 @@ class EnterpriseService(BaseService):
                                                   data=json.dumps(updated_workflow), runpod_url="RUNPOD_UPSCALE_URL",
                                                   timeout=600)
 
-        low_res_image_url = UpscaleService.upload_image_to_s3(app=app, image_bytes=low_res_image,
-                                                                      userid=str(customer.id))
+        low_res_image_url = upload_image_to_s3(app=app, image_bytes=low_res_image,
+                                                                      userid=str(customer.id), s3_folder_name="S3_FOLDER_UPSCALE_IMAGE", file_extension="png")
 
         self.save_request_to_db(customer_id=str(customer.id), company_name=customer.company_name, request_type="upscale",
                                 prompt=None, response=result, low_res_url=low_res_image_url, seed=None, model_type=None,
-                                resolution=None)
+                                resolution=None, app=app)
         return {
             "result": result,
             "low_res_image_url": low_res_image_url
         }
 
 
-    def save_request_to_db(self, customer_id, company_name, request_type, prompt, response, low_res_url,seed, model_type, resolution):
+    def save_request_to_db(self, customer_id, company_name, request_type, prompt, response, low_res_url,seed, model_type, resolution, app):
         """
         Saves a request to the database.
         """
         result = response.get("output", {}).get("message")
         if ".png" in result:
             result = result.split(".png")[0] + ".png"  # Sadece .png'ye kadar olan kısmı al
+
+        webp_url = None
+        if result:
+            webp_url = process_and_save_image(app, result, customer_id)
 
         new_request = EnterpriseRequest(
             company_id=customer_id,
@@ -146,6 +151,7 @@ class EnterpriseService(BaseService):
             prompt=prompt,
             low_res_url=low_res_url,
             image=result,
+            webp_url=webp_url,
             seed=seed,
             model_type=model_type or "normal",
             resolution=resolution or "1024x1024",
@@ -164,6 +170,7 @@ class EnterpriseService(BaseService):
             'model_type',
             'resolution',
             'created_at',
+            'webp_url'
         ]
 
         requests_list = self.get_company_requests(customer_id=str(customer.id), request_type="text-to-image", fields=fields_to_include)
@@ -180,6 +187,7 @@ class EnterpriseService(BaseService):
             'model_type',
             'resolution',
             'created_at',
+            'webp_url'
         ]
 
         requests_list = self.get_company_requests(customer_id=str(customer.id), request_type="text-to-image-consistent",
@@ -194,6 +202,7 @@ class EnterpriseService(BaseService):
             'image',
             'low_res_url',
             'created_at',
+            'webp_url'
         ]
 
         requests_list = self.get_company_requests(
@@ -239,6 +248,7 @@ class EnterpriseService(BaseService):
             'model_type',
             'resolution',
             'created_at',
+            'webp_url'
         ]
 
         request = self.get_company_request_by_id(
@@ -260,6 +270,7 @@ class EnterpriseService(BaseService):
             'model_type',
             'resolution',
             'created_at',
+            'webp_url'
         ]
 
         request = self.get_company_request_by_id(
@@ -278,6 +289,7 @@ class EnterpriseService(BaseService):
             'image',
             'low_res_url',
             'created_at',
+            'webp_url'
         ]
 
         request = self.get_company_request_by_id(

@@ -14,6 +14,7 @@ class TextToImage(Document):
     prompt_fix = StringField()
     resolution = StringField()
     image_url = StringField()
+    image_url_webp = StringField()
     cost = DecimalField(precision=20, rounding='ROUND_HALF_UP', required=False)
     execution_time = IntField()
     source = StringField()
@@ -37,6 +38,7 @@ class TextToImage(Document):
             "prompt_fix": self.prompt_fix,
             "resolution": self.resolution,
             "image_url": self.image_url,
+            "image_url_webp": self.image_url_webp,
             "cost": self.cost,
             "execution_time": self.execution_time,
             "source": self.source,

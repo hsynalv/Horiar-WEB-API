@@ -1,8 +1,6 @@
 import datetime
 import json
-import logging
 import os
-import requests
 import openai
 import random
 
@@ -10,10 +8,10 @@ from app.models.dataset_model import Dataset
 from app.models.image_request_model import ImageRequest
 from app.models.text_to_image_model import TextToImage
 from app.services.base_service import BaseService
-from requests.exceptions import Timeout, ConnectionError, RequestException
 from dotenv import load_dotenv
 
 from app.utils.runpod_requets import send_runpod_request
+from app.utils.convert_to_webp import process_and_save_image
 
 load_dotenv(dotenv_path="/var/www/Horiar-WEB-API/.env.production")
 openai.api_key = os.getenv("OPEN_AI_KEY")
@@ -197,7 +195,7 @@ class TextToImageService(BaseService):
         result, status_code = send_runpod_request(app=app, user_id=user_id, username=username, data=json.dumps(updated_workflow), runpod_url="RUNPOD_URL",timeout=360)
 
         # API yanıtını veritabanına kaydet
-        TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, True)
+        TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, True, app=app)
         return result
 
     @staticmethod
@@ -223,29 +221,28 @@ class TextToImageService(BaseService):
         result, status_code = send_runpod_request(app=app, user_id=user_id, username=username, data=json.dumps(updated_workflow), runpod_url="RUNPOD_URL", timeout=360)
 
         # API yanıtını veritabanına kaydet
-        TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, False)
+        TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, False, app=app)
         return result
 
 
     @staticmethod
-    def save_request_to_db(user_id, username, prompt, response, seed, model_type, resolution, randomSeed):
+    def save_request_to_db(user_id, username, prompt, response, seed, model_type, resolution, randomSeed, app):
         """
         Kullanıcı isteğini veritabanına kaydeder.
         """
-
         execution_time = response.get("executionTime")
-
         if execution_time is not None:
             cost = float(execution_time) * 0.00031 * 1e-3
         else:
-            cost = 0.0  # veya başka bir varsayılan değer
+            cost = 0.0
 
         image_url = response.get("output", {}).get("message")
-        # '.png' ile biten kısmı yakalayıp sonrasını silme
         if ".png" in image_url:
-            image_url = image_url.split(".png")[0] + ".png"  # Sadece .png'ye kadar olan kısmı al
+            image_url = image_url.split(".png")[0] + ".png"
 
-        TextToImageService.model = TextToImage
+        webp_url = process_and_save_image(app, image_url, user_id)
+
+        # TextToImage kaydı
         text_to_image_record = TextToImage(
             datetime=datetime.datetime.utcnow(),
             prompt=prompt,
@@ -253,7 +250,8 @@ class TextToImageService(BaseService):
             model_type=model_type,
             prompt_fix="on",
             resolution=resolution,
-            image_url= image_url,
+            image_url=image_url,
+            image_url_webp=webp_url,  # WebP URL'yi de kaydediyoruz
             cost=cost,
             execution_time=execution_time,
             source="web",
@@ -291,6 +289,7 @@ class TextToImageService(BaseService):
         return (ImageRequest.objects(user_id=user_id,consistent=True).order_by('-request_time')
                 .skip(skip).limit(per_page))
 
+    @staticmethod
     def promptEnhance(text):
         prompts = []
 
@@ -318,6 +317,7 @@ class TextToImageService(BaseService):
         )
         prompts.append(response.choices[0].message.content)
         prompts.reverse()
+        TextToImageService.save_dataset_to_db(text, prompts)
         return prompts
 
     @staticmethod
@@ -333,3 +333,8 @@ class TextToImageService(BaseService):
         )
 
         dataset.save()
+
+
+
+
+

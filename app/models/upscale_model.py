@@ -7,6 +7,7 @@ class Upscale(Document):
     datetime = DateTimeField(required=True)  # İşlem Tarihi
     low_res_image_url = StringField(required=True)  # Düşük çözünürlüklü görüntü URL
     high_res_image_url = StringField(required=True)  # Yüksek çözünürlüklü görüntü URL (opsiyonel)
+    image_url_webp = StringField()
     cost = FloatField(required=True)  # İşlem maliyeti
     execution_time = FloatField(required=True)  # İşlem süresi (milisaniye)
     user_id = StringField(required=False)  # Kullanıcı ID
@@ -25,6 +26,7 @@ class Upscale(Document):
             "datetime": self.datetime,
             "low_res_image_url": self.low_res_image_url,
             "high_res_image_url": self.high_res_image_url,
+            "image_url_webp": self.image_url_webp,
             "cost": self.cost,
             "execution_time": self.execution_time,
             "user_id": self.user_id,

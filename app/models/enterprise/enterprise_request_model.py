@@ -9,7 +9,8 @@ class EnterpriseRequest(Document):
     company_id = StringField(required=True)
     company_name = StringField(required=True, max_length=255)  # Şirketin adı
     prompt = StringField(required=False)                        # Kullanılan prompt
-    image = StringField(required=False)                         # Üretilen yüksek çözünürlüklü resmin URL'si veya yolu
+    image = StringField(required=False)                       # Üretilen yüksek çözünürlüklü resmin URL'si veya yolu
+    webp_url = StringField()
     seed = StringField()                                       # Seed değeri (varsa)
     model_type = StringField()                                 # Kullanılan model tipi
     resolution = StringField()                                 # Görüntü çözünürlüğü
@@ -26,6 +27,7 @@ class EnterpriseRequest(Document):
             "company_name": self.company_name,
             "prompt": self.prompt,
             "image": self.image,
+            "webp_url": self.webp_url,
             "seed": self.seed,
             "model_type": self.model_type,
             "resolution": self.resolution,
