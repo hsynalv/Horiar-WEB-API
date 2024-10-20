@@ -1,3 +1,5 @@
+import uuid
+
 from flask import current_app
 from bson import ObjectId
 from app.errors.not_found_error import NotFoundError
@@ -55,27 +57,25 @@ class UserService(BaseService):
         return pbkdf2_sha256.verify(provided_password, stored_password)
 
     @staticmethod
-    def add_user(email, password, username):
+    def add_user(email, password):
         """
-        Yeni bir kullanıcı ekler.
+        Yeni bir kullanıcı ekler. Kullanıcı adı rastgele oluşturulur.
         """
         # Kullanıcı verilerini doğrula
-        UserService.validate_user_data(email, password, username)
+        UserService.validate_user_data(email, password)
 
-        # E-posta var mı kontrol et
-        existing_user_email = User.objects(email=email).first()
-        if existing_user_email:
-            raise ValueError("User with this email already exists")
+        # Rastgele kullanıcı adı oluştur
+        random_username = f"user_{uuid.uuid4().hex[:8]}"  # 8 karakterlik rastgele bir kullanıcı adı
 
-        # Kullanıcı adı var mı kontrol et
-        existing_user_username = User.objects(username=username).first()
-        if existing_user_username:
-            raise ValueError("User with this username already exists")
+        # Benzersiz bir kullanıcı adı oluşturulana kadar kontrol et
+        while User.objects(username=random_username).first():
+            random_username = f"user_{uuid.uuid4().hex[:8]}"
 
         # Şifreyi hash'le ve kullanıcıyı ekle (pbkdf2_sha256 kullanılıyor)
         hashed_password = pbkdf2_sha256.hash(password)
-        user = User(email=email, username=username, password=hashed_password)
+        user = User(email=email, username=random_username, password=hashed_password)
         user.save()
+
         return str(user.id)
 
     @staticmethod
@@ -101,15 +101,21 @@ class UserService(BaseService):
         user.update(**update_data)
 
     @staticmethod
-    def validate_user_data(email, password, username):
+    def validate_user_data(email, password):
         """
         Kullanıcı oluşturma verilerini doğrular.
         """
-        if not email or not password or not username:
+        if not email or not password:
             raise ValueError("Missing required fields")
 
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
             raise ValueError("Invalid email format")
+
+
+        # E-posta var mı kontrol et
+        existing_user_email = User.objects(email=email).first()
+        if existing_user_email:
+            raise ValueError("User with this email already exists")
 
     @staticmethod
     def change_password(user_id, current_password, new_password):

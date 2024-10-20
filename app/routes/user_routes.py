@@ -127,10 +127,9 @@ def signup():
     data = request.json
     email = data.get('email')
     password = data.get('password')
-    username = data.get('username')
 
     try:
-        user_id = UserService.add_user(email, password, username)
+        user_id = UserService.add_user(email, password)
         return jsonify({"message": "User created successfully", "user_id": user_id}), 201
     except ValueError as e:
         return jsonify({"message": str(e)}), 400
