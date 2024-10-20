@@ -274,11 +274,13 @@ class TextToImageService(BaseService):
         image_request.save()
 
     @staticmethod
-    def get_requests_by_user_id(user_id):
+    def get_requests_by_user_id(user_id, page=1, per_page=8):
         """
-        Veritabanından kullanıcı ID'sine göre istekleri getirir.
+        Veritabanından kullanıcı ID'sine göre istekleri sayfalama ile getirir.
         """
-        return ImageRequest.objects(user_id=user_id, consistent=False).order_by('-request_time').all()
+        skip = (page - 1) * per_page
+        return (ImageRequest.objects(user_id=user_id, consistent=False).order_by('-request_time')
+        .skip(skip).limit(per_page))
 
     @staticmethod
     def get_requests_by_user_id_consistent(user_id):
