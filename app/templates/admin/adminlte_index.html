@@ -5,14 +5,20 @@
 {% block content %}
 <section class="content">
     <div class="container-fluid">
+        <!-- Loading animasyonu -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Yükleniyor, lütfen bekleyin...</p>
+        </div>
+
         <!-- Small boxes (Stat box) -->
-        <div class="row">
+        <div class="row" id="content" style="display: none;">
             <div class="col-lg-3 col-6">
                 <!-- small box -->
                 <div class="small-box bg-info">
                     <div class="inner">
-                        <h3>150</h3>
-                        <p>New Orders</p>
+                        <h3>{{ subscription_count }} A</h3>
+                        <p>Satın Alımlar</p>
                     </div>
                     <div class="icon">
                         <i class="ion ion-bag"></i>
@@ -25,4 +31,44 @@
         <!-- /.row -->
     </div><!-- /.container-fluid -->
 </section>
+
+<!-- CSS - Spinner için -->
+<style>
+    .loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        text-align: center;
+    }
+
+    .spinner {
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid #3498db;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+<!-- JavaScript - Yüklenme animasyonu ve yönlendirme -->
+<script>
+    window.onload = function() {
+        // Yüklenme animasyonunu gösteriyoruz
+        document.getElementById('loading').style.display = 'flex';
+        document.getElementById('content').style.display = 'none';
+
+        // 2 saniye sonra yönlendirme yapıyoruz (isteğe bağlı gecikme)
+        setTimeout(function() {
+            window.location.href = "/admin/dashboard";
+        }, 150);
+    };
+</script>
+
 {% endblock %}

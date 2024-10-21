@@ -9,6 +9,8 @@ from app.models.coupon_model import Coupon
 from app.models.discord_image_request_model import DiscordImageRequest
 from app.models.image_request_model import ImageRequest
 from app.models.package_model import Package
+from app.models.subscription_model import Subscription
+from app.models.text_to_image_model import TextToImage
 from app.models.user_model import User
 from app.services.coupon_service import CouponService
 from app.services.user_service import UserService
@@ -272,6 +274,24 @@ def delete_package(package_id):
 def send_mail_page():
     users = User.objects()
     return render_template('admin/mail/send_mail.html', users=users)
+
+
+"""
+Admin Dashboard Rotaları ------------------------------------------------------------------------------------
+"""
+
+@admin_routes_bp.route('/dashboard')
+def dashboard():
+    subscription_count = Subscription.objects.count()
+    web_site_users = User.objects.count()
+
+    discord_requests = TextToImage.objects(source="discord")
+    unique_discord_usernames = discord_requests.distinct('discord_username')
+    distinct_discord_user_count = len(unique_discord_usernames)
+
+    # Başka istatistikler de eklenebilir
+    return render_template('admin/dashboard.html', subscription_count=subscription_count,
+                           web_site_users=web_site_users, distinct_discord_user_count=distinct_discord_user_count)
 
 
 
