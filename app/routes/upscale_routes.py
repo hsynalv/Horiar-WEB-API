@@ -5,7 +5,9 @@ from flask import Blueprint, jsonify, request, current_app
 
 from app.auth import jwt_required
 from app.middlewares import check_credits
+from app.models.text_to_image_model import TextToImage
 from app.services.upscale_service import UpscaleService
+from app.utils.convert_to_webp import process_and_save_image
 
 # Blueprint oluşturuluyor
 upscale_bp = Blueprint('upscale_bp', __name__)
@@ -55,7 +57,7 @@ def get_upscale_by_user(user_id):
         requests = UpscaleService.get_upscale_request_by_userid(user_id)
 
         # Sonuçları JSON formatında döndür
-        return jsonify([request.to_dict() for request in requests]), 200
+        return jsonify(requests), 200
 
     except Exception as e:
         # Hata durumunda hata mesajı döndür
@@ -71,8 +73,15 @@ def get_upscale_by_id(upscale_id):
         # ID'ye göre tek bir upscale talebini al
         request = UpscaleService.get_by_id(upscale_id)
 
+        custom_request = {
+            "id": str(request.id),  # ObjectId'yi string formatına çeviriyoruz
+            "low_res_image_url": request.low_res_image_url,
+            "high_res_image_url": request.image_url_webp,
+            "high_image_png": request.high_res_image_url,
+        }
+
         if request:
-            return jsonify(request.to_dict()), 200
+            return jsonify(custom_request), 200
         else:
             return jsonify({"error": "Upscale request not found"}), 404
 
@@ -92,16 +101,32 @@ def get_all_upscales():
         return jsonify({"error": str(e)}), 500
 
 
-@upscale_bp.route('/upscale/<upscale_id>', methods=['DELETE'])
-def delete_upscale(upscale_id):
-    """
-    Belirtilen ID'ye göre bir upscale talebini siler.
-    """
-    try:
-        result = UpscaleService.delete_upscale_request(upscale_id)
-        if result:
-            return jsonify({"message": "Upscale request deleted successfully"}), 200
-        else:
-            return jsonify({"error": "Upscale request not found"}), 404
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+
+@upscale_bp.route('/change_upscale', methods=['GET'])
+def change_upscale():
+    upscale_requests = UpscaleService.get_all_upscale_requests()
+    a = 1
+    for upscale in upscale_requests:
+        image_url = upscale.high_res_image_url.split(".png")[0] + ".png"
+        upscale.high_res_image_url = image_url
+        webp = process_and_save_image(app= current_app._get_current_object(), userid="111", runpod_image_url=upscale.high_res_image_url)
+        upscale.image_url_webp = webp
+        upscale.save()
+        print(a)
+        a+=1
+        return 200
+
+@upscale_bp.route('/change_image', methods=['GET'])
+def change_image():
+    requests = TextToImage.objects().all()
+    a = 1
+    for upscale in requests:
+        image_url = upscale.image_url.split(".png")[0] + ".png"
+        upscale.image_url = image_url
+        webp = process_and_save_image(app= current_app._get_current_object(), userid="111", runpod_image_url=upscale.image_url)
+        upscale.image_url_webp = webp
+        upscale.save()
+        print(a)
+        a+=1
+    return {},200
+

@@ -267,6 +267,7 @@ class TextToImageService(BaseService):
             username=username,
             prompt=prompt,
             image=image_url,
+            image_webp=webp_url,
             consistent=randomSeed
         )
         image_request.save()
@@ -277,8 +278,25 @@ class TextToImageService(BaseService):
         Veritabanından kullanıcı ID'sine göre istekleri sayfalama ile getirir.
         """
         skip = (page - 1) * per_page
-        return (ImageRequest.objects(user_id=user_id, consistent=False).order_by('-request_time')
-        .skip(skip).limit(per_page))
+        requests = TextToImage.objects(user_id=user_id, consistent=False, source="web").order_by('-datetime').skip(skip).limit(
+            per_page)
+
+        # Yeni bir liste oluşturup her öğeyi özelleştiriyoruz
+        custom_requests = []
+        for request in requests:
+            custom_request = {
+                "id": str(request.id),  # ObjectId'yi string formatına çeviriyoruz
+                "prompt": request.prompt,
+                "image": request.image_url_webp,
+                "image_png" : request.image_url,
+                "seed": request.seed,
+                "model_type": request.model_type,
+                "prompt_fix": request.prompt_fix,
+                "resolution": request.resolution,
+            }
+            custom_requests.append(custom_request)
+
+        return custom_requests
 
     @staticmethod
     def get_requests_by_user_id_consistent(user_id, page=1, per_page=8):
@@ -286,8 +304,25 @@ class TextToImageService(BaseService):
         Veritabanından kullanıcı ID'sine göre istekleri getirir.
         """
         skip = (page - 1) * per_page
-        return (ImageRequest.objects(user_id=user_id,consistent=True).order_by('-request_time')
-                .skip(skip).limit(per_page))
+        requests = TextToImage.objects(user_id=user_id, consistent=True, source="web").order_by('-datetime').skip(
+            skip).limit(per_page)
+
+        # Yeni bir liste oluşturup her öğeyi özelleştiriyoruz
+        custom_requests = []
+        for request in requests:
+            custom_request = {
+                "id": str(request.id),  # ObjectId'yi string formatına çeviriyoruz
+                "prompt": request.prompt,
+                "image": request.image_url_webp,
+                "image_png": request.image_url,
+                "seed": request.seed,
+                "model_type": request.model_type,
+                "prompt_fix": request.prompt_fix,
+                "resolution": request.resolution,
+            }
+            custom_requests.append(custom_request)
+
+        return custom_requests
 
     @staticmethod
     def promptEnhance(text):

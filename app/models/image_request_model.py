@@ -8,6 +8,7 @@ class ImageRequest(Document):
     username = StringField(required=True, max_length=50)
     prompt = StringField(required=True)
     image = StringField(required=True)
+    image_webp = StringField(required=True)
     request_time = DateTimeField(default=datetime.utcnow)
     consistent = BooleanField(default=False)
 
@@ -20,6 +21,7 @@ class ImageRequest(Document):
             "username": self.username,
             "prompt": self.prompt,
             "image": self.image,
+            "image_webp": self.image_webp,
             "request_time": self.request_time,
             "consistent":self.consistent
         }

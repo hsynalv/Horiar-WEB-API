@@ -63,7 +63,7 @@ def get_requests_by_user(user_id):
         requests = TextToImageService.get_requests_by_user_id(user_id)
 
         # Sonuçları JSON formatında döndür
-        return jsonify([request.to_dict() for request in requests]), 200
+        return jsonify(requests), 200
 
     except Exception as e:
         # Hata durumunda hata mesajı döndür
@@ -80,7 +80,7 @@ def get_requests_by_user_consistent(user_id):
         requests = TextToImageService.get_requests_by_user_id_consistent(user_id)
 
         # Sonuçları JSON formatında döndür
-        return jsonify([request.to_dict() for request in requests]), 200
+        return jsonify(requests), 200
 
     except Exception as e:
         # Hata durumunda hata mesajı döndür

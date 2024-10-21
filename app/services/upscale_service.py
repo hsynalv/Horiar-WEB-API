@@ -54,11 +54,25 @@ class UpscaleService(BaseService):
 
 
     @staticmethod
-    def get_upscale_request_by_userid(user_id):
+    def get_upscale_request_by_userid(user_id, page=1, per_page=8):
         """
         Verilen ID'ye göre bir upscale talebini getirir.
         """
-        return Upscale.objects(user_id=user_id).order_by('-date').all()
+        skip = (page - 1) * per_page
+        requests =  Upscale.objects(user_id=user_id).order_by('-date').skip(
+            skip).limit(per_page)
+
+        custom_requests = []
+        for request in requests:
+            custom_request = {
+                "id": str(request.id),  # ObjectId'yi string formatına çeviriyoruz
+                "low_res_image_url": request.low_res_image_url,
+                "high_res_image_url": request.image_url_webp,
+                "high_image_png": request.high_res_image_url,
+            }
+            custom_requests.append(custom_request)
+
+        return custom_requests
 
     @staticmethod
     def get_all_upscale_requests():
@@ -66,7 +80,6 @@ class UpscaleService(BaseService):
         Tüm upscale taleplerini getirir.
         """
         return Upscale.objects().all()
-
 
     @staticmethod
     def update_workflow(path, image_btyes):

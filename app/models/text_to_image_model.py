@@ -1,3 +1,4 @@
+from bson import Decimal128
 from flask_mongoengine import Document
 from mongoengine.fields import StringField, IntField, FloatField, DateTimeField, DecimalField, BooleanField
 
@@ -39,7 +40,7 @@ class TextToImage(Document):
             "resolution": self.resolution,
             "image_url": self.image_url,
             "image_url_webp": self.image_url_webp,
-            "cost": self.cost,
+            "cost": float(self.cost) if isinstance(self.cost, Decimal128) else self.cost,
             "execution_time": self.execution_time,
             "source": self.source,
             "user_id": self.user_id,
