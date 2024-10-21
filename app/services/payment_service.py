@@ -36,10 +36,10 @@ class PaymentService:
         else:
             price = package.get("monthlySalePrice") or package["monthlyOriginalPrice"]
 
-        #currency = 'USD'
-        #if country_code == "TR":  # Eğer IP adresi Türkiye'ye aitse, fiyatı TL'ye çevir
-        price = PaymentService.convert_to_tl(price)
-        currency = 'TL'
+        currency = 'USD'
+        if country_code == "TR":  # Eğer IP adresi Türkiye'ye aitse, fiyatı TL'ye çevir
+            price = PaymentService.convert_to_tl(price)
+            currency = 'TL'
         print(f"price {price}")
 
         # KDV oranını belirliyoruz (örneğin %20 KDV)
