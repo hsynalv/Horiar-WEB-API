@@ -52,10 +52,10 @@ def discord_callback():
     jwt_token = create_jwt_token(str(user.id), user.username, user.email, user.roles, current_app.config['SECRET_KEY'])
 
     response = make_response(redirect("https://horiar.com"))
-    response.set_cookie('token', jwt_token, httponly=False, secure=True, samesite='None', domain='.horiar.com')
-    response.set_cookie('userId', str(user.id), httponly=False, secure=True, samesite='None', domain='.horiar.com')
-    response.set_cookie('sn', user.roles[0], httponly=False, secure=True, samesite='None', domain='.horiar.com')
-    response.set_cookie('logtype', "oauth-432bc057179a", httponly=False, secure=True, samesite='None', domain='.horiar.com')
+    response.set_cookie('token', jwt_token, httponly=False, secure=True, samesite='None', domain='.horiar.com', max_age=30*24*60*60)
+    response.set_cookie('userId', str(user.id), httponly=False, secure=True, samesite='None', domain='.horiar.com', max_age=30*24*60*60)
+    response.set_cookie('sn', user.roles[0], httponly=False, secure=True, samesite='None', domain='.horiar.com', max_age=30*24*60*60)
+    response.set_cookie('logtype', "oauth-432bc057179a", httponly=False, secure=True, samesite='None', domain='.horiar.com', max_age=30*24*60*60)
 
     return response
 
@@ -104,10 +104,10 @@ def google_callback():
     jwt_token = create_jwt_token(str(user.id), user.username, user.email, user.roles, current_app.config['SECRET_KEY'])
 
     response = make_response(redirect("https://horiar.com"))
-    response.set_cookie('token', jwt_token, httponly=False, secure=True, samesite='None', domain='.horiar.com')
-    response.set_cookie('userId', str(user.id), httponly=False, secure=True, samesite='None', domain='.horiar.com')
-    response.set_cookie('sn', user.roles[0], httponly=False, secure=True, samesite='None', domain='.horiar.com')
-    response.set_cookie('logtype', "oauth-432bc057179a", httponly=False, secure=True, samesite='None', domain='.horiar.com')
+    response.set_cookie('token', jwt_token, httponly=False, secure=True, samesite='None', domain='.horiar.com', max_age=30*24*60*60)
+    response.set_cookie('userId', str(user.id), httponly=False, secure=True, samesite='None', domain='.horiar.com', max_age=30*24*60*60)
+    response.set_cookie('sn', user.roles[0], httponly=False, secure=True, samesite='None', domain='.horiar.com', max_age=30*24*60*60)
+    response.set_cookie('logtype', "oauth-432bc057179a", httponly=False, secure=True, samesite='None', domain='.horiar.com', max_age=30*24*60*60)
 
     return response
 
