@@ -1,12 +1,14 @@
 import logging
 import datetime
+import time
+
 from flask import Blueprint, jsonify, request, current_app, make_response, redirect, url_for
 from ..auth import create_jwt_token, jwt_required, oauth
 from app.services.user_service import UserService
 from ..services.subscription_service import SubscriptionService
 
 user_bp = Blueprint('user_bp', __name__)
-
+MAX_RETRIES = 3  # Yeniden deneme sayısı
 @user_bp.route('/login/discord')
 def login_discord():
     discord = oauth.create_client('discord')
@@ -66,23 +68,39 @@ def login_google():
     redirect_uri = url_for('user_bp.google_callback', _external=True)
     return google.authorize_redirect(redirect_uri)
 
+
 @user_bp.route('/login/google/callback')
 def google_callback():
     google = oauth.create_client('google')
-    try:
-        # Google'dan yetkilendirme token'ını almayı deneyin
-        token = google.authorize_access_token(timeout=30)
-    except Exception as e:
-        # Eğer "access_denied" hatası gelirse kullanıcıyı istediğiniz yere yönlendirin
-        error_message = str(e)
-        if "access_denied" in error_message:
-            return redirect("https://horiar.com/explore")  # İptal durumunda yönlendirme
-        else:
+
+    # Yeniden deneme için döngü
+    for attempt in range(MAX_RETRIES):
+        try:
+            # Google'dan yetkilendirme token'ını almayı deneyin
+            token = google.authorize_access_token(timeout=30)
+            break  # Eğer başarıyla token alınırsa döngüyü kır
+        except Exception as e:
+            error_message = str(e)
             logging.error(f"Google login sırasında hata meydana geldi: {error_message}")
+
+            if "access_denied" in error_message:
+                return redirect("https://horiar.com/explore")  # İptal durumunda yönlendirme
+
+            if "Read timed out" in error_message and attempt < MAX_RETRIES - 1:
+                time.sleep(2)  # 2 saniye bekle ve yeniden dene
+                continue  # Yeniden denemeye devam et
+
+            # Hata devam ederse kullanıcıyı bilgilendirmeden ana sayfaya yönlendirin
             return redirect("https://horiar.com")
 
-    user_info = google.get('https://www.googleapis.com/oauth2/v1/userinfo', timeout=10).json()
+    try:
+        # Kullanıcı bilgilerini Google API'den alıyoruz
+        user_info = google.get('https://www.googleapis.com/oauth2/v1/userinfo', timeout=10).json()
+    except Exception as e:
+        logging.error(f"Kullanıcı bilgilerini alırken hata: {str(e)}")
+        return redirect("https://horiar.com")
 
+    # Kullanıcı verilerini hazırlama
     user_data = {
         "google_id": user_info["id"],
         "username": user_info["name"],
@@ -91,9 +109,9 @@ def google_callback():
         "discord_username": None,
         "google_username": user_info["name"],
         "password": None,
-        "is_enabled": True,  # Kullanıcı varsayılan olarak aktif olabilir
-        "is_banned": False,  # Varsayılan olarak yasaklanmamış olabilir
-        "roles": ["37fb8744-faf9-4f62-a729-a284c842bf0a"], # Discord üzerinden gelenler 'user' rolüyle atanabilir
+        "is_enabled": True,
+        "is_banned": False,
+        "roles": ["37fb8744-faf9-4f62-a729-a284c842bf0a"],
         "base_credits": 15
     }
 
@@ -101,13 +119,21 @@ def google_callback():
     user = UserService.add_or_update_user(user_data)
 
     # JWT oluşturmak için kullanıcı bilgilerini kullan
-    jwt_token = create_jwt_token(str(user.id), user.username, user.email, user.roles, current_app.config['SECRET_KEY'])
+    jwt_token = create_jwt_token(
+        str(user.id), user.username, user.email, user.roles,
+        current_app.config['SECRET_KEY']
+    )
 
+    # Kullanıcıya cookie göndererek yanıt oluşturma
     response = make_response(redirect("https://horiar.com"))
-    response.set_cookie('token', jwt_token, httponly=False, secure=True, samesite='None', domain='.horiar.com', max_age=30*24*60*60)
-    response.set_cookie('userId', str(user.id), httponly=False, secure=True, samesite='None', domain='.horiar.com', max_age=30*24*60*60)
-    response.set_cookie('sn', user.roles[0], httponly=False, secure=True, samesite='None', domain='.horiar.com', max_age=30*24*60*60)
-    response.set_cookie('logtype', "oauth-432bc057179a", httponly=False, secure=True, samesite='None', domain='.horiar.com', max_age=30*24*60*60)
+    response.set_cookie('token', jwt_token, httponly=False, secure=True, samesite='None', domain='.horiar.com',
+                        max_age=30 * 24 * 60 * 60)
+    response.set_cookie('userId', str(user.id), httponly=False, secure=True, samesite='None', domain='.horiar.com',
+                        max_age=30 * 24 * 60 * 60)
+    response.set_cookie('sn', user.roles[0], httponly=False, secure=True, samesite='None', domain='.horiar.com',
+                        max_age=30 * 24 * 60 * 60)
+    response.set_cookie('logtype', "oauth-432bc057179a", httponly=False, secure=True, samesite='None',
+                        domain='.horiar.com', max_age=30 * 24 * 60 * 60)
 
     return response
 
