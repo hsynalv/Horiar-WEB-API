@@ -100,33 +100,3 @@ def get_all_upscales():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-
-@upscale_bp.route('/change_upscale', methods=['GET'])
-def change_upscale():
-    upscale_requests = UpscaleService.get_all_upscale_requests()
-    a = 1
-    for upscale in upscale_requests:
-        image_url = upscale.high_res_image_url.split(".png")[0] + ".png"
-        upscale.high_res_image_url = image_url
-        webp = process_and_save_image(app= current_app._get_current_object(), userid="111", runpod_image_url=upscale.high_res_image_url)
-        upscale.image_url_webp = webp
-        upscale.save()
-        print(a)
-        a+=1
-        return 200
-
-@upscale_bp.route('/change_image', methods=['GET'])
-def change_image():
-    requests = TextToImage.objects().all()
-    a = 1
-    for upscale in requests:
-        image_url = upscale.image_url.split(".png")[0] + ".png"
-        upscale.image_url = image_url
-        webp = process_and_save_image(app= current_app._get_current_object(), userid="111", runpod_image_url=upscale.image_url)
-        upscale.image_url_webp = webp
-        upscale.save()
-        print(a)
-        a+=1
-    return {},200
-
