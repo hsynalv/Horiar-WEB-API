@@ -59,7 +59,7 @@ class UpscaleService(BaseService):
         Verilen ID'ye göre bir upscale talebini getirir.
         """
         skip = (page - 1) * per_page
-        requests =  Upscale.objects(user_id=user_id).order_by('-date').skip(
+        requests =  Upscale.objects(user_id=user_id).order_by('-datetime').skip(
             skip).limit(per_page)
 
         custom_requests = []
