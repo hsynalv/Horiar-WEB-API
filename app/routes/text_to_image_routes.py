@@ -87,3 +87,47 @@ def get_requests_by_user_consistent(user_id):
         return jsonify({"error": str(e)}), 500
 
 
+@text_to_image_bp.route('/requests', methods=['POST'])
+@jwt_required(pass_payload=False)
+def get_requests_by_user_page():
+    """
+    JWT'den alınan kullanıcı ID'sine göre tüm istekleri döndürür.
+    """
+    data = request.json
+    user_id = data.get('user_id')
+    page = data.get('page')
+
+    try:
+        # Kullanıcı ID'sine göre istekleri al
+        requests = TextToImageService.get_requests_by_user_id(user_id, page)
+
+        # Sonuçları JSON formatında döndür
+        return jsonify(requests), 200
+
+    except Exception as e:
+        # Hata durumunda hata mesajı döndür
+        return jsonify({"error": str(e)}), 500
+
+@text_to_image_bp.route('/requests/consistent', methods=['POST'])
+@jwt_required(pass_payload=False)
+def get_requests_by_user_consistent_page():
+    """
+    JWT'den alınan kullanıcı ID'sine göre tüm istekleri döndürür.
+    """
+
+    data = request.json
+    user_id = data.get('user_id')
+    page = data.get('page')
+
+    try:
+        # Kullanıcı ID'sine göre istekleri al
+        requests = TextToImageService.get_requests_by_user_id(user_id, page)
+
+        # Sonuçları JSON formatında döndür
+        return jsonify(requests), 200
+
+    except Exception as e:
+        # Hata durumunda hata mesajı döndür
+        return jsonify({"error": str(e)}), 500
+
+
