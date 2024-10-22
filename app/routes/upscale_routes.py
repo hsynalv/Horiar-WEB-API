@@ -52,26 +52,8 @@ def get_upscale_by_user(user_id):
     """
     Belirtilen ID'ye göre bir upscale talebini getirir.
     """
-    try:
-        # Kullanıcı ID'sine göre istekleri al
-        requests = UpscaleService.get_upscale_request_by_userid(user_id)
+    page = int(request.args.get('page', 1))  # Varsayılan olarak 1. sayfa
 
-        # Sonuçları JSON formatında döndür
-        return jsonify(requests), 200
-
-    except Exception as e:
-        # Hata durumunda hata mesajı döndür
-        return jsonify({"error": str(e)}), 500
-
-@upscale_bp.route('/get', methods=['POST'])
-@jwt_required(pass_payload=False)
-def get_upscale_by_user_get():
-    """
-    Belirtilen ID'ye göre bir upscale talebini getirir.
-    """
-    data = request.json
-    user_id = data.get('user_id')
-    page = data.get('page')
 
     try:
         # Kullanıcı ID'sine göre istekleri al

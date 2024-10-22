@@ -1,5 +1,6 @@
 import datetime
 import json
+import math
 import os
 import openai
 import random
@@ -277,34 +278,17 @@ class TextToImageService(BaseService):
         """
         Veritabanından kullanıcı ID'sine göre istekleri sayfalama ile getirir.
         """
+        # Kullanıcıya ait toplam kayıt sayısını alıyoruz
+        total_requests = TextToImage.objects(user_id=user_id, consistent=False, source="web").count()
+
+        # Toplam sayfa sayısını hesaplıyoruz
+        total_pages = math.ceil(total_requests / per_page)
+
+        # Sayfalama için skip miktarını hesaplıyoruz
         skip = (page - 1) * per_page
-        requests = TextToImage.objects(user_id=user_id, consistent=False, source="web").order_by('-datetime').skip(skip).limit(
-            per_page)
 
-        # Yeni bir liste oluşturup her öğeyi özelleştiriyoruz
-        custom_requests = []
-        for request in requests:
-            custom_request = {
-                "id": str(request.id),  # ObjectId'yi string formatına çeviriyoruz
-                "prompt": request.prompt,
-                "image": request.image_url_webp,
-                "image_png" : request.image_url,
-                "seed": request.seed,
-                "model_type": request.model_type,
-                "prompt_fix": request.prompt_fix,
-                "resolution": request.resolution,
-            }
-            custom_requests.append(custom_request)
-
-        return custom_requests
-
-    @staticmethod
-    def get_requests_by_user_id_consistent(user_id, page=1, per_page=8):
-        """
-        Veritabanından kullanıcı ID'sine göre istekleri getirir.
-        """
-        skip = (page - 1) * per_page
-        requests = TextToImage.objects(user_id=user_id, consistent=True, source="web").order_by('-datetime').skip(
+        # İlgili sayfaya göre istekleri alıyoruz
+        requests = TextToImage.objects(user_id=user_id, consistent=False, source="web").order_by('-datetime').skip(
             skip).limit(per_page)
 
         # Yeni bir liste oluşturup her öğeyi özelleştiriyoruz
@@ -322,7 +306,56 @@ class TextToImageService(BaseService):
             }
             custom_requests.append(custom_request)
 
-        return custom_requests
+        # Sonuçları döndürürken toplam sayfa ve toplam kayıt sayısını da ekliyoruz
+        return {
+            "requests": custom_requests,
+            "total_requests": total_requests,
+            "total_pages": total_pages,
+            "current_page": page,
+            "per_page": per_page
+        }
+
+    @staticmethod
+    def get_requests_by_user_id_consistent(user_id, page=1, per_page=8):
+        """
+        Veritabanından kullanıcı ID'sine göre istekleri sayfalama ile getirir.
+        """
+        # Kullanıcıya ait toplam kayıt sayısını alıyoruz
+        total_requests = TextToImage.objects(user_id=user_id, consistent=True, source="web").count()
+
+        # Toplam sayfa sayısını hesaplıyoruz
+        total_pages = math.ceil(total_requests / per_page)
+
+        # Sayfalama için skip miktarını hesaplıyoruz
+        skip = (page - 1) * per_page
+
+        # İlgili sayfaya göre istekleri alıyoruz
+        requests = TextToImage.objects(user_id=user_id, consistent=False, source="web").order_by('-datetime').skip(
+            skip).limit(per_page)
+
+        # Yeni bir liste oluşturup her öğeyi özelleştiriyoruz
+        custom_requests = []
+        for request in requests:
+            custom_request = {
+                "id": str(request.id),  # ObjectId'yi string formatına çeviriyoruz
+                "prompt": request.prompt,
+                "image": request.image_url_webp,
+                "image_png": request.image_url,
+                "seed": request.seed,
+                "model_type": request.model_type,
+                "prompt_fix": request.prompt_fix,
+                "resolution": request.resolution,
+            }
+            custom_requests.append(custom_request)
+
+        # Sonuçları döndürürken toplam sayfa ve toplam kayıt sayısını da ekliyoruz
+        return {
+            "requests": custom_requests,
+            "total_requests": total_requests,
+            "total_pages": total_pages,
+            "current_page": page,
+            "per_page": per_page
+        }
 
     @staticmethod
     def promptEnhance(text):

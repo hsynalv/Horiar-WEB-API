@@ -1,5 +1,6 @@
 # upscale_service.py
 import base64
+import math
 import os
 import uuid
 import json
@@ -52,16 +53,24 @@ class UpscaleService(BaseService):
                                           low_res_image=low_res_image_url, app=app)
         return result
 
-
     @staticmethod
     def get_upscale_request_by_userid(user_id, page=1, per_page=8):
         """
-        Verilen ID'ye göre bir upscale talebini getirir.
+        Verilen ID'ye göre kullanıcıya ait upscale taleplerini sayfalama ile getirir.
         """
-        skip = (page - 1) * per_page
-        requests =  Upscale.objects(user_id=user_id).order_by('-datetime').skip(
-            skip).limit(per_page)
+        # Kullanıcıya ait toplam kayıt sayısını alıyoruz
+        total_requests = Upscale.objects(user_id=user_id).count()
 
+        # Toplam sayfa sayısını hesaplıyoruz
+        total_pages = math.ceil(total_requests / per_page)
+
+        # Sayfalama için skip miktarını hesaplıyoruz
+        skip = (page - 1) * per_page
+
+        # İlgili sayfaya göre upscale isteklerini alıyoruz
+        requests = Upscale.objects(user_id=user_id).order_by('-datetime').skip(skip).limit(per_page)
+
+        # Yeni bir liste oluşturup her öğeyi özelleştiriyoruz
         custom_requests = []
         for request in requests:
             custom_request = {
@@ -72,7 +81,14 @@ class UpscaleService(BaseService):
             }
             custom_requests.append(custom_request)
 
-        return custom_requests
+        # Sonuçları döndürürken toplam sayfa ve toplam kayıt sayısını da ekliyoruz
+        return {
+            "requests": custom_requests,
+            "total_requests": total_requests,
+            "total_pages": total_pages,
+            "current_page": page,
+            "per_page": per_page
+        }
 
     @staticmethod
     def get_all_upscale_requests():
