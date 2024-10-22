@@ -19,8 +19,9 @@
 <section class="content">
     <div class="container-fluid">
         <!-- Small boxes (Stat box) -->
-                <div class="row">
-          <div class="col-lg-3 col-6">
+        <div class="row">
+            <div class="card-body" style="display: inline-flex">
+                <div class="col-lg-3 col-6">
             <!-- small box -->
             <div class="small-box bg-info">
               <div class="inner">
@@ -34,8 +35,8 @@
               <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
-          <!-- ./col -->
-          <div class="col-lg-3 col-6">
+                 <!-- ./col -->
+                <div class="col-lg-3 col-6">
             <!-- small box -->
             <div class="small-box bg-success">
               <div class="inner">
@@ -49,8 +50,8 @@
               <a href="{{ url_for('admin_routes_bp.admin_users') }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
-          <!-- ./col -->
-          <div class="col-lg-3 col-6">
+                 <!-- ./col -->
+                <div class="col-lg-3 col-6">
             <!-- small box -->
             <div class="small-box bg-warning">
               <div class="inner">
@@ -64,24 +65,42 @@
               <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
-          <!-- ./col
-          <div class="col-lg-3 col-6">
-            <div class="small-box bg-danger">
+            </div>
+        </div>
+        <!-- /.row -->
+        <div class="row">
+            <div class="card-body" style="display: inline-flex">
+                <div class="col-lg-3 col-6">
+            <!-- small box -->
+            <div class="small-box bg-info">
               <div class="inner">
-                <h3>65</h3>
+                <h3>{{ text_to_image_requests }}</h3>
 
-                <p>Unique Visitors</p>
+                <p>Text To Image</p>
               </div>
               <div class="icon">
-                <i class="ion ion-pie-graph"></i>
+                <i class="ion ion-bag"></i>
               </div>
               <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
-        -->
-          <!-- ./col -->
+                 <!-- ./col -->
+                <div class="col-lg-3 col-6">
+            <!-- small box -->
+            <div class="small-box bg-success">
+              <div class="inner">
+                <h3>{{ upscale_requets }}</h3>
+
+                <p>Upscale </p>
+              </div>
+              <div class="icon">
+                <i class="ion ion-stats-bars"></i>
+              </div>
+              <a href="{{ url_for('admin_routes_bp.admin_users') }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+            </div>
+          </div>
+            </div>
         </div>
-        <!-- /.row -->
     </div><!-- /.container-fluid -->
 </section>
 {% endblock %}

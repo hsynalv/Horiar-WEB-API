@@ -11,6 +11,7 @@ from app.models.image_request_model import ImageRequest
 from app.models.package_model import Package
 from app.models.subscription_model import Subscription
 from app.models.text_to_image_model import TextToImage
+from app.models.upscale_model import Upscale
 from app.models.user_model import User
 from app.services.coupon_service import CouponService
 from app.services.user_service import UserService
@@ -288,10 +289,13 @@ def dashboard():
     discord_requests = TextToImage.objects(source="discord")
     unique_discord_usernames = discord_requests.distinct('discord_username')
     distinct_discord_user_count = len(unique_discord_usernames)
+    text_to_image_requests = TextToImage.objects(source="web").count()
+    upscale_requets = Upscale.objects.count()
 
     # Başka istatistikler de eklenebilir
     return render_template('admin/dashboard.html', subscription_count=subscription_count,
-                           web_site_users=web_site_users, distinct_discord_user_count=distinct_discord_user_count)
+                           web_site_users=web_site_users, distinct_discord_user_count=distinct_discord_user_count,
+                           text_to_image_requests=text_to_image_requests, upscale_requets=upscale_requets)
 
 
 
