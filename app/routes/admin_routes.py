@@ -64,8 +64,14 @@ def admin_users():
 @admin_routes_bp.route('/image-requests')
 def list_image_requests():
     # Veritabanından tüm ImageRequest nesnelerini çekiyoruz
-    image_requests = ImageRequest.objects()
+    image_requests = TextToImage.objects()
     return render_template('admin/image_requests.html', image_requests=image_requests)
+
+@admin_routes_bp.route('/upscale-requests')
+def list_upscale_requests():
+    # Veritabanından tüm ImageRequest nesnelerini çekiyoruz
+    requests = Upscale.objects()
+    return render_template('admin/upscale_requests.html', image_requests=requests)
 
 @admin_routes_bp.route('/discord_requests')
 def discord_requests():

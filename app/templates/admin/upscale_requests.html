@@ -16,7 +16,7 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1>Web Site Render Verileri</h1>
+                <h1>Upscale Render Verileri</h1>
             </div>
         </div>
     </div>
@@ -32,7 +32,7 @@
                     <tr>
                         <th>Kullanıcı Adı</th>
                         <th>İstek Zamanı</th>
-                        <th>Prompt</th>
+                        <th>Düşük Çözünürlük</th>
                         <th>Görüntü</th>
                     </tr>
                 </thead>
@@ -41,15 +41,15 @@
                     <tr>
                         <td>{{ request.username }}</td>
                         <td>{{ request.datetime }}</td>
-                        <td>{{ request.prompt }}</td>
                         <td>
-                            {% if request.image_url_webp and "base64 verisi (yedeklendi)" not in request.image_url_webp %}
+                            <a href="{{ request.low_res_image_url }}" target="_blank">
+                                <img src="{{ request.low_res_image_url }}" alt="Image" style="width: 100px; height: auto;">
+                            </a>
+                        </td>
+                        <td>
                             <a href="{{ request.image_url_webp }}" target="_blank">
                                 <img src="{{ request.image_url_webp }}" alt="Image" style="width: 100px; height: auto;">
                             </a>
-                            {% else %}
-                                Görüntü AWS S3'de mevcut değil
-                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}

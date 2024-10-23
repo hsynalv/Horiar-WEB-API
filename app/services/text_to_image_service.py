@@ -330,7 +330,7 @@ class TextToImageService(BaseService):
         skip = (page - 1) * per_page
 
         # İlgili sayfaya göre istekleri alıyoruz
-        requests = TextToImage.objects(user_id=user_id, consistent=False, source="web").order_by('-datetime').skip(
+        requests = TextToImage.objects(user_id=user_id, consistent=True, source="web").order_by('-datetime').skip(
             skip).limit(per_page)
 
         # Yeni bir liste oluşturup her öğeyi özelleştiriyoruz
