@@ -81,6 +81,7 @@ class UpscaleService(BaseService):
             }
             custom_requests.append(custom_request)
 
+        """
         # Sonuçları döndürürken toplam sayfa ve toplam kayıt sayısını da ekliyoruz
         return {
             "requests": custom_requests,
@@ -89,6 +90,8 @@ class UpscaleService(BaseService):
             "current_page": page,
             "per_page": per_page
         }
+        """
+        return custom_requests
 
     @staticmethod
     def get_all_upscale_requests():
