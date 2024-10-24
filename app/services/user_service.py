@@ -45,6 +45,7 @@ class UserService(BaseService):
         """
         E-posta ile kullanıcıyı bulur.
         """
+        email = email.lower()
         return User.objects(email=email).first()
 
     @staticmethod
@@ -73,6 +74,7 @@ class UserService(BaseService):
 
         # Şifreyi hash'le ve kullanıcıyı ekle (pbkdf2_sha256 kullanılıyor)
         hashed_password = pbkdf2_sha256.hash(password)
+        email = email.lower()
         user = User(email=email, username=random_username, password=hashed_password)
         user.save()
 
