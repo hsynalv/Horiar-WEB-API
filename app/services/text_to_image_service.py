@@ -307,7 +307,7 @@ class TextToImageService(BaseService):
             custom_requests.append(custom_request)
 
         # Sonuçları döndürürken toplam sayfa ve toplam kayıt sayısını da ekliyoruz
-        """
+
         return {
             "requests": custom_requests,
             "total_requests": total_requests,
@@ -315,8 +315,8 @@ class TextToImageService(BaseService):
             "current_page": page,
             "per_page": per_page
         }
-        """
-        return custom_requests
+
+        #return custom_requests
 
     @staticmethod
     def get_requests_by_user_id_consistent(user_id, page=1, per_page=8):
@@ -352,7 +352,7 @@ class TextToImageService(BaseService):
             custom_requests.append(custom_request)
 
         # Sonuçları döndürürken toplam sayfa ve toplam kayıt sayısını da ekliyoruz
-        """
+
         return {
             "requests": custom_requests,
             "total_requests": total_requests,
@@ -360,8 +360,8 @@ class TextToImageService(BaseService):
             "current_page": page,
             "per_page": per_page
         }
-        """
-        return custom_requests
+
+        #return custom_requests
 
     @staticmethod
     def promptEnhance(text):
