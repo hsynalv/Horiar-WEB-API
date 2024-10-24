@@ -55,7 +55,7 @@ def register_error_handlers(app):
                         f"Method: {request.method}\n" \
                         f"IP: {client_ip}\n" \
                         f"Traceback: {error_trace}"
-        send_error_email(subject="Critical Error in Application", error_details=error_details)
+        # send_error_email(subject="Critical Error in Application", error_details=error_details)
         # Hata cevabı döndürme
         return jsonify({
             "error": "Internal Server Error",
