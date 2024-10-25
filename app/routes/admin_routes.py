@@ -213,10 +213,13 @@ def edit_coupon(coupon_id):
 """
 Admin Dashboard İçin Package Rotaları ------------------------------------------------------------------------------------
 """
+
+
 @admin_routes_bp.route('/packages', methods=['GET'])
 def list_packages():
     packages = Package.objects.all()
     return render_template('admin/package/packages.html', packages=packages)
+
 
 @admin_routes_bp.route('/packages/new', methods=['GET', 'POST'])
 def create_package():
@@ -227,7 +230,14 @@ def create_package():
         yearly_original_price = float(data.get('yearly_original_price'))
         monthly_sale_price = float(data.get('monthly_sale_price', 0)) if data.get('monthly_sale_price') else None
         yearly_sale_price = float(data.get('yearly_sale_price', 0)) if data.get('yearly_sale_price') else None
-        features = data.getlist('features')
+
+        # Yeni 'features' alanını iki dilde alıyoruz
+        features_en = {f"feature_{i + 1}": val for i, val in enumerate(data.getlist('features_en'))}
+        features_tr = {f"feature_{i + 1}": val for i, val in enumerate(data.getlist('features_tr'))}
+        features = {
+            "en": features_en,
+            "tr": features_tr
+        }
 
         try:
             package = Package(
@@ -236,7 +246,7 @@ def create_package():
                 yearly_original_price=yearly_original_price,
                 monthly_sale_price=monthly_sale_price,
                 yearly_sale_price=yearly_sale_price,
-                features=features
+                features=features  # Özellikler iki dilde ekleniyor
             )
             package.save()
             return redirect(url_for('admin_routes_bp.list_packages'))
@@ -245,6 +255,7 @@ def create_package():
             return jsonify({"error": "Paketi oluştururken hata oluştu."}), 500
 
     return render_template('admin/package/create_package.html')
+
 
 @admin_routes_bp.route('/packages/edit/<package_id>', methods=['GET', 'POST'])
 def edit_package(package_id):
@@ -257,9 +268,17 @@ def edit_package(package_id):
         package.title = data.get('title')
         package.monthly_original_price = float(data.get('monthly_original_price'))
         package.yearly_original_price = float(data.get('yearly_original_price'))
-        package.monthly_sale_price = float(data.get('monthly_sale_price', 0)) if data.get('monthly_sale_price') else None
+        package.monthly_sale_price = float(data.get('monthly_sale_price', 0)) if data.get(
+            'monthly_sale_price') else None
         package.yearly_sale_price = float(data.get('yearly_sale_price', 0)) if data.get('yearly_sale_price') else None
-        package.features = data.getlist('features')
+
+        # Yeni 'features' alanını iki dilde alıyoruz
+        features_en = {f"feature_{i + 1}": val for i, val in enumerate(data.getlist('features_en'))}
+        features_tr = {f"feature_{i + 1}": val for i, val in enumerate(data.getlist('features_tr'))}
+        package.features = {
+            "en": features_en,
+            "tr": features_tr
+        }
 
         try:
             package.save()
@@ -269,6 +288,7 @@ def edit_package(package_id):
             return jsonify({"error": "Paketi güncellerken hata oluştu."}), 500
 
     return render_template('admin/package/edit_package.html', package=package)
+
 
 @admin_routes_bp.route('/packages/delete/<package_id>', methods=['POST'])
 def delete_package(package_id):

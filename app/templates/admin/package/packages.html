@@ -29,49 +29,65 @@
         </div>
         <div class="card-body">
             <table id="packageTable" class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>İşlemler</th>
-            <th>Paket Adı</th>
-            <th>Aylık Orijinal Fiyat</th>
-            <th>Yıllık Orijinal Fiyat</th>
-            <th>Aylık İndirimli Fiyat</th>
-            <th>Yıllık İndirimli Fiyat</th>
-            <th>Özellikler</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for package in packages %}
-        <tr>
-            <td>
-                <a href="{{ url_for('admin_routes_bp.edit_package', package_id=package.id) }}" class="btn btn-warning btn-sm">Düzenle</a>
-                <button class="btn btn-danger btn-sm delete-package" data-package-id="{{ package.id }}">Sil</button>
-            </td>
-            <td>{{ package.title }}</td>
-            <td>{{ package.monthly_original_price }}</td>
-            <td>{{ package.yearly_original_price }}</td>
-            <td>{{ package.monthly_sale_price if package.monthly_sale_price is not none else '' }}</td>
-            <td>{{ package.yearly_sale_price if package.yearly_sale_price is not none else '' }}</td>
-            <td>
-                {% if package.features %}
-                    <ul>
-                        {% for feature in package.features %}
-                            <li>{{ feature }}</li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    Özellik Yok
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+                <thead>
+                    <tr>
+                        <th>İşlemler</th>
+                        <th>Paket Adı</th>
+                        <th>Aylık Orijinal Fiyat</th>
+                        <th>Yıllık Orijinal Fiyat</th>
+                        <th>Aylık İndirimli Fiyat</th>
+                        <th>Yıllık İndirimli Fiyat</th>
+                        <th>İngilizce Özellikler</th>
+                        <th>Türkçe Özellikler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for package in packages %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('admin_routes_bp.edit_package', package_id=package.id) }}" class="btn btn-warning btn-sm">Düzenle</a>
+                            <button class="btn btn-danger btn-sm delete-package" data-package-id="{{ package.id }}">Sil</button>
+                        </td>
+                        <td>{{ package.title }}</td>
+                        <td>{{ package.monthly_original_price }}</td>
+                        <td>{{ package.yearly_original_price }}</td>
+                        <td>{{ package.monthly_sale_price if package.monthly_sale_price is not none else '' }}</td>
+                        <td>{{ package.yearly_sale_price if package.yearly_sale_price is not none else '' }}</td>
 
+                        <!-- İngilizce Özellikler -->
+                        <td>
+                            {% if package.features.en %}
+                                <ul>
+                                    {% for feature in package.features.en.values() %}
+                                        <li>{{ feature }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                Özellik Yok
+                            {% endif %}
+                        </td>
+
+                        <!-- Türkçe Özellikler -->
+                        <td>
+                            {% if package.features.tr %}
+                                <ul>
+                                    {% for feature in package.features.tr.values() %}
+                                        <li>{{ feature }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                Özellik Yok
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </section>
 {% endblock %}
+
 {% block scripts %}
     {{ super() }}
     <script src="{{ url_for('static', filename='plugins/datatables/jquery.dataTables.min.js') }}"></script>
@@ -109,8 +125,6 @@
                     }
                 });
             }
-});
-
-
+        });
     </script>
 {% endblock %}

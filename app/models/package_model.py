@@ -1,4 +1,4 @@
-from mongoengine.fields import StringField, IntField, FloatField, ListField
+from mongoengine.fields import StringField, IntField, FloatField, DictField
 from flask_mongoengine import Document
 
 class Package(Document):
@@ -7,8 +7,21 @@ class Package(Document):
     yearly_original_price = FloatField(required=True)  # Yıllık orijinal fiyat
     monthly_sale_price = FloatField(required=False)  # Aylık indirimli fiyat (opsiyonel)
     yearly_sale_price = FloatField(required=False)  # Yıllık indirimli fiyat (opsiyonel)
-    features = ListField(StringField(), required=True)  # Özellikler listesi (örneğin: "Limited Generations ( ~150/Month)")
     credits = IntField(required=True)
+
+    features = DictField(
+        required=True,
+        default=lambda: {
+            'en': {
+                'feature_1': '',
+                'feature_2': ''
+            },
+            'tr': {
+                'feature_1': '',
+                'feature_2': ''
+            }
+        }
+    )
 
     meta = {'collection': 'packages'}
 

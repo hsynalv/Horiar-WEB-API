@@ -35,10 +35,19 @@
                     <label for="yearly_sale_price">Yıllık İndirimli Fiyat</label>
                     <input type="number" step="0.01" class="form-control" id="yearly_sale_price" name="yearly_sale_price">
                 </div>
+
+                <!-- İngilizce Özellikler Girişi -->
                 <div class="form-group">
-                    <label for="features">Özellikler (Her bir özelliği virgülle ayırın)</label>
-                    <textarea class="form-control" id="features" name="features"></textarea>
+                    <label for="features_en">Özellikler (İngilizce) - Her bir özelliği virgülle ayırın</label>
+                    <textarea class="form-control" id="features_en" name="features_en"></textarea>
                 </div>
+
+                <!-- Türkçe Özellikler Girişi -->
+                <div class="form-group">
+                    <label for="features_tr">Özellikler (Türkçe) - Her bir özelliği virgülle ayırın</label>
+                    <textarea class="form-control" id="features_tr" name="features_tr"></textarea>
+                </div>
+
                 <button type="submit" class="btn bg-gradient-primary">Paket Oluştur</button>
             </form>
         </div>

@@ -17,6 +17,13 @@ def add_package():
             if not data.get(field):
                 return jsonify({"message": f"Missing required field: {field}"}), 400
 
+        # Features alanının dict formatında olup olmadığını ve gerekli anahtarları içerip içermediğini kontrol edin
+        features = data.get('features')
+        if not isinstance(features, dict):
+            return jsonify({"message": "Features must be a dictionary with 'en' and 'tr' keys"}), 400
+        if 'en' not in features or 'tr' not in features:
+            return jsonify({"message": "Features must contain both 'en' and 'tr' keys"}), 400
+
         package_id = PackageService.add_package(data)
         return jsonify({"message": "Package added successfully", "package_id": str(package_id)}), 201
     except ValueError as e:
@@ -46,6 +53,11 @@ def update_package(package_id):
         for field in required_fields:
             if not data.get(field):
                 return jsonify({"message": f"Missing required field: {field}"}), 400
+
+        # Features alanının dict formatında olup olmadığını ve gerekli anahtarları içerip içermediğini kontrol edin
+        features = data.get('features')
+        if features and (not isinstance(features, dict) or 'en' not in features or 'tr' not in features):
+            return jsonify({"message": "Features must be a dictionary with 'en' and 'tr' keys"}), 400
 
         PackageService.update_package(package_id, data)
         return jsonify({"message": "Package updated successfully"}), 200

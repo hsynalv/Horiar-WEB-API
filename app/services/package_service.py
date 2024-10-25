@@ -12,6 +12,16 @@ class PackageService(BaseService):
             raise ValidationError("Discounted price cannot be greater than the original price")
 
     @staticmethod
+    def validate_features(features):
+        if not isinstance(features, dict):
+            raise ValidationError("Features must be a dictionary")
+        if 'en' not in features or 'tr' not in features:
+            raise ValidationError("Features must contain both 'en' and 'tr' keys")
+        # Her iki dildeki özelliklerin de listelenmiş olup olmadığını kontrol et
+        if not isinstance(features['en'], dict) or not isinstance(features['tr'], dict):
+            raise ValidationError("Both 'en' and 'tr' keys must contain a dictionary of features")
+
+    @staticmethod
     def add_package(data):
         # Eksik alan kontrolü
         required_fields = ["title", "monthly_original_price", "yearly_original_price", "features", "credits"]
@@ -24,6 +34,9 @@ class PackageService(BaseService):
             PackageService.validate_discount(data.get('monthly_original_price'), data.get('monthly_sale_price'))
         if data.get('yearly_sale_price'):
             PackageService.validate_discount(data.get('yearly_original_price'), data.get('yearly_sale_price'))
+
+        # Features alanını kontrol et
+        PackageService.validate_features(data['features'])
 
         # Model kullanarak paket oluşturma
         package = Package(**data)
@@ -43,6 +56,10 @@ class PackageService(BaseService):
             PackageService.validate_discount(data.get('monthly_original_price'), data.get('monthly_sale_price'))
         if data.get('yearly_sale_price'):
             PackageService.validate_discount(data.get('yearly_original_price'), data.get('yearly_sale_price'))
+
+        # Features alanı güncelleniyorsa kontrol et
+        if data.get('features'):
+            PackageService.validate_features(data['features'])
 
         # Paketi güncelleme
         package.update(**data)
