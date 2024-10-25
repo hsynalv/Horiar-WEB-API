@@ -17,13 +17,14 @@ def generate_image_direct(payload):
     prompt = data.get('prompt')
     model_type = data.get('model_type', None)
     resolution = data.get('resolution', None)
+    prompt_fix = data.get('prompt_fix', True)
 
     if not prompt:
         return jsonify({"message": "Missing required fields"}), 400
 
     try:
         # Text to image işlemini kuyruk kullanmadan doğrudan yap
-        result = TextToImageService.generate_image_directly(current_app._get_current_object(), prompt, model_type, resolution, payload)
+        result = TextToImageService.generate_image_directly(current_app._get_current_object(), prompt, model_type, resolution, payload, prompt_fix)
         # Eğer result JSON değilse, burada hata olabilir
         return jsonify(result), 200
     except Exception as e:
@@ -39,13 +40,14 @@ def generate_image_direct_consistent(payload):
     prompt = data.get('prompt')
     model_type = data.get('model_type', None)
     resolution = data.get('resolution', None)
+    prompt_fix = data.get('prompt_fix', False)
 
     if not prompt:
         return jsonify({"message": "Missing required fields"}), 400
 
     try:
         # Text to image işlemini kuyruk kullanmadan doğrudan yap
-        result = TextToImageService.generate_image_directly_fixed_seed(current_app._get_current_object(), prompt, model_type, resolution,payload)
+        result = TextToImageService.generate_image_directly_fixed_seed(current_app._get_current_object(), prompt, model_type, resolution,payload, prompt_fix)
         # Eğer result JSON değilse, burada hata olabilir
         return jsonify(result), 200
     except Exception as e:

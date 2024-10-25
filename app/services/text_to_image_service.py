@@ -142,7 +142,7 @@ class TextToImageService(BaseService):
     }
 
     @staticmethod
-    def update_workflow_with_prompt(path, prompt, model_type, resolution, randomSeed):
+    def update_workflow_with_prompt(path, prompt, model_type, resolution, randomSeed, prompt_fix=True):
         """
         workflow.json dosyasını okur ve verilen prompt ile günceller.
         """
@@ -150,8 +150,17 @@ class TextToImageService(BaseService):
             workflow_data = json.load(file)
 
         # JSON verisinde gerekli değişiklikleri yap
-        workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = prompt[0]
-        workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = prompt[1]
+
+        if prompt_fix:
+            print("prompt fix True")
+            newPrompts = TextToImageService.promptEnhance(prompt)
+            workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = newPrompts[0]
+            workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = newPrompts[1]
+        else:
+            print("prompt fix False")
+            workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = prompt
+            workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = prompt
+
         if(randomSeed == True):
             print("seed değişti")
             workflow_data["input"]["workflow"]["112"]["inputs"]["noise_seed"] = random.randint(10 ** 14, 10 ** 15 - 1)
@@ -174,7 +183,7 @@ class TextToImageService(BaseService):
         return workflow_data
 
     @staticmethod
-    def generate_image_directly_fixed_seed(app, prompt, model_type, resolution, payload):
+    def generate_image_directly_fixed_seed(app, prompt, model_type, resolution, payload, prompt_fix):
         workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_promptfix.json')
 
         """
@@ -182,15 +191,18 @@ class TextToImageService(BaseService):
         if nsfw_flag:
             return jsonify({"warning: This prompt violates our safety policy"}), 404
         """
-        newPrompts = TextToImageService.promptEnhance(prompt)
+
 
         # workflow.json dosyasını güncelle
-        updated_workflow = TextToImageService.update_workflow_with_prompt(workflow_path, newPrompts, model_type,
-                                                                          resolution, False)
+        updated_workflow = TextToImageService.update_workflow_with_prompt(path=workflow_path, prompt=prompt,
+                                                                          model_type=model_type, resolution=resolution,
+                                                                          randomSeed=False, prompt_fix=prompt_fix)
         seed = updated_workflow["input"]["workflow"]["112"]["inputs"]["noise_seed"]
 
         user_id = payload["sub"]
         username = payload["username"]
+
+        print("deneme")
 
         # runpod isteği
         result, status_code = send_runpod_request(app=app, user_id=user_id, username=username, data=json.dumps(updated_workflow), runpod_url="RUNPOD_URL",timeout=360)
@@ -200,7 +212,7 @@ class TextToImageService(BaseService):
         return result
 
     @staticmethod
-    def generate_image_directly(app, prompt, model_type, resolution, payload):
+    def generate_image_directly(app, prompt, model_type, resolution, payload, prompt_fix):
         workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_promptfix.json')
 
         """
@@ -208,11 +220,11 @@ class TextToImageService(BaseService):
         if nsfw_flag:
             return jsonify({"warning: This prompt violates our safety policy"}), 404
         """
-        newPrompts = TextToImageService.promptEnhance(prompt)
 
         # workflow.json dosyasını güncelle
-        updated_workflow = TextToImageService.update_workflow_with_prompt(workflow_path, newPrompts, model_type,
-                                                                          resolution, True)
+        updated_workflow = TextToImageService.update_workflow_with_prompt(path=workflow_path, prompt=prompt,
+                                                                          model_type=model_type, resolution=resolution,
+                                                                          randomSeed=True, prompt_fix=prompt_fix)
         seed = updated_workflow["input"]["workflow"]["112"]["inputs"]["noise_seed"]
 
         user_id = payload["sub"]
