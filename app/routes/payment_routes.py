@@ -25,6 +25,15 @@ def get_token(payload):
     is_annual = data.get('is_annual')
     name_surname = data.get('name_surname')
     coupon_name = data.get('coupon_name')
+    logging.info("payment route girildi")
+    logging.info(f"package_id: {package_id}")
+    logging.info(f"user_address: {user_address}")
+    logging.info(f"user_phone: {user_phone}")
+    logging.info(f"is_annual: {is_annual}")
+    logging.info(f"name_surname: {name_surname}")
+    logging.info(f"coupon_name: {coupon_name}")
+    logging.info(f"route bilgileri --------------------------")
+
     result = PaymentService.get_token(current_app._get_current_object(), payload, package_id, user_address, user_phone, user_ip, is_annual, name_surname, coupon_name)
     return result
 

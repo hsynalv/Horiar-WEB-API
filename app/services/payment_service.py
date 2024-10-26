@@ -28,8 +28,11 @@ class PaymentService:
         user_id = payload['sub']
         user = UserService.get_user_by_id(user_id)
         package = PackageService.get_package_by_id(package_id)
+        logging.info("payment servis girildi")
         country_code = PaymentService.get_country_code_by_ip(user_ip) or "TL"
-        print(country_code)
+        logging.info(country_code)
+
+
 
         if is_annual:
             price = package.get("yearlySalePrice") or package["yearlyOriginalPrice"]
@@ -40,7 +43,7 @@ class PaymentService:
         if country_code == "TR":  # Eğer IP adresi Türkiye'ye aitse, fiyatı TL'ye çevir
             price = PaymentService.convert_to_tl(price)
             currency = 'TL'
-        print(f"price {price}")
+        logging.info(f"price {price}")
 
         # KDV oranını belirliyoruz (örneğin %20 KDV)
         kdv_rate = 20
@@ -122,14 +125,15 @@ class PaymentService:
 
             # Yanıttaki "status" alanını kontrol et
             if res.get("status") == "success":
+                logging.info(res)
                 if coupon_name:
                     resultForSave = PaymentService.save_provision(merchant_oid=merchant_oid, user_id=user_id, username=user.username,
                                                                   package_id=package_id, is_annual=is_annual, email=user.email, coupon_name=coupon["name"])
-                    print("kupon varken revizyon kaydedildi")
+                    logging.info("kupon varken revizyon kaydedildi")
                 else:
                     resultForSave = PaymentService.save_provision(merchant_oid=merchant_oid, user_id=user_id, username=user.username,
                                                                   package_id=package_id, is_annual=is_annual, email=user.email, coupon_name=None)
-                    print("kupon yokken revizyon kaydedildi")
+                    logging.info("kupon yokken revizyon kaydedildi")
                 if resultForSave:
                     return res  # Başarılıysa yanıtı döndür
                 else:
