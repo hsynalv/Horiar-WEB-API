@@ -48,3 +48,26 @@ def callback_ok():
         return 'OK', 200  # OK
     else:  # Ödemeye Onay Verilmedi
         return 'OK', 200
+
+
+@payment_bp.route('/contract/', methods=['GET'])
+def get_contract():
+
+    # Kullanıcının Accept-Language başlığından dil tercihini alıyoruz
+    accept_language = request.headers.get('Accept-Language', '')
+
+    # Varsayılan dil İngilizce ('en')
+    language = 'en'
+
+    # Accept-Language'de Türkçe var mı diye kontrol ediyoruz
+    if 'tr' in accept_language.lower():
+        language = 'tr'
+
+    # Dosyadan metni oku
+    contract_text = PaymentService.read_contract_file(language)
+
+    if contract_text:
+        return jsonify({"contract": contract_text}), 200
+    else:
+        return jsonify({"error": "Language not supported or file not found"}), 400
+

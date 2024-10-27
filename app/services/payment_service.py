@@ -2,12 +2,14 @@ import base64
 import hmac
 import json
 import logging
+import os
 import random
 import time
 import hashlib
 from datetime import timedelta, datetime
 
 import requests
+from flask import current_app
 
 from app.models.provision_model import Provision
 from app.models.subscription_model import Subscription
@@ -303,3 +305,17 @@ class PaymentService:
         else:
             PaymentService.paytr_logger.error(f"Provision not found for merchant_oid: {merchant_oid}")
             return False
+
+    # Metin dosyasını okuma fonksiyonu (static klasöründen)
+    @staticmethod
+    def read_contract_file(language):
+        # Static klasöründeki dosya yolunu oluşturuyoruz
+        file_path = os.path.join(current_app.static_folder, 'contracts', f'remote_sales_contract_{language}.txt')
+
+        # Dosya mevcutsa okuma işlemi
+        if os.path.exists(file_path):
+            with open(file_path, 'r', encoding='utf-8') as file:
+                content = file.read()
+            return content
+        else:
+            return None
