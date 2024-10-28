@@ -261,7 +261,7 @@ class TextToImageService(BaseService):
             prompt=prompt,
             seed=seed,
             model_type=model_type,
-            prompt_status = "on" if prompt_fix else "off",
+            prompt_fix = "on" if prompt_fix else "off",
             resolution=resolution,
             image_url=image_url,
             image_url_webp=webp_url,  # WebP URL'yi de kaydediyoruz
