@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 
+from bson import ObjectId
 from flask import render_template, redirect, url_for, flash, Blueprint, session, request, jsonify
 from flask_login import login_user, logout_user
 
@@ -87,11 +88,35 @@ def list_subscription():
 """
 Admin Dashboard İçin Kupon Rotaları ------------------------------------------------------------------------------------
 """
+
+
 @admin_routes_bp.route('/coupons')
 def coupons():
     # Veritabanından tüm kuponları al
     coupons = Coupon.objects.all()
+
+    # Kullanıcı id'leri üzerinden kullanıcı adlarını çekmek için bir sözlük
+    user_ids = []
+    for coupon in coupons:
+        for user in coupon.used_by:
+            # Eğer user nesnesi `User` ise user.id'yi alıyoruz, değilse doğrudan user_id'yi ekliyoruz
+            user_ids.append(user.id if isinstance(user, User) else user)
+
+    # Kullanıcı id'lerini ObjectId formatına çeviriyoruz (eğer değilse)
+    user_ids = [ObjectId(user_id) for user_id in user_ids if isinstance(user_id, (str, ObjectId))]
+
+    # Veritabanından kullanıcıları çekiyoruz
+    users = User.objects(id__in=user_ids)
+    users_dict = {str(user.id): user.username for user in
+                  users}  # Kullanıcı id'leri ve adlarını bir sözlükte topluyoruz
+
+    # Her bir kupon için kullanıcı bilgilerini ekleyin
+    for coupon in coupons:
+        coupon.used_by_usernames = [users_dict.get(str(user.id if isinstance(user, User) else user)) for user in
+                                    coupon.used_by]
+
     return render_template('admin/coupon/coupons.html', coupons=coupons)
+
 
 @admin_routes_bp.route('/coupons/new', methods=['GET', 'POST'])
 def create_coupon():

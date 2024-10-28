@@ -38,6 +38,7 @@
                         <th>Aktiflik Durumu</th>
                         <th>Kullanım Sınırı</th>
                         <th>Kullanım Sayısı</th>
+                        <th>Kullanıcılar</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -55,6 +56,40 @@
                         </td>
                         <td>{{ coupon.max_usage }}</td>
                         <td>{{ coupon.usage_count }}</td>
+                       <td>
+    {% if coupon.used_by_usernames %}
+        <div>
+            <!-- Kullanıcıların listesini gösteren buton -->
+            <button class="btn btn-info btn-sm" type="button" data-toggle="modal" data-target="#couponUsersModal{{ coupon.id }}">
+                Kullananlar
+            </button>
+
+            <!-- Modal Penceresi -->
+            <div class="modal fade" id="couponUsersModal{{ coupon.id }}" tabindex="-1" role="dialog" aria-labelledby="couponUsersModalLabel{{ coupon.id }}" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="couponUsersModalLabel{{ coupon.id }}">Kuponu Kullananlar</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Kuponu kullanan kullanıcılar -->
+                            <ul>
+                                {% for username in coupon.used_by_usernames %}
+                                    <li>{{ username }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        Henüz kullanılmadı
+    {% endif %}
+</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -156,6 +191,14 @@
                         }
                     });
                 }
+            });
+        });
+
+        $(document).ready(function () {
+            // Bootstrap Modal'ı açmak için tıklama işlemini yakalıyoruz
+            $('.btn-info').on('click', function () {
+                var targetModal = $(this).data('target');
+                $(targetModal).modal('show');  // Modal'ı göster
             });
         });
     </script>
