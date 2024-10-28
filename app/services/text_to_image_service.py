@@ -208,7 +208,7 @@ class TextToImageService(BaseService):
         result, status_code = send_runpod_request(app=app, user_id=user_id, username=username, data=json.dumps(updated_workflow), runpod_url="RUNPOD_URL",timeout=360)
 
         # API yanıtını veritabanına kaydet
-        TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, True, app=app)
+        TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, True, app=app, prompt_fix=prompt_fix)
         return result
 
     @staticmethod
@@ -234,12 +234,12 @@ class TextToImageService(BaseService):
         result, status_code = send_runpod_request(app=app, user_id=user_id, username=username, data=json.dumps(updated_workflow), runpod_url="RUNPOD_URL", timeout=360)
 
         # API yanıtını veritabanına kaydet
-        TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, False, app=app)
+        TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, False, app=app, prompt_fix=prompt_fix)
         return result
 
 
     @staticmethod
-    def save_request_to_db(user_id, username, prompt, response, seed, model_type, resolution, randomSeed, app):
+    def save_request_to_db(user_id, username, prompt, response, seed, model_type, resolution, randomSeed, app, prompt_fix):
         """
         Kullanıcı isteğini veritabanına kaydeder.
         """
@@ -261,7 +261,7 @@ class TextToImageService(BaseService):
             prompt=prompt,
             seed=seed,
             model_type=model_type,
-            prompt_fix="on",
+            prompt_fix=prompt_fix,
             resolution=resolution,
             image_url=image_url,
             image_url_webp=webp_url,  # WebP URL'yi de kaydediyoruz
