@@ -35,22 +35,23 @@ def send_runpod_request(app, data, user_id, username, runpod_url, timeout=360):
             return {"message": "An error occurred: RunPod request did not complete successfully."}, 500
 
         if message is None:
+            runpod_logger.error(f"RunPod kaynaklı hata meydana geldi. user_id: {user_id} - username: {username}")
             raise KeyError("An error occurred while generating the image, please try again.")
 
         return result, 200
 
     except Timeout:
-        runpod_logger.error("RunPod isteği zaman aşımına uğradı!")
+        runpod_logger.error(f"RunPod isteği zaman aşımına uğradı! user_id: {user_id} - username: {username}")
         return {"message": "RunPod isteği zaman aşımına uğradı."}, 500
 
     except ConnectionError:
-        runpod_logger.error("RunPod bağlantı hatası!")
+        runpod_logger.error(f"RunPod bağlantı hatası! user_id: {user_id} - username: {username}")
         return {"message": "RunPod bağlantı hatası."}, 500
 
     except RequestException as e:
-        runpod_logger.error(f"RunPod isteğinde bir hata oluştu: {str(e)}")
+        runpod_logger.error(f"RunPod isteğinde bir hata oluştu: {str(e)} -- user_id: {user_id} - username: {username}")
         return {"message": f"RunPod isteğinde bir hata oluştu: {str(e)}"}, 500
 
     except KeyError as ke:
-        runpod_logger.error(f"RunPod yanıtında anahtar hatası: {str(ke)}")
+        runpod_logger.error(f"RunPod yanıtında anahtar hatası: {str(ke)} -- user_id: {user_id} - username: {username}")
         return {"message": str(ke)}, 500
