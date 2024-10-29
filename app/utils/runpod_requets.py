@@ -55,3 +55,7 @@ def send_runpod_request(app, data, user_id, username, runpod_url, timeout=360):
     except KeyError as ke:
         runpod_logger.error(f"RunPod yanıtında anahtar hatası: {str(ke)} -- user_id: {user_id} - username: {username}")
         return {"message": str(ke)}, 500
+
+
+
+
