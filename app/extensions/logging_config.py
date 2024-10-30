@@ -27,6 +27,12 @@ def setup_logging():
     paytr_file_handler.setLevel(logging.INFO)  # Sadece ERROR seviyesindeki loglar
     paytr_file_handler.setFormatter(formatter)
 
+    # Creator özel log dosyası yapılandırması
+    creator_log_file = os.path.join(log_dir, "creator.log")
+    creator_file_handler = RotatingFileHandler(creator_log_file, maxBytes=10 * 1024 * 1024, backupCount=5)
+    creator_file_handler.setLevel(logging.INFO)
+    creator_file_handler.setFormatter(formatter)
+
     # Konsol logları için stream handler
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.DEBUG)
@@ -43,6 +49,11 @@ def setup_logging():
     runpod_logger.setLevel(logging.ERROR)  # Sadece ERROR seviyesindeki loglar
     runpod_logger.addHandler(runpod_file_handler)
 
+    # Creator logları için ayrı logger
+    creator_logger = logging.getLogger("creator")
+    creator_logger.setLevel(logging.INFO)  # Sadece ERROR seviyesindeki loglar
+    creator_logger.addHandler(creator_file_handler)
+
     # PayTR logları için ayrı logger
     paytr_logger = logging.getLogger("paytr")
     paytr_logger.setLevel(logging.INFO)  # Sadece ERROR seviyesindeki loglar
@@ -50,6 +61,7 @@ def setup_logging():
 
     # Propagate'i False yaparak PayTR ve RUNPOD loglarının root logger'a gitmesini engelliyoruz
     paytr_logger.propagate = False
+    creator_logger.propagate = False
     #runpod_logger.propagate = False
 
     logging.info("Logging setup complete.")

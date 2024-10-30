@@ -12,6 +12,7 @@ from app.services.subscription_service import SubscriptionService
 from app.services.user_service import UserService
 from app.utils.ip_request_service import track_ip_request
 
+creator_logger = logging.getLogger("creator")
 
 def daily_request_limit(f):
     @wraps(f)
@@ -113,8 +114,8 @@ def check_credits(required_credits: int):
             if isinstance(result, tuple) and result[1] == 200:  # Eğer başarılı bir sonuç dönerse
 
                 if "6a1b395f-0e6f-4096-add2-364fa5f15eac" in user.roles:
-                    logging.info("kullanıcı creator")
-                    print("kullanıcı creator")
+                    creator_logger.info(f"kullanıcı creator: {user.username}")
+                    print(f"kullanıcı creator: {user.username}")
                 else:
                     if subscription is None:
                         user.base_credits -= required_credits
