@@ -1,7 +1,7 @@
 import logging
 import os
 
-from flask import send_from_directory, request, jsonify
+from flask import send_from_directory, request, jsonify, Blueprint
 
 from app.routes.admin_routes import admin_routes_bp
 from app.routes.coupon_routes import coupon_bp
@@ -14,10 +14,12 @@ from app.routes.package_routes import package_bp
 from app.routes.text_to_image_routes import text_to_image_bp
 
 def register_blueprints(app):
+    # Parent Blueprint tanımlaması
+
     app.register_blueprint(user_bp, url_prefix='/user')
     app.register_blueprint(package_bp, url_prefix='/package')
-    app.register_blueprint(text_to_image_bp, url_prefix='/create')
-    app.register_blueprint(upscale_bp, url_prefix='/upscale')
+    app.register_blueprint(text_to_image_bp, url_prefix='/v1/create')
+    app.register_blueprint(upscale_bp, url_prefix='/v1/upscale')
     app.register_blueprint(coupon_bp, url_prefix='/coupon')
     app.register_blueprint(mail_bp)
     app.register_blueprint(admin_routes_bp, url_prefix='/admin')
@@ -32,6 +34,7 @@ def register_blueprints(app):
     @app.route('/robots.txt')
     def robots_txt():
         return send_from_directory(app.static_folder, 'robots.txt')
+
 
     @app.route('/webhook', methods=['POST'])
     def runpod_webhook():
