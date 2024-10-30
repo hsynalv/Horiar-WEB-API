@@ -83,7 +83,7 @@ def discord_requests():
 @admin_routes_bp.route('/subscriptions')
 def list_subscription():
     requests = Subscription.objects()
-    return render_template('admin/subscriptions.html', subscription_requests=requests)
+    return render_template('admin/subscription/subscription.html', subscription_requests=requests)
 
 """
 Admin Dashboard İçin Kupon Rotaları ------------------------------------------------------------------------------------

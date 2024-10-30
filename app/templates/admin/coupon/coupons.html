@@ -14,19 +14,16 @@
 <section class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1>Kupon Listesi</h1>
-            </div>
+            <div class="col-sm-12 d-flex justify-content-between align-items-center">
+            <h1>Kupon Listesi</h1>
+            <a href="{{ url_for('admin_routes_bp.create_coupon') }}" class="btn bg-gradient-primary">Yeni Kupon Oluştur</a>
+        </div>
         </div>
     </div>
 </section>
 
 <section class="content">
     <div class="card">
-        <div class="col-sm-6 text-right">
-            <!-- Kupon oluşturma sayfasına yönlendirecek bir buton -->
-            <a href="{{ url_for('admin_routes_bp.create_coupon') }}" class="btn bg-gradient-primary">Yeni Kupon Oluştur</a>
-        </div>
         <div class="card-body">
             <table id="couponTable" class="table table-bordered table-striped">
                 <thead>
