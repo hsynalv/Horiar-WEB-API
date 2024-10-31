@@ -26,6 +26,18 @@ def register_error_handlers(app):
         logging.error(f"Validation error: {e.message}")
         return jsonify(e.to_dict()), e.status_code
 
+    @app.errorhandler(404)
+    def not_found_error(e):
+        # Loglama işlemi
+        logging.warning(
+            f"404 Not Found: Requested URL: {request.url}, "
+            f"Method: {request.method}, "
+            f"IP: {request.remote_addr}"
+        )
+
+        # İsteğe bağlı olarak kullanıcıya 404 yanıtı döndürme
+        return jsonify({"error": "Not Found"}), 404
+
     @app.errorhandler(Exception)
     def handle_global_exception(e):
         # Hata kodu belirleme
