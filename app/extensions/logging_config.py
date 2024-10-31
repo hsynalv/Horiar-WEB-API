@@ -62,6 +62,6 @@ def setup_logging():
     # Propagate'i False yaparak PayTR ve RUNPOD loglarının root logger'a gitmesini engelliyoruz
     paytr_logger.propagate = False
     creator_logger.propagate = False
-    #runpod_logger.propagate = False
+    runpod_logger.propagate = False
 
     logging.info("Logging setup complete.")
