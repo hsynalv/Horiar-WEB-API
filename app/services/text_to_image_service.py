@@ -140,6 +140,7 @@ class TextToImageService(BaseService):
                         - Ensure the final prompt is clear, descriptive, and ready for use in image generation.    
             """
     }
+    Duty_Translate = "You are a translator GPT, your job is to translate the {prompt} from any language to English without any changes in the context. Be straightforward and direct for the translation"
 
     @staticmethod
     def update_workflow_with_prompt(path, prompt, model_type, resolution, randomSeed, prompt_fix=True):
@@ -158,8 +159,9 @@ class TextToImageService(BaseService):
             workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = newPrompts[1]
         else:
             print("prompt fix False")
-            workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = prompt
-            workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = prompt
+            translatePrompt = TextToImageService.translatePrompt(prompt)
+            workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = translatePrompt
+            workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = translatePrompt
 
         if(randomSeed == True):
             print("seed değişti")
@@ -405,6 +407,21 @@ class TextToImageService(BaseService):
         prompts.reverse()
         TextToImageService.save_dataset_to_db(text, prompts)
         return prompts
+
+    @staticmethod
+    def translatePrompt(text):
+        response = openai.chat.completions.create(
+            model='gpt-4o-mini',
+            messages=[
+                {"role": "system", "content": f"{TextToImageService.Duty_Translate}"},
+                {"role": "user", "content": f"prompt: {text}"}
+            ],
+            temperature=0.7,  # Allows for creative enhancements
+            frequency_penalty=0.0,  # Doesn't penalize word repetition
+            presence_penalty=0.0  # Neutral towards new topics
+        )
+        print(response.choices[0].message.content)
+        return response.choices[0].message.content
 
     @staticmethod
     def save_dataset_to_db(mainPrompt, promptsFromAI):
