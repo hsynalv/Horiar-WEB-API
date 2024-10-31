@@ -32,7 +32,7 @@ def register_error_handlers(app):
         logging.warning(
             f"404 Not Found: Requested URL: {request.url}, "
             f"Method: {request.method}, "
-            f"IP: {request.remote_addr}"
+            f"IP: {get_client_ip()}"
         )
 
         # İsteğe bağlı olarak kullanıcıya 404 yanıtı döndürme
