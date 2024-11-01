@@ -13,7 +13,10 @@ text_to_image_bp = Blueprint('text_to_image_bp', __name__)
 @check_credits(1)
 def generate_image_direct(payload):
     data = request.json
-    print(data)
+
+    # Kullanıcıya özel oda adı olarak user_id kullanılıyor
+    room = payload.get("sub")  # JWT payload'dan kullanıcı ID'sini alıyoruz
+
     prompt = data.get('prompt')
     model_type = data.get('model_type', None)
     resolution = data.get('resolution', None)
@@ -22,14 +25,11 @@ def generate_image_direct(payload):
     if not prompt:
         return jsonify({"message": "Missing required fields"}), 400
 
-    try:
-        # Text to image işlemini kuyruk kullanmadan doğrudan yap
-        result = TextToImageService.generate_image_directly(current_app._get_current_object(), prompt, model_type, resolution, payload, prompt_fix)
-        # Eğer result JSON değilse, burada hata olabilir
-        return jsonify(result), 200
-    except Exception as e:
-        print(f"Error: {e}")  # Hata mesajı
-        return jsonify({"message": str(e)}), 500
+    # Kuyruğa göre image generation işlemini başlatma
+    job = TextToImageService.generate_image_with_queue(prompt, model_type, resolution, payload,
+                                    prompt_fix, False, room)
+
+    return jsonify({"message": "Request has been queued", "job_id": job.id, "room": room}), 200
 
 @text_to_image_bp.route('/generate-image-direct-consistent', methods=['POST'])
 @jwt_required(pass_payload=True)
@@ -37,22 +37,23 @@ def generate_image_direct(payload):
 @check_credits(1)
 def generate_image_direct_consistent(payload):
     data = request.json
+
+    # Kullanıcıya özel oda adı olarak user_id kullanılıyor
+    room = payload.get("sub")  # JWT payload'dan kullanıcı ID'sini alıyoruz
+
     prompt = data.get('prompt')
     model_type = data.get('model_type', None)
     resolution = data.get('resolution', None)
-    prompt_fix = data.get('prompt_fix', False)
+    prompt_fix = data.get('prompt_fix', True)
 
     if not prompt:
         return jsonify({"message": "Missing required fields"}), 400
 
-    try:
-        # Text to image işlemini kuyruk kullanmadan doğrudan yap
-        result = TextToImageService.generate_image_directly_fixed_seed(current_app._get_current_object(), prompt, model_type, resolution,payload, prompt_fix)
-        # Eğer result JSON değilse, burada hata olabilir
-        return jsonify(result), 200
-    except Exception as e:
-        print(f"Error: {e}")  # Hata mesajı
-        return jsonify({"message": str(e)}), 500
+    # Kuyruğa göre image generation işlemini başlatma
+    job = TextToImageService.generate_image_with_queue(prompt, model_type, resolution, payload,
+                                                       prompt_fix, True, room)
+
+    return jsonify({"message": "Request has been queued", "job_id": job.id, "room": room}), 200
 
 @text_to_image_bp.route('/requests/<user_id>', methods=['GET'])
 @jwt_required(pass_payload=False)

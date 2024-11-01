@@ -11,6 +11,8 @@ from app.models.text_to_image_model import TextToImage
 from app.services.base_service import BaseService
 from dotenv import load_dotenv
 
+from app.utils.notification import notify_status_update
+from app.utils.queue_manager import add_to_image_queue, redis_conn
 from app.utils.runpod_requets import send_runpod_request
 from app.utils.convert_to_webp import process_and_save_image
 
@@ -185,62 +187,6 @@ class TextToImageService(BaseService):
         return workflow_data
 
     @staticmethod
-    def generate_image_directly_fixed_seed(app, prompt, model_type, resolution, payload, prompt_fix):
-        workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_promptfix.json')
-
-        """
-        nsfw_flag = openai.moderations.create(input=prompt).results[0].flagged
-        if nsfw_flag:
-            return jsonify({"warning: This prompt violates our safety policy"}), 404
-        """
-
-
-        # workflow.json dosyasını güncelle
-        updated_workflow = TextToImageService.update_workflow_with_prompt(path=workflow_path, prompt=prompt,
-                                                                          model_type=model_type, resolution=resolution,
-                                                                          randomSeed=False, prompt_fix=prompt_fix)
-        seed = updated_workflow["input"]["workflow"]["112"]["inputs"]["noise_seed"]
-
-        user_id = payload["sub"]
-        username = payload["username"]
-
-        print("deneme")
-
-        # runpod isteği
-        result, status_code = send_runpod_request(app=app, user_id=user_id, username=username, data=json.dumps(updated_workflow), runpod_url="RUNPOD_URL",timeout=360)
-
-        # API yanıtını veritabanına kaydet
-        TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, True, app=app, prompt_fix=prompt_fix)
-        return result
-
-    @staticmethod
-    def generate_image_directly(app, prompt, model_type, resolution, payload, prompt_fix):
-        workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_promptfix.json')
-
-        """
-        nsfw_flag = openai.moderations.create(input=prompt).results[0].flagged
-        if nsfw_flag:
-            return jsonify({"warning: This prompt violates our safety policy"}), 404
-        """
-
-        # workflow.json dosyasını güncelle
-        updated_workflow = TextToImageService.update_workflow_with_prompt(path=workflow_path, prompt=prompt,
-                                                                          model_type=model_type, resolution=resolution,
-                                                                          randomSeed=True, prompt_fix=prompt_fix)
-        seed = updated_workflow["input"]["workflow"]["112"]["inputs"]["noise_seed"]
-
-        user_id = payload["sub"]
-        username = payload["username"]
-
-        # runpod isteği
-        result, status_code = send_runpod_request(app=app, user_id=user_id, username=username, data=json.dumps(updated_workflow), runpod_url="RUNPOD_URL", timeout=360)
-
-        # API yanıtını veritabanına kaydet
-        TextToImageService.save_request_to_db(user_id, username, prompt, result, seed, model_type, resolution, False, app=app, prompt_fix=prompt_fix)
-        return result
-
-
-    @staticmethod
     def save_request_to_db(user_id, username, prompt, response, seed, model_type, resolution, randomSeed, app, prompt_fix):
         """
         Kullanıcı isteğini veritabanına kaydeder.
@@ -275,17 +221,6 @@ class TextToImageService(BaseService):
             consistent=randomSeed
         )
         text_to_image_record.save()
-
-        TextToImageService.model = ImageRequest
-        image_request = ImageRequest(
-            user_id=user_id,
-            username=username,
-            prompt=prompt,
-            image=image_url,
-            image_webp=webp_url,
-            consistent=randomSeed
-        )
-        image_request.save()
 
     @staticmethod
     def get_requests_by_user_id(user_id, page=1, per_page=8):
@@ -436,6 +371,67 @@ class TextToImageService(BaseService):
         )
 
         dataset.save()
+
+    def generate_image_with_queue(prompt, model_type, resolution, payload, prompt_fix, consistent ,room):
+        """Kuyruğa göre image generation işlemini başlatır."""
+        job = add_to_image_queue(
+            TextToImageService.run_image_generation,
+            prompt=prompt, model_type=model_type, resolution=resolution, payload=payload, prompt_fix=prompt_fix,
+            room=room, consistent=consistent  # room parametresi yalnızca **kwargs olarak geçiliyor
+        )
+        notify_status_update(room, 'processing', 'Your request is being processed.')
+        return job
+
+    @staticmethod
+    def run_image_generation(prompt, model_type, resolution, payload, prompt_fix, consistent ,room=None):
+        # create_app fonksiyonunu burada import edin
+        from app import create_app
+
+        # Flask uygulamasını başlat
+        app = create_app()
+
+        with app.app_context():
+            workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_promptfix.json')
+
+            # workflow.json dosyasını güncelle
+            updated_workflow = TextToImageService.update_workflow_with_prompt(
+                path=workflow_path, prompt=prompt, model_type=model_type,
+                resolution=resolution, randomSeed=not consistent, prompt_fix=prompt_fix
+            )
+            seed = updated_workflow["input"]["workflow"]["112"]["inputs"]["noise_seed"]
+
+            user_id = payload["sub"]
+            username = payload["username"]
+
+            # RunPod isteği gönder
+            result, status_code = send_runpod_request(
+                app=app, user_id=user_id, username=username,
+                data=json.dumps(updated_workflow), runpod_url="RUNPOD_URL",
+                timeout=360
+            )
+
+            # RunPod ID’sini al ve Redis’te kaydet
+            runpod_id = result.get("id")  # RunPod yanıtından job ID’yi alıyoruz
+            if runpod_id:
+                redis_data = {
+                    "user_id": user_id,
+                    "username": username,
+                    "prompt": prompt,
+                    "seed": seed,
+                    "model_type": model_type,
+                    "resolution": resolution,
+                    "room": room,
+                    "status": "IN_PROGRESS",
+                    "prompt_fix": prompt_fix,
+                    "consistent": consistent,
+                    "job_type": "image_generation"  # İşlem türü burada belirtiliyor
+                }
+                redis_conn.setex(f"runpod_request:{runpod_id}", 3600, json.dumps(redis_data))
+
+            # Bildirim gönder
+            notify_status_update(room, 'in_progress', 'Your request is being processed.')
+
+            return result
 
 
 

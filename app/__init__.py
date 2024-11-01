@@ -5,8 +5,10 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from flask_mongoengine import MongoEngine
 from dotenv import load_dotenv
+from flask_socketio import SocketIO
 
 from app.auth import configure_oauth
+from app.extensions.socketio import socketio
 from app.models.user_model import User
 from app.routes.text_to_image_routes import text_to_image_bp
 
@@ -39,6 +41,9 @@ def create_app():
     # Loglama yapılandırmasını başlat
     setup_logging()
 
+    # Yeni: SocketIO uygulamaya entegre edildi
+    socketio.init_app(app)
+
     # Ortam değişkenine göre yapılandırmayı yükle
     if app.config['ENV'] == 'production':
         app.config.from_object(ProductionConfig)
@@ -47,7 +52,7 @@ def create_app():
 
     if app.config['ENV'] == 'production':
         CORS(app, resources={
-            r"/*": {"origins": ["https://www.horiar.com", "https://horiar.com"], "supports_credentials": True}})
+            r"/*": {"origins": ["https://www.horiar.com", "https://horiar.com", "http://localhost:5000", "http://127.0.0.1:5500"], "supports_credentials": True}})
     else:
         CORS(app, resources={r"/*": {"origins": "*", "supports_credentials": True}})
 

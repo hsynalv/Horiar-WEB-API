@@ -1,0 +1,17 @@
+import redis
+from rq import Queue
+from app.utils.notification import notify_status_update
+
+# Redis bağlantısı için 'redis-server' host ismini kullanıyoruz
+redis_conn = redis.Redis(host='redis-server', port=6379, db=0)
+
+# Farklı iş türleri için ayrı kuyruklar tanımlıyoruz
+image_generation_queue = Queue('image_generation', connection=redis_conn)
+video_generation_queue = Queue('video_generation', connection=redis_conn)
+upscale_queue = Queue('upscale', connection=redis_conn)
+
+def add_to_image_queue(func, *args, **kwargs):
+    """Fonksiyonu yalnızca image_generation kuyruğunda çalıştırır ve istemciye durum güncellemesi gönderir."""
+    job = image_generation_queue.enqueue(func, *args, ttl=3600*24, **kwargs)
+    notify_status_update(kwargs.get('room'), 'queued', 'Your request is in the queue.')
+    return job
