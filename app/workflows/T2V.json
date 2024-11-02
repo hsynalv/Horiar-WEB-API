@@ -1,0 +1,147 @@
+{
+  "input": {
+    "workflow":
+    {
+      "1": {
+        "inputs": {
+          "model": "THUDM/CogVideoX-5b",
+          "precision": "bf16",
+          "fp8_transformer": "disabled",
+          "compile": "disabled",
+          "enable_sequential_cpu_offload": false
+        },
+        "class_type": "DownloadAndLoadCogVideoModel",
+        "_meta": {
+          "title": "(Down)load CogVideo Model"
+        }
+      },
+      "11": {
+        "inputs": {
+          "enable_vae_tiling": false,
+          "tile_sample_min_height": 240,
+          "tile_sample_min_width": 360,
+          "tile_overlap_factor_height": 0.2,
+          "tile_overlap_factor_width": 0.2,
+          "auto_tile_size": true,
+          "pipeline": [
+            "34",
+            0
+          ],
+          "samples": [
+            "34",
+            1
+          ]
+        },
+        "class_type": "CogVideoDecode",
+        "_meta": {
+          "title": "CogVideo Decode"
+        }
+      },
+      "20": {
+        "inputs": {
+          "clip_name": "t5xxl_fp8_e4m3fn.safetensors",
+          "type": "sd3"
+        },
+        "class_type": "CLIPLoader",
+        "_meta": {
+          "title": "Load CLIP"
+        }
+      },
+      "30": {
+        "inputs": {
+          "prompt": "",
+          "strength": 1,
+          "force_offload": true,
+          "clip": [
+            "20",
+            0
+          ]
+        },
+        "class_type": "CogVideoTextEncode",
+        "_meta": {
+          "title": "CogVideo TextEncode"
+        }
+      },
+      "31": {
+        "inputs": {
+          "prompt": "bad quality, blurry, low quality",
+          "strength": 1,
+          "force_offload": true,
+          "clip": [
+            "20",
+            0
+          ]
+        },
+        "class_type": "CogVideoTextEncode",
+        "_meta": {
+          "title": "CogVideo TextEncode"
+        }
+      },
+      "33": {
+        "inputs": {
+          "frame_rate": 24,
+          "loop_count": 0,
+          "filename_prefix": "CogVideoX5B",
+          "format": "video/h264-mp4",
+          "pix_fmt": "yuv420p",
+          "crf": 19,
+          "save_metadata": true,
+          "pingpong": false,
+          "save_output": true,
+          "images": [
+            "35",
+            0
+          ]
+        },
+        "class_type": "VHS_VideoCombine",
+        "_meta": {
+          "title": "Video Combine 🎥🅥🅗🅢"
+        }
+      },
+      "34": {
+        "inputs": {
+          "height": 480,
+          "width": 720,
+          "num_frames": 49,
+          "steps": 50,
+          "cfg": 6,
+          "seed": 806286757407563,
+          "scheduler": "DPM++",
+          "denoise_strength": 1,
+          "pipeline": [
+            "1",
+            0
+          ],
+          "positive": [
+            "30",
+            0
+          ],
+          "negative": [
+            "31",
+            0
+          ]
+        },
+        "class_type": "CogVideoSampler",
+        "_meta": {
+          "title": "CogVideo Sampler"
+        }
+      },
+      "35": {
+        "inputs": {
+          "ckpt_name": "film_net_fp32.pt",
+          "clear_cache_after_n_frames": 10,
+          "multiplier": 3,
+          "frames": [
+            "11",
+            0
+          ]
+        },
+        "class_type": "FILM VFI",
+        "_meta": {
+          "title": "FILM VFI"
+        }
+      }
+    }
+  },
+  "webhook": "https://api.horiar.com/webhook"
+}

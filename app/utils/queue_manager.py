@@ -24,3 +24,7 @@ def add_to_image_queue(func, *args, **kwargs):
 def add_to_upscale_queue(func, *args, **kwargs):
     """Fonksiyonu upscale kuyruğunda çalıştırır."""
     return add_to_queue(upscale_queue, func, *args, **kwargs)
+
+def add_to_video_queue(func, *args, **kwargs):
+    """Fonksiyonu video kuyruğunda çalıştırır."""
+    return add_to_queue(video_generation_queue, func, *args, **kwargs)

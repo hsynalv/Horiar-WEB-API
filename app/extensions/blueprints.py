@@ -13,8 +13,10 @@ from app.routes.upscale_routes import upscale_bp
 from app.routes.user_routes import user_bp
 from app.routes.package_routes import package_bp
 from app.routes.text_to_image_routes import text_to_image_bp
+from app.routes.video_generation_routes import video_generation_bp
 from app.services.text_to_image_service import TextToImageService
 from app.services.upscale_service import UpscaleService
+from app.services.video_generation_service import VideoGenerationService
 from app.utils.queue_manager import redis_conn
 
 
@@ -30,6 +32,7 @@ def register_blueprints(app):
     app.register_blueprint(admin_routes_bp, url_prefix='/admin')
     app.register_blueprint(payment_bp, url_prefix='/payment')
     app.register_blueprint(enterprise_bp, url_prefix='/enterprise')
+    app.register_blueprint(video_generation_bp, url_prefix='/video_generation')
 
     @app.route('/favicon.ico')
     def favicon():
@@ -105,14 +108,15 @@ def register_blueprints(app):
                         low_res_image=request_info.get("low_res_image_url"),
                         app=current_app
                     )
-                """
-                elif job_type == "video_generation":
-                    VideoService.save_request_to_db(
+
+                elif job_type == "text_to_video_generation":
+                    VideoGenerationService.save_text_to_video_to_db(
                         user_id=user_id,
-                        video_url=image_url,
-                        # Gerekli diğer alanları ekle
+                        username=request_info.get("username"),
+                        response=data,
+                        prompt=request_info.get("prompt"),
                     )
-                """
+
 
                 # Kullanıcıya bildirim gönder (frontend'e WebSocket ile veya diğer yöntemlerle)
                 notify_user_via_websocket(user_id, {"status": status, "message": image_url})

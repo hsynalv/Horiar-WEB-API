@@ -16,6 +16,7 @@ class DevelopmentConfig:
     SECRET_KEY = os.getenv("SECRET_KEY", "horiar-bir-web3-platformu")
     RUNPOD_URL = os.getenv("RUNPOD_URL")
     RUNPOD_UPSCALE_URL = os.getenv("RUNPOD_UPSCALE_URL")
+    RUNPOD_VIDEO_URL = os.getenv("RUNPOD_VIDEO_URL")
     RUNPOD_API_KEY = os.getenv("RUNPOD_API_KEY")
     OPEN_AI_KEY = os.getenv("OPEN_AI_KEY")
     MAIL_SERVER = os.getenv('MAIL_SERVER')
