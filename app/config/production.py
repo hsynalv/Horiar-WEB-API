@@ -33,6 +33,7 @@ class ProductionConfig:
     S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
     S3_FOLDER_UPSCALE_IMAGE = os.getenv('S3_FOLDER_UPSCALE_IMAGE')
     S3_FOLDER_WEBP_IMAGE = os.getenv('S3_FOLDER_WEBP_IMAGE')
+    S3_FOLDER_VIDEO = os.getenv('S3_FOLDER_VIDEO')
     MERCHANT_ID = os.getenv('MERCHANT_ID')
     MERCHANT_KEY = os.getenv('MERCHANT_KEY')
     MERCHANT_SALT = os.getenv('MERCHANT_SALT')

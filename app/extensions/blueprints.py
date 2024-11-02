@@ -117,6 +117,15 @@ def register_blueprints(app):
                         prompt=request_info.get("prompt"),
                     )
 
+                elif job_type == "image_to_video_generation":
+                    VideoGenerationService.save_image_to_video_to_db(
+                        user_id=user_id,
+                        username=request_info.get("username"),
+                        response=data,
+                        prompt=request_info.get("prompt"),
+                        image_url= request_info.get("image_url"),
+                    )
+
 
                 # Kullanıcıya bildirim gönder (frontend'e WebSocket ile veya diğer yöntemlerle)
                 notify_user_via_websocket(user_id, {"status": status, "message": image_url})
