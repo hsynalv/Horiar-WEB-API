@@ -32,8 +32,10 @@
                       <th>Kullanıcı Adı</th>
                       <th>E-Posta</th>
                       <th>Roller</th>
+                      <th>Ön Kredi</th>
                       <th>Kayıt Tarihi</th>
                       <th>Son Giriş Tarihi</th>
+                      <th>Kayıt Tipi</th>
                       <th>Aktiflik Durumu</th>
                       <th>Ban Durumu</th>
                   </tr>
@@ -43,9 +45,45 @@
                     <tr>
                         <td>{{ user.username }}</td>
                         <td>{{ user.email }}</td>
-                        <td>{{ ', '.join(user.roles) }}</td>
-                        <td>{{ user.registration_date }}</td>
-                        <td>{{ user.last_login_date }}</td>
+                        <td>
+                            {% for role in user.roles %}
+                                {% if role == "9951a9b2-f455-4940-931e-432bc057179a" %}
+                                    <span style="display:inline-block; background-color: #000000; color: #fff; padding: 3px 6px; margin: 2px; border-radius: 4px;">
+                                        Admin
+                                    </span>
+                                {% elif role == "37fb8744-faf9-4f62-a729-a284c842bf0a" %}
+                                    <span style="display:inline-block; background-color: #007bff; color: #fff; padding: 3px 6px; margin: 2px; border-radius: 4px;">
+                                        User
+                                    </span>
+                                {% elif role == "6a1b395f-0e6f-4096-add2-364fa5f15eac" %}
+                                    <span style="display:inline-block; background-color: #ffae00; color: #fff; padding: 3px 6px; margin: 2px; border-radius: 4px;">
+                                        Creator
+                                    </span>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>{{ user.base_credits }}</td>
+                        <td>{{ user.registration_date.strftime('%Y/%m/%d') if user.registration_date else 'N/A' }}</td>
+                        <td>{{ user.last_login_date.strftime('%Y/%m/%d') if user.last_login_date else 'Kayıt Yok!' }}</td>
+                        <td>
+                          {% if user.google_username %}
+                            <span style="background-color: #000000; color: white; padding: 5px 10px; border-radius: 5px;">
+                              Google
+                            </span>
+                          {% endif %}
+
+                          {% if user.discord_username %}
+                            <span style="background-color: #505be5; color: white; padding: 5px 10px; border-radius: 5px;">
+                              Discord
+                            </span>
+                          {% endif %}
+
+                          {% if user.password %}
+                            <span style="background-color: #fb952b; color: white; padding: 5px 10px; border-radius: 5px;">
+                              Manuel
+                            </span>
+                          {% endif %}
+                        </td>
                         <td>
                             <input type="checkbox" class="switch-status is_enabled"
                                    data-user-id="{{ user.id }}" {% if user.is_enabled %}checked{% endif %}
