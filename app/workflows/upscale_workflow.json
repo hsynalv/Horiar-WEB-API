@@ -253,5 +253,6 @@
         "image": ""
       }
     ]
-  }
+  },
+  "webhook": "https://api.horiar.com/webhook"
 }

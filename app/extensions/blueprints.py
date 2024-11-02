@@ -14,6 +14,7 @@ from app.routes.user_routes import user_bp
 from app.routes.package_routes import package_bp
 from app.routes.text_to_image_routes import text_to_image_bp
 from app.services.text_to_image_service import TextToImageService
+from app.services.upscale_service import UpscaleService
 from app.utils.queue_manager import redis_conn
 
 
@@ -57,22 +58,26 @@ def register_blueprints(app):
             status = data.get("status")
             output = data.get("output")
 
-            if not job_id or not status or not output:
-                return jsonify({"message": "Invalid data"}), 400
-
             # Redis'ten ilgili job_id'yi alarak kaydı kontrol et
             request_key = f"runpod_request:{job_id}"
             stored_data = redis_conn.get(request_key)
-
-            if not stored_data:
-                logging.warning(f"No pending request found for job_id: {job_id}")
-                return jsonify({"message": f"No pending request found for job_id: {job_id}"}), 404
 
             # Redis'te bulunan veriyi çözümle ve iş durumu "COMPLETED" mi diye kontrol et
             request_info = json.loads(stored_data)
             user_id = request_info.get("user_id")
             job_type = request_info.get("job_type")
             image_url = output.get("message")
+
+            if not job_id or not status or not output:
+                notify_user_via_websocket(user_id, {"status": "failed", "message": "A server error occurred while processing your request"})
+                return jsonify({"message": "Invalid data"}), 400
+
+
+            if not stored_data:
+                logging.warning(f"No pending request found for job_id: {job_id}")
+                return jsonify({"message": f"No pending request found for job_id: {job_id}"}), 404
+
+
 
             # İşlem tamamlandıysa iş türüne göre veritabanına kayıt işlemi yapalım
             if status == "COMPLETED":
@@ -90,14 +95,17 @@ def register_blueprints(app):
                         app=current_app,
                         prompt_fix=request_info.get("prompt_fix")
                     )
-                """
+
+
                 elif job_type == "upscale":
                     UpscaleService.save_request_to_db(
+                        response=data,  # RunPod yanıtı
                         user_id=user_id,
-                        image_url=image_url,
-                        # Gerekli diğer alanları ekle
+                        username=request_info.get("username"),
+                        low_res_image=request_info.get("low_res_image_url"),
+                        app=current_app
                     )
-                
+                """
                 elif job_type == "video_generation":
                     VideoService.save_request_to_db(
                         user_id=user_id,
@@ -107,7 +115,7 @@ def register_blueprints(app):
                 """
 
                 # Kullanıcıya bildirim gönder (frontend'e WebSocket ile veya diğer yöntemlerle)
-                notify_user_via_websocket(user_id, {"status": status, "image_url": image_url})
+                notify_user_via_websocket(user_id, {"status": status, "message": image_url})
                 logging.info(f"Job {job_id} completed with image URL: {image_url}")
                 return jsonify({"message": "Webhook received successfully"}), 200
 
@@ -115,7 +123,7 @@ def register_blueprints(app):
                 # Başarısız durum güncellemesi ve bildirim gönderme
                 request_info['status'] = status
                 redis_conn.set(request_key, json.dumps(request_info), ex=3600)
-                notify_user_via_websocket(user_id, {"status": status})
+                notify_user_via_websocket(user_id, {"status": "failed", "message": "A server error occurred while processing your request"})
                 logging.warning(f"Job {job_id} failed with status: {status}")
                 return jsonify({"message": f"Job {job_id} failed with status {status}"}), 200
 

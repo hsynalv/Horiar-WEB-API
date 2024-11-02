@@ -19,28 +19,29 @@ upscale_bp = Blueprint('upscale_bp', __name__)
 def create_upscale(payload):
     """
     Yeni bir upscale talebi oluşturur.
-    Bu rota, front-end'den gelen düşük çözünürlüklü bir resmi alır ve upscale işlemini başlatır.
     """
     logging.info("upscale route girildi")
 
     try:
-        # İmajı request'ten almak
         if 'image' not in request.files:
             return jsonify({"error": "No image file part"}), 400
 
         image_file = request.files['image']
-        # Eğer dosya ismi boş ise, kullanıcı dosya seçmemiş demektir
         if image_file.filename == '':
             return jsonify({"error": "No selected file"}), 400
 
         if image_file:
-            # Resim dosyasını istediğiniz işlemleri yapmak üzere okuyabilirsiniz
-            image_bytes = image_file.read()  # Bu binary veriyi işlemek için kullanabilirsiniz
+            image_bytes = image_file.read()
 
-            # Yeni upscale isteği oluşturuluyor
-            upscale_request = UpscaleService.create_upscale_request(app = current_app._get_current_object(),low_res_image=image_bytes, payload=payload)
+            # Kullanıcıya özel oda adı olarak user_id'yi kullanıyoruz
+            room = payload.get("sub")  # JWT payload'dan kullanıcı ID'sini alıyoruz
 
-            return upscale_request, 200
+            # Kuyruğa ekleme
+            job = UpscaleService.add_to_upscale_queue(
+                image_bytes=image_bytes, payload=payload, room=room
+            )
+
+            return jsonify({"message": "Upscale request has been queued", "job_id": job.id, "room": room}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -14,6 +14,8 @@ from requests.exceptions import Timeout, ConnectionError, RequestException
 
 from app.models.upscale_model import Upscale
 from app.services.base_service import BaseService
+from app.utils.notification import notify_status_update
+from app.utils.queue_manager import upscale_queue, redis_conn, add_to_upscale_queue
 from app.utils.runpod_requets import send_runpod_request
 from app.utils.convert_to_webp import upload_image_to_s3, process_and_save_image
 
@@ -118,7 +120,7 @@ class UpscaleService(BaseService):
         return workflow_data
 
     @staticmethod
-    def save_request_to_db(response, user_id,username, low_res_image, app):
+    def save_request_to_db(response, user_id, username, low_res_image, app):
         """
         Kullanıcı isteğini veritabanına kaydeder.
         """
@@ -148,4 +150,57 @@ class UpscaleService(BaseService):
             source="web"  # Kaynak bilgisi (örneğin Discord)
         )
         upscale.save()
+
+    @staticmethod
+    def add_to_upscale_queue(image_bytes, payload, room):
+        """Kuyruğa göre upscale işlemini başlatır."""
+        job = add_to_upscale_queue(
+            UpscaleService.run_upscale,
+            image_bytes=image_bytes, payload=payload, room=room
+        )
+        notify_status_update(room, 'processing', 'Your upscale request is being processed.')
+        return job
+
+    @staticmethod
+    def run_upscale(image_bytes, payload, room = None):
+        """Upscale işlemini çalıştırır ve Redis'te takip eder."""
+        from app import create_app
+        app = create_app()
+
+        with app.app_context():
+            user_id = payload["sub"]
+            username = payload["username"]
+
+            workflow_path = os.path.join(os.getcwd(), 'app/workflows/upscale_workflow.json')
+            updated_workflow = UpscaleService.update_workflow(workflow_path, image_bytes)
+            low_res_image_url = upload_image_to_s3(
+                app=app, image_bytes=image_bytes, userid=user_id, s3_folder_name="S3_FOLDER_UPSCALE_IMAGE",
+                file_extension="png"
+            )
+
+            result, status_code = send_runpod_request(
+                app=app, user_id=user_id, username=username, data=json.dumps(updated_workflow),
+                runpod_url="RUNPOD_UPSCALE_URL", timeout=600
+            )
+
+            # RunPod API yanıtında "status" alanını kontrol et
+            if result.get("status") == "IN_QUEUE" and result.get("id"):
+                # Sadece geçerli bir istek alındıysa Redis'e kaydet
+                runpod_id = result.get("id")
+                redis_data = {
+                    "user_id": user_id,
+                    "username": username,
+                    "status": "IN_PROGRESS",
+                    "low_res_image_url": low_res_image_url,
+                    "job_type": "upscale"
+                }
+                redis_conn.setex(f"runpod_request:{runpod_id}", 3600, json.dumps(redis_data))
+                notify_status_update(user_id, 'in_progress', 'Your upscale request is being processed.')
+            else:
+                # İstek başarısız olduysa, kullanıcıya bildirim gönder ve işlemi durdur
+                notify_status_update(user_id, 'failed', 'Your upscale request could not be processed.')
+                logging.error(f"Upscale request for user {user_id} failed with status: {result.get('status')}")
+                return {"message": "Upscale request failed. Please try again later."}, 500
+
+            return result
 

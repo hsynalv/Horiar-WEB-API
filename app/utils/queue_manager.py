@@ -10,8 +10,16 @@ image_generation_queue = Queue('image_generation', connection=redis_conn)
 video_generation_queue = Queue('video_generation', connection=redis_conn)
 upscale_queue = Queue('upscale', connection=redis_conn)
 
-def add_to_image_queue(func, *args, **kwargs):
-    """Fonksiyonu yalnızca image_generation kuyruğunda çalıştırır ve istemciye durum güncellemesi gönderir."""
-    job = image_generation_queue.enqueue(func, *args, ttl=3600*24, **kwargs)
+def add_to_queue(queue, func, *args, **kwargs):
+    """Genel kuyruk fonksiyonu. Verilen kuyrukta işlemi başlatır ve istemciye durum güncellemesi gönderir."""
+    job = queue.enqueue(func, *args, **kwargs)
     notify_status_update(kwargs.get('room'), 'queued', 'Your request is in the queue.')
     return job
+
+def add_to_image_queue(func, *args, **kwargs):
+    """Fonksiyonu image_generation kuyruğunda çalıştırır."""
+    return add_to_queue(image_generation_queue, func, *args, **kwargs)
+
+def add_to_upscale_queue(func, *args, **kwargs):
+    """Fonksiyonu upscale kuyruğunda çalıştırır."""
+    return add_to_queue(upscale_queue, func, *args, **kwargs)

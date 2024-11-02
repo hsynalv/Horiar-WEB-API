@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 import math
 import os
 import openai
@@ -383,7 +384,7 @@ class TextToImageService(BaseService):
         return job
 
     @staticmethod
-    def run_image_generation(prompt, model_type, resolution, payload, prompt_fix, consistent ,room=None):
+    def run_image_generation(prompt, model_type, resolution, payload, prompt_fix, consistent, room=None):
         # create_app fonksiyonunu burada import edin
         from app import create_app
 
@@ -410,9 +411,10 @@ class TextToImageService(BaseService):
                 timeout=360
             )
 
-            # RunPod ID’sini al ve Redis’te kaydet
-            runpod_id = result.get("id")  # RunPod yanıtından job ID’yi alıyoruz
-            if runpod_id:
+            # RunPod yanıtında "status" kontrolü yap
+            if result.get("status") == "IN_QUEUE" and result.get("id"):
+                # Geçerli bir yanıt alındığında Redis’e kaydet
+                runpod_id = result.get("id")
                 redis_data = {
                     "user_id": user_id,
                     "username": username,
@@ -424,14 +426,17 @@ class TextToImageService(BaseService):
                     "status": "IN_PROGRESS",
                     "prompt_fix": prompt_fix,
                     "consistent": consistent,
-                    "job_type": "image_generation"  # İşlem türü burada belirtiliyor
+                    "job_type": "image_generation"
                 }
                 redis_conn.setex(f"runpod_request:{runpod_id}", 3600, json.dumps(redis_data))
+                notify_status_update(room, 'in_progress', 'Your request is being processed.')
+            else:
+                # Yanıt geçerli değilse, kullanıcıya başarısızlık bildirimi gönder
+                notify_status_update(room, 'failed', 'Your image generation request could not be processed.')
+                logging.error(f"Image generation request for user {user_id} failed with status: {result.get('status')}")
+                return {"message": "Image generation request failed. Please try again later."}, 500
 
-            # Bildirim gönder
-            notify_status_update(room, 'in_progress', 'Your request is being processed.')
-
-            return result
+        return result
 
 
 
