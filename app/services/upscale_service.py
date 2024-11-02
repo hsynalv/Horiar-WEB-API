@@ -27,35 +27,6 @@ class UpscaleService(BaseService):
     """
 
     @staticmethod
-    def create_upscale_request(app,low_res_image, payload):
-        logging.info("upscale servis girildi")
-        # Parametrelerin varlığını kontrol et
-        if not low_res_image:
-            raise ValueError("Low resolution image is required.")
-
-        if not payload or 'sub' not in payload:
-            raise ValueError("Payload is required and must contain user information.")
-
-        user_id = payload["sub"]
-        username = payload["username"]
-
-        workflow_path = os.path.join(os.getcwd(), 'app/workflows/upscale_workflow.json')
-
-
-        # workflow.json dosyasını güncelle
-        updated_workflow = UpscaleService.update_workflow(workflow_path, low_res_image)
-
-        result, status_code = send_runpod_request(app=app, user_id=user_id, username=username, data=json.dumps(updated_workflow), runpod_url="RUNPOD_UPSCALE_URL",timeout=600)
-        print(f"runpod istek sonrası {result}")
-
-        low_res_image_url = upload_image_to_s3(app=app, image_bytes=low_res_image,
-                                                              userid=user_id, s3_folder_name="S3_FOLDER_UPSCALE_IMAGE", file_extension="png")
-        print("deneme")
-        UpscaleService.save_request_to_db(response=result, user_id=user_id, username=username,
-                                          low_res_image=low_res_image_url, app=app)
-        return result
-
-    @staticmethod
     def get_upscale_request_by_userid(user_id, page=1, per_page=8):
         """
         Verilen ID'ye göre kullanıcıya ait upscale taleplerini sayfalama ile getirir.

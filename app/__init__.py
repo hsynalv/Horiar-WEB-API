@@ -52,7 +52,7 @@ def create_app():
 
     if app.config['ENV'] == 'production':
         CORS(app, resources={
-            r"/*": {"origins": ["https://www.horiar.com", "https://horiar.com", "http://localhost:5000", "http://127.0.0.1:5500"], "supports_credentials": True}})
+            r"/*": {"origins": ["https://www.horiar.com", "https://horiar.com", "http://localhost:5000", "http://127.0.0.1:5500", "http://localhost:3000", "http://127.0.0.1:3000"], "supports_credentials": True}})
     else:
         CORS(app, resources={r"/*": {"origins": "*", "supports_credentials": True}})
 
