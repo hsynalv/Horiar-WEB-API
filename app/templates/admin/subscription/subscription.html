@@ -17,11 +17,51 @@
         <div class="row mb-2">
              <div class="col-sm-12 d-flex justify-content-between align-items-center">
                 <h1>Satın Alımlar</h1>
-                <a href="#" class="btn bg-gradient-primary">Kredi Tanımla</a>
+                <a href="#" class="btn bg-gradient-primary" data-toggle="modal" data-target="#creditModal">Kredi Tanımla</a>
             </div>
         </div>
     </div>
 </section>
+
+<!-- Modal -->
+<div class="modal fade" id="creditModal" tabindex="-1" aria-labelledby="creditModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="creditModalLabel">Kredi Tanımla</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="creditForm">
+                    <div class="form-group">
+                        <label for="emailInput">Kullanıcı E-mail</label>
+                        <input type="email" class="form-control" id="emailInput" placeholder="Kullanıcı e-posta adresini girin" required>
+                        <button type="button" class="btn btn-info mt-2" onclick="fetchUserData()">Sorgula</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="userIdInput">Kullanıcı ID</label>
+                        <input type="text" class="form-control" id="userIdInput" placeholder="Kullanıcı ID'si" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="usernameInput">Kullanıcı Adı</label>
+                        <input type="text" class="form-control" id="usernameInput" placeholder="Kullanıcı adı" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="creditAmountInput">Kredi Miktarı</label>
+                        <input type="number" class="form-control" id="creditAmountInput" placeholder="Kredi miktarını girin" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                <button type="button" class="btn btn-primary" onclick="assignCredit()">Kredi Tanımla</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <section class="content">
     <div class="card">
@@ -62,6 +102,8 @@
 
 {% block scripts %}
     {{ super() }}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='plugins/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ url_for('static', filename='plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
     <script src="{{ url_for('static', filename='plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
@@ -79,5 +121,70 @@
                 "buttons": ["csv", "excel", "print"]
             }).buttons().container().appendTo('#imageRequestsTable_wrapper .col-md-6:eq(0)');
         });
+
+        function fetchUserData() {
+    const email = document.getElementById("emailInput").value;
+
+    if (!email) {
+        alert("Lütfen bir e-posta adresi girin.");
+        return;
+    }
+
+    fetch('/get-user-by-email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: email })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Gelen verileri form alanlarına yerleştir
+            document.getElementById("userIdInput").value = data.user.id;
+            document.getElementById("usernameInput").value = data.user.username;
+            // Gerekirse diğer alanları da doldurabilirsiniz
+        } else {
+            alert("Kullanıcı bulunamadı: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error("Hata:", error);
+        alert("Kullanıcı verileri alınırken bir hata oluştu.");
+    });
+}
+
+function assignCredit() {
+    const userId = document.getElementById("userIdInput").value;
+    const creditAmount = document.getElementById("creditAmountInput").value;
+
+    if (!userId || !creditAmount) {
+        alert("Lütfen tüm alanları doldurun.");
+        return;
+    }
+
+    fetch('/assign-credit', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ user_id: userId, credit: creditAmount })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Kredi başarıyla tanımlandı!");
+            $('#creditModal').modal('hide');
+            location.reload();
+        } else {
+            alert("Kredi tanımlama başarısız: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error("Hata:", error);
+        alert("Kredi tanımlama sırasında bir hata oluştu.");
+    });
+}
+
     </script>
 {% endblock %}
