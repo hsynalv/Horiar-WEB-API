@@ -105,13 +105,15 @@
         <div class="mt-6 col-6">
             <div class="col-md-12">
                 <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Text to Image İstekleri Grafiği</h3>
-                        <select id="textToImageTimeFilter" class="form-control" style="width: 200px; display: inline-block; margin-left: 15px;">
-                            <option value="daily">Günlük</option>
-                            <option value="weekly">Haftalık</option>
-                            <option value="monthly">Aylık</option>
-                        </select>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="badge bg-info p-2" style="font-size: 1.0rem;">Text to Image İstekleri Grafiği</span>
+                        <div>
+                            <select id="textToImageTimeFilter" class="form-control" style="width: 200px; display: inline-block; margin-left: 20%;">
+                                <option value="daily">Günlük</option>
+                                <option value="weekly">Haftalık</option>
+                                <option value="monthly">Aylık</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="card-body">
                         <canvas id="textToImageChart" style="height: 300px;"></canvas>
@@ -124,9 +126,9 @@
         <div class="mt-6 col-6">
             <div class="col-md-12">
                 <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Upscale İstekleri Grafiği</h3>
-                        <select id="upscaleTimeFilter" class="form-control" style="width: 200px; display: inline-block; margin-left: 15px;">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="badge bg-success p-2" style="font-size: 1.0rem;">Upscale İstekleri Grafiği</span>
+                        <select id="upscaleTimeFilter" class="form-control" style="width: 200px; display: inline-block; margin-left: 22%;">
                             <option value="daily">Günlük</option>
                             <option value="weekly">Haftalık</option>
                             <option value="monthly">Aylık</option>
