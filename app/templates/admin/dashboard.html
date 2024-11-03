@@ -90,7 +90,7 @@
               <div class="inner">
                 <h3>{{ upscale_requets }}</h3>
 
-                <p>Upscale </p>
+                <p>Upscale</p>
               </div>
               <div class="icon">
                 <i class="ion ion-stats-bars"></i>
@@ -100,6 +100,142 @@
           </div>
             </div>
         </div>
+        <div class="row">
+        <!-- Text to Image İstekleri Grafiği -->
+        <div class="mt-6 col-6">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Text to Image İstekleri Grafiği</h3>
+                        <select id="textToImageTimeFilter" class="form-control" style="width: 200px; display: inline-block; margin-left: 15px;">
+                            <option value="daily">Günlük</option>
+                            <option value="weekly">Haftalık</option>
+                            <option value="monthly">Aylık</option>
+                        </select>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="textToImageChart" style="height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upscale İstekleri Grafiği -->
+        <div class="mt-6 col-6">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Upscale İstekleri Grafiği</h3>
+                        <select id="upscaleTimeFilter" class="form-control" style="width: 200px; display: inline-block; margin-left: 15px;">
+                            <option value="daily">Günlük</option>
+                            <option value="weekly">Haftalık</option>
+                            <option value="monthly">Aylık</option>
+                        </select>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="upscaleChart" style="height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
     </div><!-- /.container-fluid -->
 </section>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<script>
+    function fetchChartData(url, timeFrame) {
+        return fetch(`${url}?timeFrame=${timeFrame}`)
+            .then(response => response.json())
+            .then(data => data);
+    }
+
+    function updateChart(chart, url, timeFrame) {
+        fetchChartData(url, timeFrame).then(data => {
+            chart.data.labels = data.labels;
+            chart.data.datasets[0].data = data.data;
+            chart.update();
+        });
+    }
+
+    // Text to Image Chart with separate lines for Story and Image Generation
+    const textToImageCtx = document.getElementById('textToImageChart').getContext('2d');
+    const textToImageChart = new Chart(textToImageCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Story',
+                    data: [],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    fill: false
+                },
+                {
+                    label: 'Image Generation',
+                    data: [],
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 2,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            scales: {
+                x: { type: 'time', time: { unit: 'day' } },
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    document.getElementById('textToImageTimeFilter').addEventListener('change', function () {
+        updateTextToImageChart(this.value);
+    });
+
+    function updateTextToImageChart(timeFrame) {
+        fetch(`/admin/text_to_image_requests_chart_data?timeFrame=${timeFrame}`)
+            .then(response => response.json())
+            .then(data => {
+                textToImageChart.data.labels = data.labels;
+                textToImageChart.data.datasets[0].data = data.storyData; // Story verisi
+                textToImageChart.data.datasets[1].data = data.imageGenerationData; // Image Generation verisi
+                textToImageChart.update();
+            });
+    }
+
+    updateTextToImageChart('daily');  // Sayfa yüklendiğinde günlük veriyle başlatıyoruz
+
+    // Upscale Chart
+    const upscaleCtx = document.getElementById('upscaleChart').getContext('2d');
+    const upscaleChart = new Chart(upscaleCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Upscale İstekleri',
+                data: [],
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 2,
+                fill: false
+            }]
+        },
+        options: {
+            scales: {
+                x: { type: 'time', time: { unit: 'day' } },
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    document.getElementById('upscaleTimeFilter').addEventListener('change', function () {
+        updateChart(upscaleChart, '/admin/upscale_requests_chart_data', this.value);
+    });
+
+    updateChart(upscaleChart, '/admin/upscale_requests_chart_data', 'daily');
+</script>
 {% endblock %}

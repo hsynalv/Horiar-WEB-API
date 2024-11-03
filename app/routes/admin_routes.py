@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from bson import ObjectId
 from flask import render_template, redirect, url_for, flash, Blueprint, session, request, jsonify
@@ -406,6 +406,81 @@ def dashboard():
     return render_template('admin/dashboard.html', subscription_count=subscription_count,
                            web_site_users=web_site_users, distinct_discord_user_count=distinct_discord_user_count,
                            text_to_image_requests=text_to_image_requests, upscale_requets=upscale_requets)
+
+@admin_routes_bp.route('/text_to_image_requests_chart_data')
+def get_text_to_image_chart_data():
+    time_frame = request.args.get('timeFrame', 'daily')
+    now = datetime.now()
+
+    if time_frame == 'daily':
+        start_date = now - timedelta(days=1)
+        interval = 'hour'
+    elif time_frame == 'weekly':
+        start_date = now - timedelta(days=7)
+        interval = 'day'
+    elif time_frame == 'monthly':
+        start_date = now - timedelta(days=30)
+        interval = 'day'
+    else:
+        return jsonify({"error": "Invalid time frame"}), 400
+
+    # Veritabanından 'consistent' alanına göre ayırarak veri çekiyoruz
+    story_requests = TextToImage.objects(datetime__gte=start_date, consistent=True)
+    image_generation_requests = TextToImage.objects(datetime__gte=start_date, consistent=False)
+
+    # Verileri gruplamak
+    story_data = {}
+    image_generation_data = {}
+
+    for req in story_requests:
+        time_key = req.datetime.strftime('%Y-%m-%d %H' if interval == 'hour' else '%Y-%m-%d')
+        story_data[time_key] = story_data.get(time_key, 0) + 1
+
+    for req in image_generation_requests:
+        time_key = req.datetime.strftime('%Y-%m-%d %H' if interval == 'hour' else '%Y-%m-%d')
+        image_generation_data[time_key] = image_generation_data.get(time_key, 0) + 1
+
+    labels = sorted(set(story_data.keys()).union(image_generation_data.keys()))
+
+    story_counts = [story_data.get(label, 0) for label in labels]
+    image_generation_counts = [image_generation_data.get(label, 0) for label in labels]
+
+    return jsonify({
+        "labels": labels,
+        "storyData": story_counts,
+        "imageGenerationData": image_generation_counts
+    })
+
+@admin_routes_bp.route('/upscale_requests_chart_data')
+def get_upscale_chart_data():
+    time_frame = request.args.get('timeFrame', 'daily')
+    now = datetime.utcnow()
+
+    if time_frame == 'daily':
+        start_date = now - timedelta(days=1)
+        interval = 'hour'
+    elif time_frame == 'weekly':
+        start_date = now - timedelta(days=7)
+        interval = 'day'
+    elif time_frame == 'monthly':
+        start_date = now - timedelta(days=30)
+        interval = 'day'
+    else:
+        return jsonify({"error": "Invalid time frame"}), 400
+
+    # Tarih aralığına göre filtreleme
+    requests = Upscale.objects(datetime__gte=start_date)
+
+    # Veriyi istenen zaman dilimine göre grupla
+    data = {}
+    for req in requests:
+        time_key = req.datetime.strftime('%Y-%m-%d %H' if interval == 'hour' else '%Y-%m-%d')
+        data[time_key] = data.get(time_key, 0) + 1
+
+    labels = sorted(data.keys())
+    counts = [data[label] for label in labels]
+
+    return jsonify({"labels": labels, "data": counts})
 
 
 
