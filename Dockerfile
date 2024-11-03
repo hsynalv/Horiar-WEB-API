@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y build-essential \
 COPY . .
 
 ENV FLASK_APP=app.py
-ENV FLASK_ENV=production
+ENV FLASK_ENV=development
 
 EXPOSE 5000 9181
 

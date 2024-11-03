@@ -1,3 +1,4 @@
+import logging
 import os
 from flask import Flask, request
 from flask_cors import CORS
@@ -49,6 +50,9 @@ def create_app():
         app.config.from_object(ProductionConfig)
     else:
         app.config.from_object(DevelopmentConfig)
+
+    print(app.config['ENV'])
+    logging.info(app.config['ENV'])
 
     if app.config['ENV'] == 'production':
         CORS(app, resources={

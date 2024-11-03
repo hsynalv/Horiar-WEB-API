@@ -7,7 +7,7 @@ services:
     env_file:
       - .env.production
     environment:
-      - FLASK_ENV=production
+      - FLASK_ENV=development
     ports:
       - "5000:5000"
     depends_on:
