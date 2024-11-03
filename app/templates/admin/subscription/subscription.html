@@ -52,6 +52,10 @@
                         <label for="creditAmountInput">Kredi Miktarı</label>
                         <input type="number" class="form-control" id="creditAmountInput" placeholder="Kredi miktarını girin" required>
                     </div>
+                    <div class="form-group">
+                        <label for="expiryDateInput">Son Geçerlilik Tarihi</label>
+                        <input type="date" class="form-control" id="expiryDateInput" required>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -61,7 +65,6 @@
         </div>
     </div>
 </div>
-
 
 <section class="content">
     <div class="card">
@@ -130,7 +133,7 @@
         return;
     }
 
-    fetch('/get-user-by-email', {
+    fetch('/admin/get-user-by-email', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -157,25 +160,30 @@
 function assignCredit() {
     const userId = document.getElementById("userIdInput").value;
     const creditAmount = document.getElementById("creditAmountInput").value;
+    const expiryDate = document.getElementById("expiryDateInput").value;
 
-    if (!userId || !creditAmount) {
+    if (!userId || !creditAmount || !expiryDate) {
         alert("Lütfen tüm alanları doldurun.");
         return;
     }
 
-    fetch('/assign-credit', {
+    fetch('assign-credit', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ user_id: userId, credit: creditAmount })
+        body: JSON.stringify({
+            user_id: userId,
+            credit: creditAmount,
+            expiry_date: expiryDate
+        })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             alert("Kredi başarıyla tanımlandı!");
             $('#creditModal').modal('hide');
-            location.reload();
+            location.reload();  // Sayfayı yeniler, eğer güncellemeleri hemen görmek istiyorsanız
         } else {
             alert("Kredi tanımlama başarısız: " + data.message);
         }

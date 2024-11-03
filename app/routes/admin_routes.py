@@ -85,6 +85,58 @@ def list_subscription():
     requests = Subscription.objects()
     return render_template('admin/subscription/subscription.html', subscription_requests=requests)
 
+@admin_routes_bp.route('/get-user-by-email', methods=['POST'])
+def get_user_by_email():
+    email = request.json.get('email')
+    user = User.objects(email=email).first()
+    if user:
+        return jsonify({
+            "success": True,
+            "user": user.to_dict()
+        }), 200
+    else:
+        return jsonify({"success": False, "message": "Kullanıcı bulunamadı"}), 404
+
+@admin_routes_bp.route('/assign-credit', methods=['POST'])
+def assign_credit():
+    """
+    Kullanıcıya kredi tanımlama işlemini gerçekleştirir.
+    """
+    try:
+        # İstekten JSON verilerini al
+        data = request.get_json()
+        user_id = data.get('user_id')
+        credit = data.get('credit')
+        expiry_date = data.get('expiry_date')
+
+        # User ID ile veritabanından kullanıcıyı sorgula (örneğin User modelini kullanarak)
+        # (Bu kısımda mevcut bir kullanıcıyı doğrulamak isteyebilirsiniz.)
+        user = User.objects(id=user_id).first()
+        if not user:
+            return jsonify({"success": False, "message": "Kullanıcı bulunamadı"}), 404
+
+        # Subscription nesnesini oluştur
+        subscription = Subscription(
+            user_id=str(user.id),
+            username=user.username,
+            email=user.email,
+            subscription_date=datetime.utcnow(),
+            subscription_end_date=datetime.strptime(expiry_date, '%Y-%m-%d'),
+            credit_balance=float(credit),
+            merchant_oid="HORIAR-KREDI-TANIMLAMA",  # Manuel eklemelerde özel bir tanımlama
+            used_coupon=None,  # İsteğe bağlı olarak kullanılabilir,
+            max_credit_balance = int(credit)
+        )
+
+        # Yeni abonelik kaydını veritabanına kaydet
+        subscription.save()
+
+        return jsonify({"success": True, "message": "Kredi başarıyla tanımlandı!"}), 200
+
+    except Exception as e:
+        logging.error(f"Kredi tanımlama hatası: {str(e)}")
+        return jsonify({"success": False, "message": "Kredi tanımlama sırasında bir hata oluştu"}), 500
+
 """
 Admin Dashboard İçin Kupon Rotaları ------------------------------------------------------------------------------------
 """
@@ -163,6 +215,8 @@ def update_coupon_status():
     except Exception as e:
         logging.error(f"Kupon durumu güncellenirken hata: {str(e)}")
         return jsonify({"message": "Kupon durumu güncellenirken bir hata oluştu"}), 500
+
+
 
 @admin_routes_bp.route('/coupons/delete', methods=['DELETE'])
 def delete_coupon():
