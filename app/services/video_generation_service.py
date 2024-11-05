@@ -239,8 +239,8 @@ class VideoGenerationService(BaseService):
         if ".mp4" in video_url:
             video_url = video_url.split(".mp4")[0] + ".mp4"
 
-        # TextToVideo kaydı
-        text_to_video_record = ImageToVideo(
+        # ImageToVideo kaydı
+        image_to_video_record = ImageToVideo(
             datetime=datetime.utcnow(),
             prompt=prompt,
             video_url=video_url,
@@ -252,9 +252,9 @@ class VideoGenerationService(BaseService):
         )
 
         # Veritabanına kaydet
-        text_to_video_record.save()
+        image_to_video_record.save()
 
-        return text_to_video_record
+        return image_to_video_record
 
     def generate_image_to_video_with_queue(prompt, payload, image_bytes, room):
         """Kuyruğa göre video generation işlemini başlatır."""

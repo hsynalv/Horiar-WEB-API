@@ -5,10 +5,8 @@ from bson import ObjectId
 from flask import render_template, redirect, url_for, flash, Blueprint, session, request, jsonify
 from flask_login import login_user, logout_user
 
-from app.auth import jwt_required
 from app.models.coupon_model import Coupon
 from app.models.discord_image_request_model import DiscordImageRequest
-from app.models.image_request_model import ImageRequest
 from app.models.package_model import Package
 from app.models.subscription_model import Subscription
 from app.models.text_to_image_model import TextToImage
@@ -24,6 +22,12 @@ admin_routes_bp = Blueprint('admin_routes_bp', __name__)
 admin_users = {
     "admin": "hashed_password",  # Şifreyi hashlenmiş bir şekilde saklamalısınız
 }
+
+@admin_routes_bp.before_request
+def require_admin_login():
+    if not session.get('admin_logged_in') and request.endpoint != 'admin_routes_bp.login':
+        flash('Bu sayfayı görmek için giriş yapmanız gerekiyor!', 'warning')
+        return redirect(url_for('admin_routes_bp.login'))
 
 @admin_routes_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -56,11 +60,13 @@ def logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('admin_routes_bp.login'))
 
+
 @admin_routes_bp.route('/users')
 def admin_users():
     # Tüm kullanıcıları veritabanından al
     users = UserService.get_all_users()
     return render_template('admin/users.html', users=users)
+
 
 @admin_routes_bp.route('/image-requests')
 def list_image_requests():
@@ -68,11 +74,13 @@ def list_image_requests():
     image_requests = TextToImage.objects()
     return render_template('admin/image_requests.html', image_requests=image_requests)
 
+
 @admin_routes_bp.route('/upscale-requests')
 def list_upscale_requests():
     # Veritabanından tüm ImageRequest nesnelerini çekiyoruz
     requests = Upscale.objects()
     return render_template('admin/upscale_requests.html', image_requests=requests)
+
 
 @admin_routes_bp.route('/discord_requests')
 def discord_requests():
@@ -85,6 +93,7 @@ def list_subscription():
     requests = Subscription.objects()
     return render_template('admin/subscription/subscription.html', subscription_requests=requests)
 
+
 @admin_routes_bp.route('/get-user-by-email', methods=['POST'])
 def get_user_by_email():
     email = request.json.get('email')
@@ -96,6 +105,7 @@ def get_user_by_email():
         }), 200
     else:
         return jsonify({"success": False, "message": "Kullanıcı bulunamadı"}), 404
+
 
 @admin_routes_bp.route('/assign-credit', methods=['POST'])
 def assign_credit():
@@ -197,6 +207,7 @@ def create_coupon():
         logging.error(f"Kupon oluşturulurken hata: {str(e)}")
         return render_template('admin/coupon/new_coupon.html', error=str(e))
 
+
 @admin_routes_bp.route('/coupons/update-status', methods=['POST'])
 def update_coupon_status():
     try:
@@ -237,6 +248,7 @@ def delete_coupon():
 
     except Exception as e:
         return jsonify({"error": f"Kupon silinirken hata oluştu: {str(e)}"}), 500
+
 
 @admin_routes_bp.route('/coupons/edit/<coupon_id>', methods=['GET', 'POST'])
 def edit_coupon(coupon_id):
@@ -407,6 +419,7 @@ def dashboard():
                            web_site_users=web_site_users, distinct_discord_user_count=distinct_discord_user_count,
                            text_to_image_requests=text_to_image_requests, upscale_requets=upscale_requets)
 
+
 @admin_routes_bp.route('/text_to_image_requests_chart_data')
 def get_text_to_image_chart_data():
     time_frame = request.args.get('timeFrame', 'daily')
@@ -451,6 +464,7 @@ def get_text_to_image_chart_data():
         "imageGenerationData": image_generation_counts
     })
 
+
 @admin_routes_bp.route('/upscale_requests_chart_data')
 def get_upscale_chart_data():
     time_frame = request.args.get('timeFrame', 'daily')
@@ -481,6 +495,7 @@ def get_upscale_chart_data():
     counts = [data[label] for label in labels]
 
     return jsonify({"labels": labels, "data": counts})
+
 
 
 
