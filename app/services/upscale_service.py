@@ -166,10 +166,10 @@ class UpscaleService(BaseService):
                     "job_type": "upscale"
                 }
                 redis_conn.setex(f"runpod_request:{runpod_id}", 3600, json.dumps(redis_data))
-                notify_status_update(user_id, 'in_progress', 'Your upscale request is being processed.')
+                notify_status_update(room, 'in_progress', 'Your upscale request is being processed.')
             else:
                 # İstek başarısız olduysa, kullanıcıya bildirim gönder ve işlemi durdur
-                notify_status_update(user_id, 'failed', 'Your upscale request could not be processed.')
+                notify_status_update(room, 'failed', 'Your upscale request could not be processed.')
                 logging.error(f"Upscale request for user {user_id} failed with status: {result.get('status')}")
                 return {"message": "Upscale request failed. Please try again later."}, 500
 
