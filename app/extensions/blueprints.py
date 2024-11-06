@@ -98,6 +98,7 @@ def register_blueprints(app):
                         app=current_app,
                         prompt_fix=request_info.get("prompt_fix")
                     )
+                    notify_user_via_websocket(user_id, {"status": status, "message": image_url})
 
 
                 elif job_type == "upscale":
@@ -108,6 +109,9 @@ def register_blueprints(app):
                         low_res_image=request_info.get("low_res_image_url"),
                         app=current_app
                     )
+                    response = jsonify({"status": status, "message": image_url, "low_res_image": request_info.get("low_res_image_url")})
+                    notify_user_via_websocket(user_id, response)
+
 
                 elif job_type == "text_to_video_generation":
                     VideoGenerationService.save_text_to_video_to_db(
@@ -116,6 +120,7 @@ def register_blueprints(app):
                         response=data,
                         prompt=request_info.get("prompt"),
                     )
+                    notify_user_via_websocket(user_id, {"status": status, "message": image_url})
 
                 elif job_type == "image_to_video_generation":
                     VideoGenerationService.save_image_to_video_to_db(
@@ -125,10 +130,13 @@ def register_blueprints(app):
                         prompt=request_info.get("prompt"),
                         image_url= request_info.get("image_url"),
                     )
+                    response = jsonify({"status": status, "message": image_url,
+                                        "image": request_info.get("image_url")})
+                    notify_user_via_websocket(user_id, response)
 
 
                 # Kullanıcıya bildirim gönder (frontend'e WebSocket ile veya diğer yöntemlerle)
-                notify_user_via_websocket(user_id, {"status": status, "message": image_url})
+
                 logging.info(f"Job {job_id} completed with image URL: {image_url}")
                 return jsonify({"message": "Webhook received successfully"}), 200
 
