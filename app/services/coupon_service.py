@@ -1,4 +1,6 @@
 # /app/services/coupon_service.py
+from datetime import datetime
+
 from app.models.coupon_model import Coupon
 from app.models.user_model import User
 from app.errors.not_found_error import NotFoundError
@@ -33,11 +35,31 @@ class CouponService(BaseService):
         return coupon.to_dict()
 
     @staticmethod
-    def check_coupon(coupon_name):
+    def check_coupon(coupon_name, payload):
         coupon = Coupon.objects(name=coupon_name).first()
-        if not coupon:
-            raise ValueError("Coupon not found")
+        user_id = payload['sub']
 
+
+        if not coupon:
+            raise ValueError("Kupon bulunamadı.")
+
+        # Kuponun aktif olup olmadığını kontrol et
+        if not coupon.is_active:
+            raise ValueError("Kupon şu anda aktif değil.")
+
+        # Kuponun geçerlilik tarihini kontrol et
+        if coupon.valid_until < datetime.utcnow():
+            raise ValueError("Kuponun geçerlilik süresi dolmuş.")
+
+        # Kullanım sınırını kontrol et
+        if coupon.usage_count >= coupon.max_usage:
+            raise ValueError("Kupon kullanım sınırına ulaşmıştır.")
+
+        # Kullanıcının kuponu daha önce kullanıp kullanmadığını kontrol et
+        if user_id in [str(used_user.id) for used_user in coupon.used_by]:
+            raise ValueError("Bu kuponu zaten kullanmışsınız.")
+
+        # Kupon geçerliyse, bilgileri döndür
         return coupon.to_dict()
 
     @staticmethod
