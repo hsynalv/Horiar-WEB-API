@@ -57,7 +57,7 @@ class PaymentService:
             if not coupon:
                 raise ValueError("Invalid coupon code")  # Kupon bulunamazsa hata fırlatıyoruz
 
-            CouponService.use_coupon(coupon_name, user_id)
+            # CouponService.use_coupon(coupon_name, user_id)
 
             # Kuponun indirim oranını alıyoruz
             discount_rate = coupon.get("discount_percentage") or 0
@@ -266,6 +266,7 @@ class PaymentService:
 
             if provision.used_coupon:
                 used_coupon = provision.used_coupon
+                CouponService.use_coupon(used_coupon, provision.user_id)
             else:
                 used_coupon = None
 
