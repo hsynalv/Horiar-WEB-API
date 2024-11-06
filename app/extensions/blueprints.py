@@ -65,6 +65,10 @@ def register_blueprints(app):
             request_key = f"runpod_request:{job_id}"
             stored_data = redis_conn.get(request_key)
 
+            if not stored_data:
+                logging.warning(f"No pending request found for job_id: {job_id}")
+                return jsonify({"message": f"No pending request found for job_id: {job_id}"}), 404
+
             # Redis'te bulunan veriyi çözümle ve iş durumu "COMPLETED" mi diye kontrol et
             request_info = json.loads(stored_data)
             user_id = request_info.get("user_id")
@@ -74,12 +78,6 @@ def register_blueprints(app):
             if not job_id or not status or not output:
                 notify_user_via_websocket(user_id, {"status": "failed", "message": "A server error occurred while processing your request"})
                 return jsonify({"message": "Invalid data"}), 400
-
-
-            if not stored_data:
-                logging.warning(f"No pending request found for job_id: {job_id}")
-                return jsonify({"message": f"No pending request found for job_id: {job_id}"}), 404
-
 
 
             # İşlem tamamlandıysa iş türüne göre veritabanına kayıt işlemi yapalım
@@ -98,7 +96,6 @@ def register_blueprints(app):
                         app=current_app,
                         prompt_fix=request_info.get("prompt_fix")
                     )
-                    notify_user_via_websocket(user_id, {"status": status, "message": image_url})
 
 
                 elif job_type == "upscale":
@@ -109,8 +106,6 @@ def register_blueprints(app):
                         low_res_image=request_info.get("low_res_image_url"),
                         app=current_app
                     )
-                    response = jsonify({"status": status, "message": image_url, "low_res_image": request_info.get("low_res_image_url")})
-                    notify_user_via_websocket(user_id, response)
 
 
                 elif job_type == "text_to_video_generation":
@@ -120,7 +115,7 @@ def register_blueprints(app):
                         response=data,
                         prompt=request_info.get("prompt"),
                     )
-                    notify_user_via_websocket(user_id, {"status": status, "message": image_url})
+
 
                 elif job_type == "image_to_video_generation":
                     VideoGenerationService.save_image_to_video_to_db(
@@ -130,13 +125,12 @@ def register_blueprints(app):
                         prompt=request_info.get("prompt"),
                         image_url= request_info.get("image_url"),
                     )
-                    response = jsonify({"status": status, "message": image_url,
-                                        "image": request_info.get("image_url")})
-                    notify_user_via_websocket(user_id, response)
+
+                logging.info("adım 5")
 
 
                 # Kullanıcıya bildirim gönder (frontend'e WebSocket ile veya diğer yöntemlerle)
-
+                notify_user_via_websocket(user_id, {"status": status, "message": image_url})
                 logging.info(f"Job {job_id} completed with image URL: {image_url}")
                 return jsonify({"message": "Webhook received successfully"}), 200
 
