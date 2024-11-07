@@ -3,7 +3,6 @@ import os
 
 from flask import send_from_directory, current_app
 
-from app.extensions.socketio import notify_user_via_websocket
 from app.routes.admin_routes import admin_routes_bp
 from app.routes.coupon_routes import coupon_bp
 from app.routes.enterprise.enterprise_routes import enterprise_bp
@@ -17,6 +16,7 @@ from app.routes.video_generation_routes import video_generation_bp
 from app.services.text_to_image_service import TextToImageService
 from app.services.upscale_service import UpscaleService
 from app.services.video_generation_service import VideoGenerationService
+from app.utils.notification import notify_user_via_websocket
 from app.utils.queue_manager import redis_conn
 
 
