@@ -11,7 +11,7 @@ def handle_connect():
     emit('message', {'status': 'connected', 'message': 'Connection established'})
 
 
-@socketio.on('join')
+@socketio.on('joinRoom')
 def handle_join(data):
     logging.error("join fonksiyonu tetiklendi.")
     room = data.get('room')
