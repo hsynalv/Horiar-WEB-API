@@ -9,7 +9,7 @@ video_generation_bp = Blueprint('video_generation_bp', __name__)
 @video_generation_bp.route('/text-to-video', methods=['POST'])
 @jwt_required(pass_payload=True)
 @ban_check
-@check_credits(15)
+@check_credits(5)
 def generate_text_to_video(payload):
     data = request.json
 
@@ -27,7 +27,7 @@ def generate_text_to_video(payload):
 @video_generation_bp.route('/image-to-video', methods=['POST'])
 @jwt_required(pass_payload=True)
 @ban_check
-@check_credits(15)
+@check_credits(5)
 def generate_image_to_video(payload):
     room = payload.get("sub")
     prompt = request.form.get('prompt')
