@@ -40,7 +40,7 @@
                     {% for request in image_requests %}
                     <tr>
                         <td>{{ request.username }}</td>
-                        <td>{{ request.datetime }}</td>
+                        <td>{{ request.datetime.strftime('%Y/%m/%d %H:%M') }}</td>
                         <td>
                             <a href="{{ request.low_res_image_url }}" target="_blank">
                                 <img src="{{ request.low_res_image_url }}" alt="Image" style="width: 100px; height: auto;">

@@ -42,7 +42,7 @@
                     {% for request in image_requests %}
                     <tr>
                         <td>{{ request.username }}</td>
-                        <td>{{ request.datetime }}</td>
+                        <td>{{ request.datetime.strftime('%Y/%m/%d %H:%M') }}</td>
                         <td>{{ request.prompt }}</td>
                         <td>{{ request.prompt_fix }}</td>
                         <td>

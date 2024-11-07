@@ -40,7 +40,7 @@
                     {% for request in video_requests %}
                     <tr>
                         <td>{{ request.username }}</td>
-                        <td>{{ request.datetime }}</td>
+                        <td>{{ request.datetime.strftime('%Y/%m/%d %H:%M') }}</td>
                         <td>{{ request.prompt }}</td>
                         <td>
                             <video width="200" controls>
