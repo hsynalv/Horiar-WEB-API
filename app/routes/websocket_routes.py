@@ -13,17 +13,19 @@ def handle_connect():
 @socketio.on('join')
 def handle_join(data):
     room = data.get('room')
+    logging.info(f"join fonksiyonunda gelen data: {data}")
+    logging.info(f"gelen room = {room}")
     if room:
+        logging.info(f"Joining room {room}")
         join_room(room)
-        # Katılımı loglamak
-        logging.info(f"Kullanıcı room'a katıldı: {room}")
 
-        # Kullanıcının room'a katılıp katılmadığını kontrol et
+        # Kullanıcının gerçekten katıldığını doğrulayalım
         if room in rooms(request.sid):
-            logging.info(f"Room '{room}' başarılı şekilde katılındı.")
+            logging.info(f"Kullanıcı {room} odasına başarıyla katıldı.")
             emit('message', {'status': 'joined', 'room': room}, to=room)
         else:
-            logging.warning(f"Kullanıcı room'a katılamadı: {room}")
+            logging.warning(f"{room} odasına katılım başarısız.")
+            emit('message', {'status': 'error', 'message': f'Could not join room {room}'})
     else:
         emit('message', {'status': 'error', 'message': 'Room ID is required to join'})
 
