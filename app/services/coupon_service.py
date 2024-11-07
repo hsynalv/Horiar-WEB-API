@@ -12,6 +12,7 @@ class CouponService(BaseService):
 
     @staticmethod
     def use_coupon(coupon_name, user_id):
+        coupon_name = coupon_name.lower()
         coupon = Coupon.objects(name=coupon_name).first()
         if not coupon:
             raise NotFoundError("Coupon not found")
@@ -36,6 +37,7 @@ class CouponService(BaseService):
 
     @staticmethod
     def check_coupon(coupon_name, payload):
+        coupon_name = coupon_name.lower()
         coupon = Coupon.objects(name=coupon_name).first()
         user_id = payload['sub']
 
