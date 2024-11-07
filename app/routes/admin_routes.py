@@ -7,9 +7,11 @@ from flask_login import login_user, logout_user
 
 from app.models.coupon_model import Coupon
 from app.models.discord_image_request_model import DiscordImageRequest
+from app.models.image_to_video_model import ImageToVideo
 from app.models.package_model import Package
 from app.models.subscription_model import Subscription
 from app.models.text_to_image_model import TextToImage
+from app.models.text_to_video_model import TextToVideoGeneration
 from app.models.upscale_model import Upscale
 from app.models.user_model import User
 from app.services.coupon_service import CouponService
@@ -413,11 +415,14 @@ def dashboard():
     distinct_discord_user_count = len(unique_discord_usernames)
     text_to_image_requests = TextToImage.objects(source="web").count()
     upscale_requets = Upscale.objects.count()
+    text_to_video = TextToVideoGeneration.objects.count()
+    image_to_video = ImageToVideo.objects.count()
 
     # Başka istatistikler de eklenebilir
     return render_template('admin/dashboard.html', subscription_count=subscription_count,
                            web_site_users=web_site_users, distinct_discord_user_count=distinct_discord_user_count,
-                           text_to_image_requests=text_to_image_requests, upscale_requets=upscale_requets)
+                           text_to_image_requests=text_to_image_requests, upscale_requets=upscale_requets,
+                           text_to_video=text_to_video, image_to_video=image_to_video)
 
 
 @admin_routes_bp.route('/text_to_image_requests_chart_data')
