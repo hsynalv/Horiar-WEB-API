@@ -33,6 +33,7 @@
                         <th>Kullanıcı Adı</th>
                         <th>İstek Zamanı</th>
                         <th>Prompt</th>
+                        <th>Ref Görsel</th>
                         <th>Video</th>
                     </tr>
                 </thead>
@@ -42,6 +43,11 @@
                         <td>{{ request.username }}</td>
                         <td>{{ request.datetime }}</td>
                         <td>{{ request.prompt }}</td>
+                        <td>
+                            <a href="{{ request.image_url }}" target="_blank">
+                                <img src="{{ request.image_url }}" alt="Image" style="width: 100px; height: auto;">
+                            </a>
+                        </td>
                         <td>
                             <video width="200" controls>
                                 <source src="{{ request.video_url }}" type="video/mp4">
