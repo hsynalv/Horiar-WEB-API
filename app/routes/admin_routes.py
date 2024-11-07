@@ -76,6 +76,12 @@ def list_image_requests():
     image_requests = TextToImage.objects()
     return render_template('admin/image_requests.html', image_requests=image_requests)
 
+@admin_routes_bp.route('/text-to-video-requests')
+def list_text_to_video_requests():
+    # Veritabanından tüm ImageRequest nesnelerini çekiyoruz
+    requests = TextToVideoGeneration.objects()
+    return render_template('admin/list_request/text_to_video_requests.html', video_requests=requests)
+
 
 @admin_routes_bp.route('/upscale-requests')
 def list_upscale_requests():
