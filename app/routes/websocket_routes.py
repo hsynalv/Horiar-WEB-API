@@ -6,7 +6,7 @@ from app import socketio
 
 @socketio.on('connect')
 def handle_connect():
-    print(f"Client connected: {request.sid}")
+    logging.info(f"Client connected: {request.sid}")
     emit('message', {'status': 'connected', 'message': 'Connection established'})
 
 
