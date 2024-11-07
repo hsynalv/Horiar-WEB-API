@@ -13,6 +13,7 @@ def handle_connect():
 @socketio.on('join')
 def handle_join(data):
     room = data.get('room')
+    logging.info(f"room = {room}")
     if room:
         logging.info(f"Joining room {room}")
         join_room(room)
