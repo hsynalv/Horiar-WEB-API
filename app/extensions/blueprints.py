@@ -54,7 +54,7 @@ def register_blueprints(app):
         """
         try:
             data = request.json  # Gelen JSON veriyi alıyoruz
-            logging.info(f"Webhook received data: {data}")
+            logging.info(f"Webhook received data")
 
             # İşi tamamlayan job_id ve output bilgilerini alıyoruz
             job_id = data.get("id")
