@@ -136,6 +136,14 @@ def register_blueprints(app):
                 # Kullanıcıya bildirim gönder (frontend'e WebSocket ile veya diğer yöntemlerle)
                 notify_user_via_websocket(user_id, message)
                 logging.info(f"Job {job_id} completed with image URL: {image_url}")
+
+                # Redis'ten veriyi sil
+                redis_conn.unlink(request_key)
+                if redis_conn.exists(request_key):
+                    logging.info(f"Key {request_key} exists in Redis")
+                else:
+                    logging.info(f"Key {request_key} does not exist in Redis")
+
                 return jsonify(message), 200
 
             else:
