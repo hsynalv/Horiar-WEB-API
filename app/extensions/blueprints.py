@@ -67,6 +67,11 @@ def register_blueprints(app):
             request_key = f"runpod_request:{job_id}"
             stored_data = redis_conn.get(request_key)
 
+            if redis_conn.exists(request_key):
+                logging.info(f"Key {request_key} exists in Redis")
+            else:
+                logging.info(f"Key {request_key} does not exist in Redis")
+
             if not stored_data:
                 logging.warning(f"No pending request found for job_id: {job_id}")
                 return jsonify({"message": f"No pending request found for job_id: {job_id}"}), 404
