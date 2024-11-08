@@ -14,12 +14,14 @@ services:
       - redis
     volumes:
       - .:/app
+    restart: unless-stopped
 
   redis:
     image: redis
     container_name: redis-server
     ports:
       - "6379:6379"
+    restart: unless-stopped
 
   image_worker:
     build: .
@@ -31,6 +33,7 @@ services:
       - redis
     environment:
       - FLASK_ENV=production
+    restart: unless-stopped
 
   video_worker:
     build: .
@@ -42,6 +45,7 @@ services:
       - redis
     environment:
       - FLASK_ENV=production
+    restart: unless-stopped
 
   upscale_worker:
     build: .
@@ -53,6 +57,7 @@ services:
       - redis
     environment:
       - FLASK_ENV=production
+    restart: unless-stopped
 
   rq_dashboard:
     image: eoranged/rq-dashboard
@@ -63,3 +68,4 @@ services:
       - "9181:9181"
     depends_on:
       - redis
+    restart: unless-stopped
