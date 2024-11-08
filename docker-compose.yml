@@ -65,7 +65,7 @@ services:
     environment:
       - RQ_DASHBOARD_REDIS_URL=redis://redis-server:6379
     ports:
-      - "9181:9181"
+      - "127.0.0.1:9181:9181"
     depends_on:
       - redis
     restart: unless-stopped
