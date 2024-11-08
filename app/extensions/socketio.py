@@ -12,8 +12,8 @@ socketio = SocketIO(
         "https://www.horiar.com"
     ],
     async_mode='eventlet',  # Yalnızca WebSocket bağlantısı için 'eventlet' seçin
-    logger=True,
-    engineio_logger=True  # Bağlantı detaylarını loglamak için
+    logger=False,
+    engineio_logger=False  # Bağlantı detaylarını loglamak için
 )
 
 
