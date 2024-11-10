@@ -1,7 +1,8 @@
-import logging
 import os
 
-from flask import send_from_directory, current_app
+from flask import send_from_directory, current_app, jsonify, request
+import logging
+import json
 
 from app.routes.admin_routes import admin_routes_bp
 from app.routes.coupon_routes import coupon_bp
@@ -41,13 +42,17 @@ def register_blueprints(app):
         return send_from_directory(os.path.join(app.root_path, 'static'),
                                    'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
+    @app.route('/logo.png')
+    def serve_logo():
+        return send_from_directory(os.path.join(app.root_path, 'static'), 'logo.png')
+
+    @app.route('/banner.png')
+    def serve_banner():
+        return send_from_directory(os.path.join(app.root_path, 'static'), 'banner.png')
+
     @app.route('/robots.txt')
     def robots_txt():
         return send_from_directory(app.static_folder, 'robots.txt')
-
-    from flask import jsonify, request
-    import logging
-    import json
 
     @app.route('/webhook', methods=['POST'])
     def runpod_webhook():

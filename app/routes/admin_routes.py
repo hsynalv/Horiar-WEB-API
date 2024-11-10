@@ -513,6 +513,50 @@ def get_upscale_chart_data():
 
     return jsonify({"labels": labels, "data": counts})
 
+@admin_routes_bp.route('/text_to_video_requests_chart_data')
+def get_text_to_video_chart_data():
+    time_frame = request.args.get('timeFrame', 'daily')
+    now = datetime.now()
+
+    if time_frame == 'daily':
+        start_date = now - timedelta(days=1)
+        interval = 'hour'
+    elif time_frame == 'weekly':
+        start_date = now - timedelta(days=7)
+        interval = 'day'
+    elif time_frame == 'monthly':
+        start_date = now - timedelta(days=30)
+        interval = 'day'
+    else:
+        return jsonify({"error": "Invalid time frame"}), 400
+
+    # Veritabanından 'consistent' alanına göre ayırarak veri çekiyoruz
+    image_to_video_requests = ImageToVideo.objects(datetime__gte=start_date)
+    video_generation_requests = TextToVideoGeneration.objects(datetime__gte=start_date)
+
+    # Verileri gruplamak
+    image_to_video_data = {}
+    video_generation_data = {}
+
+    for req in image_to_video_requests:
+        time_key = req.datetime.strftime('%Y-%m-%d %H' if interval == 'hour' else '%Y-%m-%d')
+        image_to_video_data[time_key] = image_to_video_data.get(time_key, 0) + 1
+
+    for req in video_generation_requests:
+        time_key = req.datetime.strftime('%Y-%m-%d %H' if interval == 'hour' else '%Y-%m-%d')
+        video_generation_data[time_key] = video_generation_data.get(time_key, 0) + 1
+
+    labels = sorted(set(image_to_video_data.keys()).union(video_generation_data.keys()))
+
+    image_to_video_counts = [image_to_video_data.get(label, 0) for label in labels]
+    video_generation_counts = [video_generation_data.get(label, 0) for label in labels]
+
+    return jsonify({
+        "labels": labels,
+        "imageToVideoData": image_to_video_counts,
+        "videoGenerationData": video_generation_counts
+    })
+
 
 
 
