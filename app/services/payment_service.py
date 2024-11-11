@@ -252,10 +252,11 @@ class PaymentService:
     @staticmethod
     def success_payment(merchant_oid):
         provision = ProvisionService.get_provision_by_merchant_oid(merchant_oid)
-        package = PackageService.get_package_by_id(provision.package_id)
+
 
         # Eğer provision bulunduysa, abonelik kaydı yap
         if provision:
+            package = PackageService.get_package_by_id(provision.package_id)
             # Abonelik tarihlerini ayarla
             subscription_date = datetime.utcnow()
 
