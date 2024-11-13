@@ -27,18 +27,9 @@ admin_users = {
 
 @admin_routes_bp.before_request
 def require_admin_login():
-    if request.method == 'OPTIONS':
-        return  # Preflight isteği için kontrol yapmayın
     if not session.get('admin_logged_in') and request.endpoint != 'admin_routes_bp.login':
         flash('Bu sayfayı görmek için giriş yapmanız gerekiyor!', 'warning')
         return redirect(url_for('admin_routes_bp.login'))
-
-@admin_routes_bp.after_request()
-def after_request(response):
-    if request.path.startswith('/admin'):
-        response.headers.add('Access-Control-Allow-Origin', 'https://horiar.com')
-        response.headers.add('Access-Control-Allow-Credentials', 'true')
-    return response
 
 @admin_routes_bp.route('/login', methods=['GET', 'POST'])
 def login():
