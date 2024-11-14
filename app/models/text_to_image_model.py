@@ -47,3 +47,16 @@ class TextToImage(Document):
             "username": self.username,
             "consistent":self.consistent
         }
+
+    def to_dict_frontend(self):
+        return {
+            "datetime": self.datetime.strftime('%Y-%m-%d %H:%M:%S.%f') if self.datetime else None,
+            "prompt": self.prompt,
+            "seed": self.seed,
+            "model_type": self.model_type,
+            "prompt_fix": self.prompt_fix,
+            "resolution": self.resolution,
+            "image_url": self.image_url,
+            "image_url_webp": self.image_url_webp,
+            "consistent":self.consistent
+        }

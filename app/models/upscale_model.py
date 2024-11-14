@@ -33,3 +33,11 @@ class Upscale(Document):
             "username": self.username,
             "source": self.source
         }
+
+    def to_dict_frontend(self):
+        return {
+            "datetime": self.datetime,
+            "low_res_image_url": self.low_res_image_url,
+            "high_res_image_url": self.high_res_image_url,
+            "image_url_webp": self.image_url_webp,
+        }

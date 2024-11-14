@@ -1,8 +1,14 @@
+import logging
 import uuid
+from itertools import chain
 
 from flask import current_app
 from bson import ObjectId
 from app.errors.not_found_error import NotFoundError
+from app.models.image_to_video_model import ImageToVideo
+from app.models.text_to_image_model import TextToImage
+from app.models.text_to_video_model import TextToVideoGeneration
+from app.models.upscale_model import Upscale
 from app.models.user_model import User
 from passlib.hash import pbkdf2_sha256  # passlib ile pbkdf2_sha256 kullanımı
 import re
@@ -159,3 +165,58 @@ class UserService(BaseService):
                     "currentCredit": int(user.base_credits),
                     "maxCredit": 15
         }
+
+    @staticmethod
+    def get_all_requests(payload, page=1, page_size=10):
+        user_id = payload.get("sub")
+        logging.info(user_id)
+
+        # Farklı render türlerinden verileri çekiyoruz, sadece istenen alanları belirtiyoruz
+        text_to_image_renders = TextToImage.objects(user_id=user_id).only(
+            "datetime", "prompt", "seed", "model_type", "prompt_fix", "resolution", "image_url", "image_url_webp", "consistent"
+        )
+
+        image_to_video_renders = ImageToVideo.objects(user_id=user_id).only(
+            "prompt", "image_url", "video_url", "datetime"
+        )
+
+        upscale_renders = Upscale.objects(user_id=user_id).only(
+            "datetime", "low_res_image_url", "high_res_image_url", "image_url_webp"
+        )
+
+        text_to_video_renders = TextToVideoGeneration.objects(user_id=user_id).only(
+            "prompt", "video_url", "datetime"
+        )
+
+        logging.info(f"text to image count: {text_to_image_renders.count()}")
+        logging.info(f"image_to_video_generation_renders count: {image_to_video_renders.count()}")
+        logging.info(f"upscale_renders count: {upscale_renders.count()}")
+        logging.info(f"text_to_video_renders count: {text_to_video_renders.count()}")
+
+        # Tüm renderları birleştiriyoruz ve her rendera type bilgisi ekliyoruz
+        all_renders = chain(
+            [(render, "Text to Image") for render in text_to_image_renders],
+            [(render, "Image to Video") for render in image_to_video_renders],
+            [(render, "Upscale") for render in upscale_renders],
+            [(render, "Text to Video") for render in text_to_video_renders]
+        )
+
+        # Renderları tarihe göre sıralıyoruz (azalan)
+        sorted_renders = sorted(all_renders, key=lambda r: r[0].datetime, reverse=True)
+
+        # Sayfalama işlemi
+        start_index = (page - 1) * page_size
+        end_index = start_index + page_size
+        paginated_renders = sorted_renders[start_index:end_index]
+
+        # JSON formatına dönüştürüyoruz
+        render_list = []
+        for render, render_type in paginated_renders:
+            render_data = {
+                "created_at": render.datetime.isoformat(),
+                "type": render_type,  # Type bilgisi elle ekleniyor
+                "data": render.to_dict_frontend()
+            }
+            render_list.append(render_data)
+
+        return render_list

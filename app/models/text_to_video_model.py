@@ -26,3 +26,10 @@ class TextToVideoGeneration(Document):
             "video_url": self.video_url,
             "datetime": self.datetime
         }
+
+    def to_dict_frontend(self):
+        return {
+            "prompt": self.prompt,
+            "video_url": self.video_url,
+            "datetime": self.datetime
+        }

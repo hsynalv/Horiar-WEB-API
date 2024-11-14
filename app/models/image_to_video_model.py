@@ -28,3 +28,11 @@ class ImageToVideo(Document):
             "video_url": self.video_url,
             "datetime": self.datetime
         }
+
+    def to_dict_frontend(self):
+        return {
+            "prompt": self.prompt,
+            "image_url": self.image_url,
+            "video_url": self.video_url,
+            "datetime": self.datetime
+        }

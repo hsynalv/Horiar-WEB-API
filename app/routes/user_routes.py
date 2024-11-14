@@ -314,3 +314,16 @@ def get_user_credit(payload):
     user_id = payload['sub']
     credit = UserService.get_user_credit(user_id)
     return credit
+
+
+@user_bp.route('/get-all-requests', methods=['GET'])
+@jwt_required(pass_payload=True)
+def get_user_requests(payload):
+    # URL'den sayfa ve sayfa boyutu bilgilerini alıyoruz, varsayılan olarak page=1 ve page_size=10
+    page = request.args.get('page', default=1, type=int)
+    page_size = request.args.get('page_size', default=10, type=int)
+
+    # Kullanıcının renderlarını alıyoruz
+    renders = UserService.get_all_requests(payload, page=page, page_size=page_size)
+
+    return jsonify(renders)
