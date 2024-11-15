@@ -86,7 +86,7 @@ class PaymentService:
         basket = base64.b64encode(json.dumps([[package["title"], str(price), 1],]).encode())
         timeout_limit = '30' # İşlem zaman aşımı süresi - dakika cinsinden
         debug_on = '0' # Hata mesajlarının ekrana basılması için entegrasyon ve test sürecinde 1 olarak bırakın. Daha sonra 0 yapabilirsiniz.
-        test_mode = '0' # Mağaza canlı modda iken test işlem yapmak için 1 olarak gönderilebilir.
+        test_mode = '1' # Mağaza canlı modda iken test işlem yapmak için 1 olarak gönderilebilir.
         no_installment = '0'  # Taksit yapılmasını istemiyorsanız, sadece tek çekim sunacaksanız 1 yapın
         max_installment = '1' # Sayfada görüntülenecek taksit adedini sınırlamak istiyorsanız uygun şekilde değiştirin. Sıfır (0) gönderilmesi durumunda yürürlükteki en fazla izin verilen taksit geçerli olur.
         merchant_oid = PaymentService.generate_merchant_oid()
@@ -125,10 +125,12 @@ class PaymentService:
             if res.get("status") == "success":
                 if coupon_name:
                     resultForSave = PaymentService.save_provision(merchant_oid=merchant_oid, user_id=user_id, username=user.username,
-                                                                  package_id=package_id, is_annual=is_annual, email=user.email, coupon_name=coupon["name"], amount=price)
+                                                                  package_id=package_id, is_annual=is_annual, email=user.email,
+                                                                  coupon_name=coupon["name"], amount=price, currency=currency)
                 else:
                     resultForSave = PaymentService.save_provision(merchant_oid=merchant_oid, user_id=user_id, username=user.username,
-                                                                  package_id=package_id, is_annual=is_annual, email=user.email, coupon_name=None, amount=price)
+                                                                  package_id=package_id, is_annual=is_annual, email=user.email,
+                                                                  coupon_name=None, amount=price, currency=currency)
 
 
                 if resultForSave:
@@ -192,7 +194,7 @@ class PaymentService:
 
         return merchant_oid
     @staticmethod
-    def save_provision(merchant_oid, user_id, username, package_id, is_annual, email, coupon_name,amount):
+    def save_provision(merchant_oid, user_id, username, package_id, is_annual, email, coupon_name, amount, currency):
         """
         Verilen bilgileri kullanarak provizyon kaydı oluşturur ve veritabanına kaydeder.
         """
@@ -206,7 +208,8 @@ class PaymentService:
                 is_annual=is_annual,
                 email=email,
                 used_coupon=coupon_name,
-                amount=amount
+                amount=amount,
+                currency=currency
             )
 
             # Veritabanına kaydet
@@ -292,9 +295,10 @@ class PaymentService:
             )
 
             purchase = Purchase(
-                username= provision.username,
-                package= package["title"],
-                amount= provision.amount / 100
+                username=provision.username,
+                package=package["title"],
+                amount=provision.amount / 100,
+                currency=provision.currency
             )
 
 

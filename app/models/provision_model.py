@@ -14,6 +14,7 @@ class Provision(Document):
     email = StringField(required=True)
     used_coupon = StringField(required=False)
     amount = FloatField(required=False)
+    currency = StringField(required=False)
 
     meta = {'collection': 'provision'}
 
@@ -26,5 +27,6 @@ class Provision(Document):
             "is_annual": self.is_annual,
             "email": self.email,
             "used_coupon": self.used_coupon,
-            "amount": self.amount
+            "amount": self.amount,
+            "currency": self.currency
         }
