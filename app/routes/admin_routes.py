@@ -9,6 +9,7 @@ from app.models.coupon_model import Coupon
 from app.models.discord_image_request_model import DiscordImageRequest
 from app.models.image_to_video_model import ImageToVideo
 from app.models.package_model import Package
+from app.models.purchase_model import Purchase
 from app.models.subscription_model import Subscription
 from app.models.text_to_image_model import TextToImage
 from app.models.text_to_video_model import TextToVideoGeneration
@@ -106,6 +107,11 @@ def discord_requests():
 def list_subscription():
     requests = Subscription.objects()
     return render_template('admin/subscription/subscription.html', subscription_requests=requests)
+
+@admin_routes_bp.route('/purchases')
+def list_purchase():
+    requests = Purchase.objects()
+    return render_template('admin/purchase.html', purchases=requests)
 
 
 @admin_routes_bp.route('/get-user-by-email', methods=['POST'])
