@@ -14,8 +14,8 @@ class Purchase(Document):
     def to_dict(self):
         return {
             "id": str(self.id),
-            "username": str(self.user.id) if self.user else None,
-            "package": str(self.package.id) if self.package else None,
+            "username": self.username,
+            "package": self.package.id,
             "amount": self.amount,
             "payment_date": self.payment_date.isoformat(),
         }
