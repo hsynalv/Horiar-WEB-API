@@ -83,6 +83,14 @@
                                 <p>Satın Alımlar</p>
                             </a>
                         </li>
+                        {% if current_user.is_authenticated and 'bc8650b1-a41f-417d-a4c2-ab59b2738195' in current_user.roles %}
+                            <li class="nav-item">
+                                <a href="{{ url_for('admin_routes_bp.list_purchase') }}" class="nav-link">
+                                    <i class="nav-icon fa-solid fa-money-bill-1-wave"></i>
+                                    <p>Mali Gelirler</p>
+                                </a>
+                            </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a href="{{ url_for('admin_routes_bp.list_image_requests') }}" class="nav-link">
                                 <i class="nav-icon fa-regular fa-image"></i>
@@ -110,7 +118,7 @@
                         <li class="nav-item">
                             <a href="{{ url_for('admin_routes_bp.list_image_to_video_requests') }}" class="nav-link">
                                 <i class="nav-icon fa-solid fa-photo-film"></i>
-                                <p>I2I İstekleri</p>
+                                <p>I2V İstekleri</p>
                             </a>
                         </li>
                         <li class="nav-item">
