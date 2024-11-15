@@ -83,7 +83,7 @@
                     {% for request in purchases %}
                     <tr>
                         <td>{{ request.username }}</td>
-                        <td>{{ request.payment_date }}</td>
+                        <td>{{ request.payment_date.strftime('%Y/%m/%d') }}</td>
                         <td>{{ request.amount }} {{ request.currency }}</td>
 
                     </tr>
