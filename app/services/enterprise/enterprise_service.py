@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import datetime
 
@@ -9,6 +10,8 @@ import secrets
 
 from app.services.text_to_image_service import TextToImageService
 from app.services.upscale_service import UpscaleService
+from app.utils.notification import notify_status_update
+from app.utils.queue_manager import add_to_image_queue, redis_conn
 from app.utils.runpod_requets import send_runpod_request
 from app.utils.convert_to_webp import upload_image_to_s3, process_and_save_image
 
@@ -55,54 +58,67 @@ class EnterpriseService(BaseService):
         customer = self.model.objects(api_key=api_key).first()
         return customer
 
-    def text_to_image(self, app, prompt, model_type, resolution, customer):
-        workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_promptfix.json')
+    def text_to_image(prompt, model_type, resolution, customer, prompt_fix, consistent, room):
+        """Kuyruğa göre image generation işlemini başlatır."""
+        job = add_to_image_queue(
+            EnterpriseService.run_image_generation,
+            prompt=prompt, model_type=model_type, resolution=resolution, customer=customer, prompt_fix=prompt_fix,
+            room=room, consistent=consistent  # room parametresi yalnızca **kwargs olarak geçiliyor
+        )
+        notify_status_update(room, 'processing', 'Your request is being processed.')
+        return job
 
-        """
-        nsfw_flag = openai.moderations.create(input=prompt).results[0].flagged
-        if nsfw_flag:
-            return jsonify({"warning: This prompt violates our safety policy"}), 404
-        """
-        newPrompts = TextToImageService.promptEnhance(prompt)
+    def run_image_generation(prompt, model_type, resolution, customer, prompt_fix, consistent, room=None):
+        # create_app fonksiyonunu burada import edin
+        from app import create_app
 
-        # workflow.json dosyasını güncelle
-        updated_workflow = TextToImageService.update_workflow_with_prompt(workflow_path, newPrompts, model_type,
-                                                                          resolution, True)
-        seed = updated_workflow["input"]["workflow"]["112"]["inputs"]["noise_seed"]
+        # Flask uygulamasını başlat
+        app = create_app()
 
-        result, status_code = send_runpod_request(app=app, user_id=str(customer.id), username=f"Enterprise: {customer.company_name}",
-                                                  data=json.dumps(updated_workflow), runpod_url="RUNPOD_URL",
-                                                  timeout=360)
+        with app.app_context():
+            workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_promptfix.json')
 
-        # API yanıtını veritabanına kaydet
-        self.save_request_to_db(customer_id=str(customer.id), company_name=customer.company_name, request_type="text-to-image",
-                                prompt=prompt, response=result, low_res_url=None, seed=str(seed), model_type=model_type, resolution=resolution, app=app)
+            # workflow.json dosyasını güncelle
+            updated_workflow = TextToImageService.update_workflow_with_prompt(
+                path=workflow_path, prompt=prompt, model_type=model_type,
+                resolution=resolution, randomSeed=not consistent, prompt_fix=prompt_fix
+            )
+            seed = updated_workflow["input"]["workflow"]["112"]["inputs"]["noise_seed"]
 
-        return result  # Yanıtı JSON olarak döndür
 
-    def text_to_image_consistent(self, app, prompt, model_type, resolution, customer):
-        workflow_path = os.path.join(os.getcwd(), 'app/workflows/flux_promptfix.json')
+            # RunPod isteği gönder
+            result, status_code = send_runpod_request(
+                app=app, user_id=str(customer.id), username=customer.company_name,
+                data=json.dumps(updated_workflow), runpod_url="RUNPOD_URL",
+                timeout=360
+            )
 
-        """
-        nsfw_flag = openai.moderations.create(input=prompt).results[0].flagged
-        if nsfw_flag:
-            return jsonify({"warning: This prompt violates our safety policy"}), 404
-        """
-        newPrompts = TextToImageService.promptEnhance(prompt)
+            # RunPod yanıtında "status" kontrolü yap
+            if result.get("status") == "IN_QUEUE" and result.get("id"):
+                # Geçerli bir yanıt alındığında Redis’e kaydet
+                runpod_id = result.get("id")
+                redis_data = {
+                    "prompt": prompt,
+                    "seed": seed,
+                    "model_type": model_type,
+                    "resolution": resolution,
+                    "room": room,
+                    "status": "IN_PROGRESS",
+                    "prompt_fix": prompt_fix,
+                    "consistent": consistent,
+                    "job_type": "customer_image_generation",
+                    "customer": customer
+                }
+                redis_conn.setex(f"runpod_request:{runpod_id}", 3600, json.dumps(redis_data))
+                notify_status_update(room, 'in_progress', 'Your request is being processed.')
+            else:
+                # Yanıt geçerli değilse, kullanıcıya başarısızlık bildirimi gönder
+                notify_status_update(room, 'failed', 'Your image generation request could not be processed.')
+                logging.error(f"(Enterprise)Image generation request for user {str(customer.id)} failed with status: {result.get('status')}")
+                return {"message": "Image generation request failed. Please try again later."}, 500
 
-        # workflow.json dosyasını güncelle
-        updated_workflow = TextToImageService.update_workflow_with_prompt(workflow_path, newPrompts, model_type,
-                                                                          resolution, False)
-        seed = updated_workflow["input"]["workflow"]["112"]["inputs"]["noise_seed"]
-        # Uygulama bağlamı içinde ayarları çek
+        return result
 
-        result, status_code = send_runpod_request(app=app, user_id=str(customer.id), username=f"Enterprise: {customer.company_name}",
-                                                  data=json.dumps(updated_workflow), runpod_url="RUNPOD_URL",
-                                                  timeout=360)
-        # API yanıtını veritabanına kaydet
-        self.save_request_to_db(customer_id=str(customer.id), company_name=customer.company_name, request_type="text-to-image-consistent",
-                                prompt=prompt, response=result, low_res_url=None, seed=str(seed), model_type=model_type, resolution=resolution, app=app)
-        return result  # Yanıtı JSON olarak döndür
 
 
     def upscale_enhance(self, app, low_res_image, customer):
@@ -159,6 +175,9 @@ class EnterpriseService(BaseService):
         )
         new_request.save()
         return new_request
+
+
+    # Get Fonksiyonları ----------------------------------------------------------------------------------------------------------------------
 
     def get_all_text_to_images(self, customer):
         # Define the fields you want to include

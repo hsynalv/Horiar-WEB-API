@@ -56,13 +56,15 @@ def text_to_image(customer):
     prompt = data.get('prompt')
     model_type = data.get('model_type', None)
     resolution = data.get('resolution', None)
+    consistent = data.get('resolution', None)
 
     if not prompt:
         return jsonify({"message": "Missing required fields"}), 400
 
     try:
         # Text to image işlemini kuyruk kullanmadan doğrudan yap
-        result = service.text_to_image(current_app._get_current_object(), prompt, model_type, resolution,customer)
+        result = service.text_to_image(prompt_fix=True, model_type=model_type, resolution=resolution, customer=customer,
+                                       consistent=consistent, prompt=prompt, room=str(customer.id))
         # Eğer result JSON değilse, burada hata olabilir
         return jsonify(result), 200
     except Exception as e:

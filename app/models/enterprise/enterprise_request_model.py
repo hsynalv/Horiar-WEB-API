@@ -7,16 +7,18 @@ class EnterpriseRequest(Document):
     Model for storing enterprise text-to-image requests.
     """
     company_id = StringField(required=True)
-    company_name = StringField(required=True, max_length=255)  # Şirketin adı
-    prompt = StringField(required=False)                        # Kullanılan prompt
-    image = StringField(required=False)                       # Üretilen yüksek çözünürlüklü resmin URL'si veya yolu
+    company_name = StringField(required=True, max_length=255)       # Şirketin adı
+    prompt = StringField(required=False)                            # Kullanılan prompt
+    image = StringField(required=False)                             # Üretilen yüksek çözünürlüklü resmin URL'si veya yolu
     webp_url = StringField()
-    seed = StringField()                                       # Seed değeri (varsa)
-    model_type = StringField()                                 # Kullanılan model tipi
-    resolution = StringField()                                 # Görüntü çözünürlüğü
-    low_res_url = StringField()                                # Düşük çözünürlüklü resmin URL'si veya yolu
-    created_at = DateTimeField(default=datetime.datetime.utcnow) # Oluşturulma tarihi
+    seed = StringField()                                            # Seed değeri (varsa)
+    model_type = StringField()                                      # Kullanılan model tipi
+    resolution = StringField()                                      # Görüntü çözünürlüğü
+    low_res_url = StringField()                                     # Düşük çözünürlüklü resmin URL'si veya yolu
+    created_at = DateTimeField(default=datetime.datetime.utcnow)    # Oluşturulma tarihi
     request_type = StringField(required=True)
+    video_url = StringField(required=False)
+    ref_image = StringField(required=False)
 
     meta = {'collection': 'enterprise_requests'}  # MongoDB koleksiyonu
 
@@ -33,5 +35,7 @@ class EnterpriseRequest(Document):
             "resolution": self.resolution,
             "low_res_url": self.low_res_url,
             "created_at": self.created_at.isoformat(),
-            "request_type": self.request_type
+            "request_type": self.request_type,
+            "video_url": self.video_url,
+            "ref_image": self.ref_image
         }

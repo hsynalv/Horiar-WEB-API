@@ -13,6 +13,7 @@ class Subscription(Document):
     merchant_oid = StringField(required=True)
     max_credit_balance = IntField(default=0.0)
     used_coupon = StringField(required=False)
+    package = StringField(required=False)
 
     meta = {'collection': 'subscriptions'}
 
@@ -30,4 +31,5 @@ class Subscription(Document):
             "merchant_oid": self.merchant_oid,
             "max_credit_balance": self.max_credit_balance,
             "used_coupon": self.used_coupon,
+            "package": self.package
         }

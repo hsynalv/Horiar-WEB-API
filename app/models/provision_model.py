@@ -1,5 +1,5 @@
 from flask_mongoengine import Document
-from mongoengine import StringField, BooleanField
+from mongoengine import StringField, BooleanField, FloatField
 
 from app.models.package_model import Package
 from app.models.user_model import User
@@ -13,6 +13,7 @@ class Provision(Document):
     is_annual = BooleanField(default=False)
     email = StringField(required=True)
     used_coupon = StringField(required=False)
+    amount = FloatField(required=False)
 
     meta = {'collection': 'provision'}
 
@@ -25,4 +26,5 @@ class Provision(Document):
             "is_annual": self.is_annual,
             "email": self.email,
             "used_coupon": self.used_coupon,
+            "amount": self.amount
         }
