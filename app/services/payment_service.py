@@ -128,7 +128,7 @@ class PaymentService:
                                                                   package_id=package_id, is_annual=is_annual, email=user.email, coupon_name=coupon["name"], amount=price)
                 else:
                     resultForSave = PaymentService.save_provision(merchant_oid=merchant_oid, user_id=user_id, username=user.username,
-                                                                  package_id=package_id, is_annual=is_annual, email=user.email, coupon_name=None)
+                                                                  package_id=package_id, is_annual=is_annual, email=user.email, coupon_name=None, amount=price)
 
 
                 if resultForSave:
