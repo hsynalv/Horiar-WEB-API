@@ -103,6 +103,48 @@ def upscale_enhance(customer):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@enterprise_bp.route('/text-to-video', methods=['POST'])
+@api_key_required
+def generate_text_to_video(customer):
+    data = request.json
+
+    room = str(customer.id)
+    prompt = data.get('prompt')
+
+    if not prompt:
+        return jsonify({"message": "Missing required fields"}), 400
+
+    # Kuyruğa göre video generation işlemini başlatma
+    job = EnterpriseService.text_to_video(prompt, customer, room)
+
+    return jsonify({"message": "Request has been queued", "job_id": job.id, "room": room}), 200
+
+@enterprise_bp.route('/image-to-video', methods=['POST'])
+@api_key_required
+def generate_image_to_video(customer):
+    room = str(customer.id)
+    prompt = request.form.get('prompt')
+
+    if not prompt:
+        return jsonify({"message": "Missing required fields"}), 400
+
+    if 'image' not in request.files:
+        return jsonify({"error": "No image file part"}), 400
+
+    image_file = request.files['image']
+    if image_file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    if image_file:
+        image_bytes = image_file.read()
+
+        # Kuyruğa göre video generation işlemini başlatma
+        job = EnterpriseService.image_to_video(prompt, customer, image_bytes, room)
+
+        return jsonify({"message": "Request has been queued", "job_id": job.id, "room": room}), 200
+
+    return 400
+
 
 @enterprise_bp.route('/text-to-image', methods=['GET'])
 @api_key_required

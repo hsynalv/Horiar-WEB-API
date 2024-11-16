@@ -10,8 +10,9 @@ import secrets
 
 from app.services.text_to_image_service import TextToImageService
 from app.services.upscale_service import UpscaleService
+from app.services.video_generation_service import VideoGenerationService
 from app.utils.notification import notify_status_update
-from app.utils.queue_manager import add_to_image_queue, redis_conn, add_to_upscale_queue
+from app.utils.queue_manager import add_to_image_queue, redis_conn, add_to_upscale_queue, add_to_video_queue
 from app.utils.runpod_requets import send_runpod_request
 from app.utils.convert_to_webp import upload_image_to_s3, process_and_save_image
 
@@ -177,6 +178,137 @@ class EnterpriseService(BaseService):
                 return {"message": "Upscale request failed. Please try again later."}, 500
 
             return result
+
+
+    # Text To Video
+
+    @staticmethod
+    def text_to_video(prompt, customer, room):
+        """Kuyruğa göre video generation işlemini başlatır."""
+        job = add_to_video_queue(
+            EnterpriseService.run_text_to_video_generation,
+            prompt=prompt, customer=customer, room=room
+        )
+        notify_status_update(room, 'processing', 'Your video request is being processed.')
+        return job
+
+    @staticmethod
+    def run_text_to_video_generation(prompt, customer, room=None):
+        # create_app fonksiyonunu burada import edin
+        from app import create_app
+
+        # Flask uygulamasını başlat
+        app = create_app()
+
+        with app.app_context():
+            workflow_path = os.path.join(os.getcwd(), 'app/workflows/T2V.json')
+
+            translatePrompt = VideoGenerationService.translatePrompt(prompt)
+
+            # workflow.json dosyasını güncelle
+            updated_workflow = VideoGenerationService.update_workflow_with_t2v(
+                path=workflow_path, prompt=translatePrompt,
+            )
+
+            customer_id = str(customer.id)
+            company_name = customer.company_name
+
+            # RunPod isteği gönder
+            result, status_code = send_runpod_request(
+                app=app, user_id=customer_id, username=company_name,
+                data=json.dumps(updated_workflow), runpod_url="RUNPOD_VIDEO_URL",
+                timeout=600
+            )
+
+            # RunPod yanıtında "status" kontrolü yap
+            if result.get("status") == "IN_QUEUE" and result.get("id"):
+                # Geçerli bir yanıt alındığında Redis’e kaydet
+                runpod_id = result.get("id")
+                redis_data = {
+                    "customer_id": customer_id,
+                    "company_name": company_name,
+                    "prompt": prompt,
+                    "room": room,
+                    "status": "IN_PROGRESS",
+                    "job_type": "customer_text_to_video"
+                }
+                redis_conn.setex(f"runpod_request:{runpod_id}", 3600, json.dumps(redis_data))
+                notify_status_update(room, 'in_progress', 'Your video request is being processed.')
+            else:
+                # Yanıt geçerli değilse, kullanıcıya başarısızlık bildirimi gönder
+                notify_status_update(room, 'failed', 'Your video generation request could not be processed.')
+                logging.error(f"Video generation request for user {customer_id} failed with status: {result.get('status')}")
+                return {"message": "Video generation request failed. Please try again later."}, 500
+
+        return result
+
+    # Image To Video
+
+    @staticmethod
+    def image_to_video(prompt, customer, image_bytes, room):
+        """Kuyruğa göre video generation işlemini başlatır."""
+        job = add_to_video_queue(
+            EnterpriseService.run_image_to_video_generation,
+            prompt=prompt, customer=customer, image_bytes=image_bytes, room=room
+        )
+        notify_status_update(room, 'processing', 'Your video request is being processed.')
+        return job
+
+    @staticmethod
+    def run_image_to_video_generation(prompt, customer, image_bytes, room=None):
+        # create_app fonksiyonunu burada import edin
+        from app import create_app
+
+        # Flask uygulamasını başlat
+        app = create_app()
+
+        customer_id = str(customer.id)
+        company_name = customer.company_name
+
+        with app.app_context():
+            workflow_path = os.path.join(os.getcwd(), 'app/workflows/I2V.json')
+
+            translatePrompt = VideoGenerationService.translatePrompt(prompt)
+
+            # workflow.json dosyasını güncelle
+            updated_workflow = VideoGenerationService.update_workflow_with_i2v(
+                path=workflow_path, prompt=translatePrompt, image_bytes=image_bytes
+            )
+
+            image_url = upload_image_to_s3(
+                app=app, image_bytes=image_bytes, userid=customer_id, s3_folder_name="S3_FOLDER_VIDEO",
+                file_extension="png"
+            )
+
+            # RunPod isteği gönder
+            result, status_code = send_runpod_request(
+                app=app, user_id=customer_id, username=company_name,
+                data=json.dumps(updated_workflow), runpod_url="RUNPOD_VIDEO_URL",
+                timeout=600
+            )
+
+            # RunPod yanıtında "status" kontrolü yap
+            if result.get("status") == "IN_QUEUE" and result.get("id"):
+                # Geçerli bir yanıt alındığında Redis’e kaydet
+                runpod_id = result.get("id")
+                redis_data = {
+                    "customer_id": customer_id,
+                    "company_name": company_name,
+                    "prompt": prompt,
+                    "room": room,
+                    "status": "IN_PROGRESS",
+                    "image_url": image_url,
+                    "job_type": "customer_image_to_video"
+                }
+                redis_conn.setex(f"runpod_request:{runpod_id}", 3600, json.dumps(redis_data))
+                notify_status_update(room, 'in_progress', 'Your video request is being processed.')
+            else:
+                # Yanıt geçerli değilse, kullanıcıya başarısızlık bildirimi gönder
+                notify_status_update(room, 'failed', 'Your video generation request could not be processed.')
+                logging.error(f"Video generation request for user {customer_id} failed with status: {result.get('status')}")
+                return {"message": "Video generation request failed. Please try again later."}, 500
+
+        return result
 
 
 
