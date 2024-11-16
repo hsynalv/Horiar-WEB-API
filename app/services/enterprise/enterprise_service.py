@@ -11,7 +11,7 @@ import secrets
 from app.services.text_to_image_service import TextToImageService
 from app.services.upscale_service import UpscaleService
 from app.utils.notification import notify_status_update
-from app.utils.queue_manager import add_to_image_queue, redis_conn
+from app.utils.queue_manager import add_to_image_queue, redis_conn, add_to_upscale_queue
 from app.utils.runpod_requets import send_runpod_request
 from app.utils.convert_to_webp import upload_image_to_s3, process_and_save_image
 
@@ -58,16 +58,18 @@ class EnterpriseService(BaseService):
         customer = self.model.objects(api_key=api_key).first()
         return customer
 
-    def text_to_image(prompt, model_type, resolution, customer, prompt_fix, consistent, room):
+    # Text To Image
+
+    def text_to_image(self, prompt, model_type, resolution, customer, prompt_fix, consistent, room):
         """Kuyruğa göre image generation işlemini başlatır."""
         job = add_to_image_queue(
             EnterpriseService.run_image_generation,
             prompt=prompt, model_type=model_type, resolution=resolution, customer=customer, prompt_fix=prompt_fix,
             room=room, consistent=consistent  # room parametresi yalnızca **kwargs olarak geçiliyor
         )
-        notify_status_update(room, 'processing', 'Your request is being processed.')
         return job
 
+    @staticmethod
     def run_image_generation(prompt, model_type, resolution, customer, prompt_fix, consistent, room=None):
         # create_app fonksiyonunu burada import edin
         from app import create_app
@@ -102,12 +104,13 @@ class EnterpriseService(BaseService):
                     "seed": seed,
                     "model_type": model_type,
                     "resolution": resolution,
-                    "room": room,
+                    "room": str(customer.id),
                     "status": "IN_PROGRESS",
                     "prompt_fix": prompt_fix,
                     "consistent": consistent,
                     "job_type": "customer_image_generation",
-                    "customer": customer
+                    "customer_id": str(customer.id),
+                    "company_name": customer.company_name
                 }
                 redis_conn.setex(f"runpod_request:{runpod_id}", 3600, json.dumps(redis_data))
                 notify_status_update(room, 'in_progress', 'Your request is being processed.')
@@ -120,35 +123,64 @@ class EnterpriseService(BaseService):
         return result
 
 
+    # Upscale Enhance
 
-    def upscale_enhance(self, app, low_res_image, customer):
-        # Parametrelerin varlığını kontrol et
-        if not low_res_image:
-            raise ValueError("Low resolution image is required.")
+    @staticmethod
+    def upscale(image_bytes, customer, room):
+        """Kuyruğa göre upscale işlemini başlatır."""
+        job = add_to_upscale_queue(
+            EnterpriseService.run_upscale,
+            image_bytes=image_bytes, customer=customer, room=room
+        )
+        notify_status_update(room, 'processing', 'Your upscale request is being processed.')
+        return job
 
-        workflow_path = os.path.join(os.getcwd(), 'app/workflows/upscale_workflow.json')
+    @staticmethod
+    def run_upscale(image_bytes, customer, room = None):
+        """Upscale işlemini çalıştırır ve Redis'te takip eder."""
+        from app import create_app
+        app = create_app()
 
-        # workflow.json dosyasını güncelle
-        updated_workflow = UpscaleService.update_workflow(workflow_path, low_res_image)
+        with app.app_context():
+            customer_id = str(customer.id)
+            company_name = str(customer.company_name)
 
-        result, status_code = send_runpod_request(app=app, user_id=str(customer.id),
-                                                  username=f"Enterprise: {customer.company_name}",
-                                                  data=json.dumps(updated_workflow), runpod_url="RUNPOD_UPSCALE_URL",
-                                                  timeout=600)
+            workflow_path = os.path.join(os.getcwd(), 'app/workflows/upscale_workflow.json')
+            updated_workflow = UpscaleService.update_workflow(workflow_path, image_bytes)
+            low_res_image_url = upload_image_to_s3(
+                app=app, image_bytes=image_bytes, userid=customer_id, s3_folder_name="S3_FOLDER_UPSCALE_IMAGE",
+                file_extension="png"
+            )
 
-        low_res_image_url = upload_image_to_s3(app=app, image_bytes=low_res_image,
-                                                                      userid=str(customer.id), s3_folder_name="S3_FOLDER_UPSCALE_IMAGE", file_extension="png")
+            result, status_code = send_runpod_request(
+                app=app, user_id=customer_id, username=company_name, data=json.dumps(updated_workflow),
+                runpod_url="RUNPOD_UPSCALE_URL", timeout=600
+            )
 
-        self.save_request_to_db(customer_id=str(customer.id), company_name=customer.company_name, request_type="upscale",
-                                prompt=None, response=result, low_res_url=low_res_image_url, seed=None, model_type=None,
-                                resolution=None, app=app)
-        return {
-            "result": result,
-            "low_res_image_url": low_res_image_url
-        }
+            # RunPod API yanıtında "status" alanını kontrol et
+            if result.get("status") == "IN_QUEUE" and result.get("id"):
+                # Sadece geçerli bir istek alındıysa Redis'e kaydet
+                runpod_id = result.get("id")
+                redis_data = {
+                    "customer_id": customer_id,
+                    "company_name": company_name,
+                    "status": "IN_PROGRESS",
+                    "low_res_image_url": low_res_image_url,
+                    "job_type": "customer_upscale"
+                }
+                redis_conn.setex(f"runpod_request:{runpod_id}", 3600, json.dumps(redis_data))
+                notify_status_update(room, 'in_progress', 'Your upscale request is being processed.')
+            else:
+                # İstek başarısız olduysa, kullanıcıya bildirim gönder ve işlemi durdur
+                notify_status_update(room, 'failed', 'Your upscale request could not be processed.')
+                logging.error(f"Upscale request for user {customer_id} failed with status: {result.get('status')}")
+                return {"message": "Upscale request failed. Please try again later."}, 500
+
+            return result
 
 
-    def save_request_to_db(self, customer_id, company_name, request_type, prompt, response, low_res_url,seed, model_type, resolution, app):
+
+    def save_request_to_db(self, customer_id, company_name, request_type, prompt, response, low_res_url,seed, model_type, resolution):
         """
         Saves a request to the database.
         """
@@ -156,9 +188,9 @@ class EnterpriseService(BaseService):
         if ".png" in result:
             result = result.split(".png")[0] + ".png"  # Sadece .png'ye kadar olan kısmı al
 
-        webp_url = None
-        if result:
-            webp_url = process_and_save_image(app, result, customer_id)
+        if ".mp4" in result:
+            result = result.split(".mp4")[0] + ".mp4"  # Sadece .mp4'ye kadar olan kısmı al
+
 
         new_request = EnterpriseRequest(
             company_id=customer_id,
@@ -167,7 +199,6 @@ class EnterpriseService(BaseService):
             prompt=prompt,
             low_res_url=low_res_url,
             image=result,
-            webp_url=webp_url,
             seed=seed,
             model_type=model_type or "normal",
             resolution=resolution or "1024x1024",

@@ -15,6 +15,7 @@ from app.routes.user_routes import user_bp
 from app.routes.package_routes import package_bp
 from app.routes.text_to_image_routes import text_to_image_bp
 from app.routes.video_generation_routes import video_generation_bp
+from app.services.enterprise.enterprise_service import EnterpriseService
 from app.services.text_to_image_service import TextToImageService
 from app.services.upscale_service import UpscaleService
 from app.services.video_generation_service import VideoGenerationService
@@ -141,6 +142,38 @@ def register_blueprints(app):
                         image_url= request_info.get("image_url"),
                     )
                     message =  {"status": status, "message": image_url, "ref_image_url": request_info.get("image_url")}
+
+                elif job_type == "customer_image_generation":
+                    enterpriseService = EnterpriseService()
+                    enterpriseService.save_request_to_db(
+                        customer_id=request_info.get("customer_id"),
+                        company_name=request_info.get("company_name"),
+                        request_type="text-to-image",
+                        model_type=request_info.get("model_type"),
+                        prompt=request_info.get("prompt"),
+                        seed=str(request_info.get("seed")),
+                        resolution=request_info.get("resolution"),
+                        response=data,
+                        low_res_url=None,
+                    )
+                    redis_conn.unlink(request_key)
+                    return "OK", 200
+
+                elif job_type == "customer_upscale":
+                    enterpriseService = EnterpriseService()
+                    enterpriseService.save_request_to_db(
+                        customer_id=request_info.get("customer_id"),
+                        company_name=request_info.get("company_name"),
+                        request_type="upscale",
+                        model_type=None,
+                        prompt=None,
+                        seed=None,
+                        resolution=None,
+                        response=data,
+                        low_res_url=request_info.get("low_res_image_url"),
+                    )
+                    redis_conn.unlink(request_key)
+                    return "OK", 200
 
                 else:
                     message = {"status": "failed", "message": "İstek sırasında bir hata ile karşılaşıldı.", "ref_image_url": None}

@@ -63,36 +63,14 @@ def text_to_image(customer):
 
     try:
         # Text to image işlemini kuyruk kullanmadan doğrudan yap
-        result = service.text_to_image(prompt_fix=True, model_type=model_type, resolution=resolution, customer=customer,
+        job = service.text_to_image(prompt_fix=True, model_type=model_type, resolution=resolution, customer=customer,
                                        consistent=consistent, prompt=prompt, room=str(customer.id))
         # Eğer result JSON değilse, burada hata olabilir
-        return jsonify(result), 200
+        return jsonify({"message": "Request has been queued", "job_id": job.id }), 200
     except Exception as e:
         print(f"Error: {e}")  # Hata mesajı
         return jsonify({"message": str(e)}), 500
     pass
-
-
-@enterprise_bp.route('/text-to-image-consistent', methods=['POST'])
-@api_key_required
-def text_to_image_consistent(customer):
-    service = EnterpriseService()
-    data = request.json
-    prompt = data.get('prompt')
-    model_type = data.get('model_type', None)
-    resolution = data.get('resolution', None)
-
-    if not prompt:
-        return jsonify({"message": "Missing required fields"}), 400
-
-    try:
-        # Text to image işlemini kuyruk kullanmadan doğrudan yap
-        result = service.text_to_image_consistent(current_app._get_current_object(), prompt, model_type, resolution,customer)
-        # Eğer result JSON değilse, burada hata olabilir
-        return jsonify(result), 200
-    except Exception as e:
-        print(f"Error: {e}")  # Hata mesajı
-        return jsonify({"message": str(e)}), 500
 
 
 @enterprise_bp.route('/upscale-enhance', methods=['POST'])
@@ -118,10 +96,9 @@ def upscale_enhance(customer):
             image_bytes = image_file.read()  # Bu binary veriyi işlemek için kullanabilirsiniz
 
             # Yeni upscale isteği oluşturuluyor
-            upscale_request = service.upscale_enhance(app=current_app._get_current_object(),
-                                                                    low_res_image=image_bytes, customer=customer)
+            job = service.upscale(customer=customer, image_bytes=image_bytes, room=str(customer.id))
 
-            return upscale_request, 200
+            return jsonify({"message": "Request has been queued", "job_id": job.id }), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
