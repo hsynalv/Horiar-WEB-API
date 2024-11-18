@@ -69,6 +69,7 @@ def register_blueprints(app):
             status = data.get("status")
             output = data.get("output")
 
+
             # Redis'ten ilgili job_id'yi alarak kaydı kontrol et
             request_key = f"runpod_request:{job_id}"
             stored_data = redis_conn.get(request_key)
@@ -78,6 +79,7 @@ def register_blueprints(app):
             else:
                 logging.info(f"Key {request_key} does not exist in Redis")
 
+
             if not stored_data:
                 logging.warning(f"No pending request found for job_id: {job_id}")
                 return jsonify({"message": f"No pending request found for job_id: {job_id}"}), 404
@@ -86,7 +88,7 @@ def register_blueprints(app):
             request_info = json.loads(stored_data)
             user_id = request_info.get("user_id")
             job_type = request_info.get("job_type")
-            image_url = output.get("message")
+
 
             if not job_id or not status or not output:
                 notify_user_via_websocket(user_id, {"status": "failed", "message": "A server error occurred while processing your request"})
@@ -95,6 +97,9 @@ def register_blueprints(app):
 
             # İşlem tamamlandıysa iş türüne göre veritabanına kayıt işlemi yapalım
             if status == "COMPLETED":
+
+                image_url = output.get("message")
+
                 # İş türüne göre ilgili kayıt fonksiyonunu çağır
                 if job_type == "image_generation":
                     TextToImageService.save_request_to_db(

@@ -459,27 +459,43 @@ class EnterpriseService(BaseService):
 
         return request
 
-    def get_one_text_to_image_consistent(self, customer, request_id):
+    def get_one_text_to_video(self, customer, request_id):
         # Dönmek istediğiniz alanları tanımlayın
         fields_to_include = [
             'id',
             'prompt',
-            'image',
-            'seed',
-            'model_type',
-            'resolution',
+            'video_url',
             'created_at',
-            'webp_url'
         ]
 
         request = self.get_company_request_by_id(
             customer_id=str(customer.id),
-            request_type="text-to-image-consistent",
+            request_type="text-to-image",
             fields=fields_to_include,
             request_id=request_id
         )
 
         return request
+
+    def get_one_image_to_video(self, customer, request_id):
+        # Dönmek istediğiniz alanları tanımlayın
+        fields_to_include = [
+            'id',
+            'prompt',
+            'ref_image'
+            'video_url',
+            'created_at',
+        ]
+
+        request = self.get_company_request_by_id(
+            customer_id=str(customer.id),
+            request_type="text-to-image",
+            fields=fields_to_include,
+            request_id=request_id
+        )
+
+        return request
+
 
     def get_one_upscale_enhance(self, customer, request_id):
         # Dönmek istediğiniz alanları tanımlayın
@@ -524,3 +540,11 @@ class EnterpriseService(BaseService):
             else:
                 req_dict[field] = value
         return req_dict
+
+    def get_query_job_id(self, customer, job_id):
+        request = EnterpriseRequest.objects(job_id=job_id)
+
+        if not request:
+            return {"job_id":job_id, "message":"Your request has been queued."}
+
+        return request

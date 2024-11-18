@@ -180,12 +180,12 @@ def get_one_text_to_image(customer, request_id):
         print(f"Error: {e}")
         return jsonify({"message": str(e)}), 500
 
-@enterprise_bp.route('/text-to-image-consistent/<request_id>', methods=['GET'])
+@enterprise_bp.route('/text-to-image/<request_id>', methods=['GET'])
 @api_key_required
-def get_one_text_to_images_consistent(customer, request_id):
+def get_one_text_to_video(customer, request_id):
     service = EnterpriseService()
     try:
-        request = service.get_one_text_to_image_consistent(customer, request_id)
+        request = service.get_one_text_to_video(customer, request_id)
         if not request:
             return jsonify({"message": "Request not found"}), 404
         return jsonify(request), 200
@@ -193,12 +193,39 @@ def get_one_text_to_images_consistent(customer, request_id):
         print(f"Error: {e}")
         return jsonify({"message": str(e)}), 500
 
+@enterprise_bp.route('/text-to-image/<request_id>', methods=['GET'])
+@api_key_required
+def get_one_image_to_video(customer, request_id):
+    service = EnterpriseService()
+    try:
+        request = service.get_one_image_to_video(customer, request_id)
+        if not request:
+            return jsonify({"message": "Request not found"}), 404
+        return jsonify(request), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"message": str(e)}), 500
+
+
 @enterprise_bp.route('/upscale-enhance/<request_id>', methods=['GET'])
 @api_key_required
 def get_one_upscale_enhance(customer, request_id):
     service = EnterpriseService()
     try:
         request = service.get_one_upscale_enhance(customer, request_id)
+        if not request:
+            return jsonify({"message": "Request not found"}), 404
+        return jsonify(request), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"message": str(e)}), 500
+
+@enterprise_bp.route('/query/<job_id>', methods=['GET'])
+@api_key_required
+def query_job_id(customer, job_id):
+    service = EnterpriseService()
+    try:
+        request = service.get_query_job_id(customer, job_id)
         if not request:
             return jsonify({"message": "Request not found"}), 404
         return jsonify(request), 200
