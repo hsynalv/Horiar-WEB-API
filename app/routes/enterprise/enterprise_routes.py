@@ -66,7 +66,7 @@ def text_to_image(customer):
         job = service.text_to_image(prompt_fix=True, model_type=model_type, resolution=resolution, customer=customer,
                                        consistent=consistent, prompt=prompt, room=str(customer.id))
         # Eğer result JSON değilse, burada hata olabilir
-        return jsonify({"message": "Request has been queued", "job_id": job.id }), 200
+        return job, 200
     except Exception as e:
         print(f"Error: {e}")  # Hata mesajı
         return jsonify({"message": str(e)}), 500
@@ -98,8 +98,7 @@ def upscale_enhance(customer):
             # Yeni upscale isteği oluşturuluyor
             job = service.upscale(customer=customer, image_bytes=image_bytes, room=str(customer.id))
 
-            return jsonify({"message": "Request has been queued", "job_id": job.id }), 200
-
+            return job, 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -117,8 +116,7 @@ def generate_text_to_video(customer):
     # Kuyruğa göre video generation işlemini başlatma
     job = EnterpriseService.text_to_video(prompt, customer, room)
 
-    return jsonify({"message": "Request has been queued", "job_id": job.id, "room": room}), 200
-
+    return job, 200
 @enterprise_bp.route('/image-to-video', methods=['POST'])
 @api_key_required
 def generate_image_to_video(customer):
@@ -141,7 +139,7 @@ def generate_image_to_video(customer):
         # Kuyruğa göre video generation işlemini başlatma
         job = EnterpriseService.image_to_video(prompt, customer, image_bytes, room)
 
-        return jsonify({"message": "Request has been queued", "job_id": job.id, "room": room}), 200
+        return job, 200
 
     return 400
 

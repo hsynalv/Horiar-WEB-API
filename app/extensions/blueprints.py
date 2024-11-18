@@ -141,7 +141,7 @@ def register_blueprints(app):
                         prompt=request_info.get("prompt"),
                         image_url= request_info.get("image_url"),
                     )
-                    message =  {"status": status, "message": image_url, "ref_image_url": request_info.get("image_url")}
+                    message = {"status": status, "message": image_url, "ref_image_url": request_info.get("image_url")}
 
                 elif job_type == "customer_image_generation":
                     enterpriseService = EnterpriseService()
@@ -155,9 +155,12 @@ def register_blueprints(app):
                         resolution=request_info.get("resolution"),
                         response=data,
                         low_res_url=None,
+                        ref_image=None,
+                        request_id=request_info.get("request_id"),
+                        consistent=None
                     )
                     redis_conn.unlink(request_key)
-                    return "OK", 200
+                    return "customer_image_generation", 200
 
                 elif job_type == "customer_upscale":
                     enterpriseService = EnterpriseService()
@@ -170,10 +173,51 @@ def register_blueprints(app):
                         seed=None,
                         resolution=None,
                         response=data,
+                        ref_image=None,
                         low_res_url=request_info.get("low_res_image_url"),
+                        request_id=request_info.get("request_id"),
+                        consistent=None
                     )
                     redis_conn.unlink(request_key)
-                    return "OK", 200
+                    return "customer_upscale", 200
+
+                elif job_type == "customer_text_to_video":
+                    enterpriseService = EnterpriseService()
+                    enterpriseService.save_request_to_db(
+                        customer_id=request_info.get("customer_id"),
+                        company_name=request_info.get("company_name"),
+                        request_type="text-to-video",
+                        model_type=None,
+                        prompt=request_info.get("prompt"),
+                        seed=None,
+                        resolution=None,
+                        response=data,
+                        low_res_url=None,
+                        ref_image=None,
+                        request_id=request_info.get("request_id"),
+                        consistent=None
+                    )
+                    redis_conn.unlink(request_key)
+                    return "customer_text_to_video", 200
+
+                elif job_type == "customer_image_to_video":
+                    enterpriseService = EnterpriseService()
+                    enterpriseService.save_request_to_db(
+                        customer_id=request_info.get("customer_id"),
+                        company_name=request_info.get("company_name"),
+                        request_type="image-to-video",
+                        model_type=None,
+                        prompt=request_info.get("prompt"),
+                        seed=None,
+                        resolution=None,
+                        response=data,
+                        ref_image=request_info.get("ref_image"),
+                        low_res_url=request_info.get("low_res_image_url"),
+                        request_id=request_info.get("request_id"),
+                        consistent=None
+                    )
+                    redis_conn.unlink(request_key)
+                    return "customer_image_to_video", 200
 
                 else:
                     message = {"status": "failed", "message": "İstek sırasında bir hata ile karşılaşıldı.", "ref_image_url": None}

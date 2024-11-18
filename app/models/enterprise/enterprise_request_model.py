@@ -19,6 +19,8 @@ class EnterpriseRequest(Document):
     request_type = StringField(required=True)
     video_url = StringField(required=False)
     ref_image = StringField(required=False)
+    job_id = StringField(required=False)
+    consistent = StringField(required=False)
 
     meta = {'collection': 'enterprise_requests'}  # MongoDB koleksiyonu
 
@@ -37,5 +39,7 @@ class EnterpriseRequest(Document):
             "created_at": self.created_at.isoformat(),
             "request_type": self.request_type,
             "video_url": self.video_url,
-            "ref_image": self.ref_image
+            "ref_image": self.ref_image,
+            "job_id":self.job_id,
+            "consistent":self.consistent
         }

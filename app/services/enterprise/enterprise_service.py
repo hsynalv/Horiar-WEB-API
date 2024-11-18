@@ -2,6 +2,10 @@ import json
 import logging
 import os
 import datetime
+import uuid
+
+from flask import jsonify
+from rq.job import parse_job_id
 
 from app.models.enterprise.enterprise_customer_model import EnterpriseCustomer
 from app.models.enterprise.enterprise_request_model import EnterpriseRequest
@@ -63,15 +67,18 @@ class EnterpriseService(BaseService):
 
     def text_to_image(self, prompt, model_type, resolution, customer, prompt_fix, consistent, room):
         """Kuyruğa göre image generation işlemini başlatır."""
+        guid = str(uuid.uuid4())
+        logging.info(f"deneme guid i {guid}")
+        logging.info(f"guid tipi {type(guid)}" )
         job = add_to_image_queue(
             EnterpriseService.run_image_generation,
-            prompt=prompt, model_type=model_type, resolution=resolution, customer=customer, prompt_fix=prompt_fix,
-            room=room, consistent=consistent  # room parametresi yalnızca **kwargs olarak geçiliyor
+            prompt=prompt, model_type=model_type, resolution=resolution, customer=customer, consistent=consistent,
+            request_id=guid, prompt_fix=prompt_fix, room=room  # room parametresi yalnızca **kwargs olarak geçiliyor
         )
-        return job
+        return jsonify({"job_id": guid, "message": "Your request has been queued." })
 
     @staticmethod
-    def run_image_generation(prompt, model_type, resolution, customer, prompt_fix, consistent, room=None):
+    def run_image_generation(prompt, model_type, resolution, customer, prompt_fix, consistent, request_id, room=None):
         # create_app fonksiyonunu burada import edin
         from app import create_app
 
@@ -111,7 +118,8 @@ class EnterpriseService(BaseService):
                     "consistent": consistent,
                     "job_type": "customer_image_generation",
                     "customer_id": str(customer.id),
-                    "company_name": customer.company_name
+                    "company_name": customer.company_name,
+                    "request_id": request_id
                 }
                 redis_conn.setex(f"runpod_request:{runpod_id}", 3600, json.dumps(redis_data))
                 notify_status_update(room, 'in_progress', 'Your request is being processed.')
@@ -129,15 +137,16 @@ class EnterpriseService(BaseService):
     @staticmethod
     def upscale(image_bytes, customer, room):
         """Kuyruğa göre upscale işlemini başlatır."""
+        guid = str(uuid.uuid4())
         job = add_to_upscale_queue(
             EnterpriseService.run_upscale,
-            image_bytes=image_bytes, customer=customer, room=room
+            image_bytes=image_bytes, customer=customer, room=room, request_id=guid
         )
         notify_status_update(room, 'processing', 'Your upscale request is being processed.')
-        return job
+        return jsonify({"job_id": guid, "message": "Your request has been queued." })
 
     @staticmethod
-    def run_upscale(image_bytes, customer, room = None):
+    def run_upscale(image_bytes, customer, request_id, room = None):
         """Upscale işlemini çalıştırır ve Redis'te takip eder."""
         from app import create_app
         app = create_app()
@@ -167,7 +176,8 @@ class EnterpriseService(BaseService):
                     "company_name": company_name,
                     "status": "IN_PROGRESS",
                     "low_res_image_url": low_res_image_url,
-                    "job_type": "customer_upscale"
+                    "job_type": "customer_upscale",
+                    "request_id": request_id
                 }
                 redis_conn.setex(f"runpod_request:{runpod_id}", 3600, json.dumps(redis_data))
                 notify_status_update(room, 'in_progress', 'Your upscale request is being processed.')
@@ -185,15 +195,16 @@ class EnterpriseService(BaseService):
     @staticmethod
     def text_to_video(prompt, customer, room):
         """Kuyruğa göre video generation işlemini başlatır."""
+        guid = str(uuid.uuid4())
         job = add_to_video_queue(
             EnterpriseService.run_text_to_video_generation,
-            prompt=prompt, customer=customer, room=room
+            prompt=prompt, customer=customer, room=room, request_id=guid
         )
         notify_status_update(room, 'processing', 'Your video request is being processed.')
-        return job
+        return jsonify({"job_id": guid, "message": "Your request has been queued." })
 
     @staticmethod
-    def run_text_to_video_generation(prompt, customer, room=None):
+    def run_text_to_video_generation(prompt, customer, request_id, room=None):
         # create_app fonksiyonunu burada import edin
         from app import create_app
 
@@ -230,7 +241,8 @@ class EnterpriseService(BaseService):
                     "prompt": prompt,
                     "room": room,
                     "status": "IN_PROGRESS",
-                    "job_type": "customer_text_to_video"
+                    "job_type": "customer_text_to_video",
+                    "request_id": request_id
                 }
                 redis_conn.setex(f"runpod_request:{runpod_id}", 3600, json.dumps(redis_data))
                 notify_status_update(room, 'in_progress', 'Your video request is being processed.')
@@ -247,15 +259,16 @@ class EnterpriseService(BaseService):
     @staticmethod
     def image_to_video(prompt, customer, image_bytes, room):
         """Kuyruğa göre video generation işlemini başlatır."""
+        guid = str(uuid.uuid4())
         job = add_to_video_queue(
             EnterpriseService.run_image_to_video_generation,
-            prompt=prompt, customer=customer, image_bytes=image_bytes, room=room
+            prompt=prompt, customer=customer, image_bytes=image_bytes, room=room, request_id=guid
         )
         notify_status_update(room, 'processing', 'Your video request is being processed.')
-        return job
+        return jsonify({"job_id": guid, "message": "Your request has been queued." })
 
     @staticmethod
-    def run_image_to_video_generation(prompt, customer, image_bytes, room=None):
+    def run_image_to_video_generation(prompt, customer, image_bytes, request_id, room=None):
         # create_app fonksiyonunu burada import edin
         from app import create_app
 
@@ -297,8 +310,9 @@ class EnterpriseService(BaseService):
                     "prompt": prompt,
                     "room": room,
                     "status": "IN_PROGRESS",
-                    "image_url": image_url,
-                    "job_type": "customer_image_to_video"
+                    "ref_image": image_url,
+                    "job_type": "customer_image_to_video",
+                    "request_id": request_id
                 }
                 redis_conn.setex(f"runpod_request:{runpod_id}", 3600, json.dumps(redis_data))
                 notify_status_update(room, 'in_progress', 'Your video request is being processed.')
@@ -310,9 +324,8 @@ class EnterpriseService(BaseService):
 
         return result
 
-
-
-    def save_request_to_db(self, customer_id, company_name, request_type, prompt, response, low_res_url,seed, model_type, resolution):
+    def save_request_to_db(self, customer_id, company_name, request_type, prompt, response, low_res_url,seed, model_type,
+                           resolution, ref_image, request_id, consistent):
         """
         Saves a request to the database.
         """
@@ -330,11 +343,15 @@ class EnterpriseService(BaseService):
             request_type=request_type,
             prompt=prompt,
             low_res_url=low_res_url,
-            image=result,
+            image = result if result and '.png' in result else None,
             seed=seed,
             model_type=model_type or "normal",
             resolution=resolution or "1024x1024",
-            created_at=datetime.datetime.utcnow()
+            created_at=datetime.datetime.utcnow(),
+            ref_image=ref_image,
+            video_url=result if result and '.mp4' in result else None,
+            job_id=request_id,
+            consistent = consistent
         )
         new_request.save()
         return new_request
