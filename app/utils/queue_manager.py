@@ -15,10 +15,7 @@ upscale_queue = Queue('upscale', connection=redis_conn)
 def add_to_queue(queue, func, *args, **kwargs):
     """Genel kuyruk fonksiyonu. Verilen kuyrukta işlemi başlatır ve istemciye durum güncellemesi gönderir."""
     # 1 gün boyunca saklanmasını sağlamak için result_ttl parametresi ekleniyor
-    logging.info(f"add_to_queue kwargs içeriği: {kwargs}")
-    logging.info(f"add_to_queue args içeriği: {args}")
     job = queue.enqueue(func, *args, result_ttl=86400, **kwargs)
-    logging.info(f"Job ID: {job.id} enqueued successfully with args={args} and kwargs={kwargs}")
     notify_status_update(kwargs.get('room'), 'queued', 'Your request is in the queue.')
     return job
 
