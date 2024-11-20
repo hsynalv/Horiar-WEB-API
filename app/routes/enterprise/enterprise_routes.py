@@ -48,6 +48,8 @@ def create_token():
     except Exception as e:
         return jsonify({"message": "Error creating API key", "error": str(e)}), 400
 
+# -------------------------------- Generate Request -------------------------------------------------------------------
+
 @enterprise_bp.route('/text-to-image', methods=['POST'])
 @api_key_required
 def text_to_image(customer):
@@ -71,7 +73,6 @@ def text_to_image(customer):
         print(f"Error: {e}")  # Hata mesajı
         return jsonify({"message": str(e)}), 500
     pass
-
 
 @enterprise_bp.route('/upscale-enhance', methods=['POST'])
 @api_key_required
@@ -143,29 +144,50 @@ def generate_image_to_video(customer):
 
     return 400
 
+# -------------------------------- Get All Requests -------------------------------------------------------------------
 
 @enterprise_bp.route('/text-to-image', methods=['GET'])
 @api_key_required
-def get_text_to_images(customer):
+def get_all_text_to_images(customer):
     service = EnterpriseService()
     list = service.get_all_text_to_images(customer)
     return jsonify(list)
 
 
-@enterprise_bp.route('/text-to-image-consistent', methods=['GET'])
-@api_key_required
-def get_text_to_images_consistent(customer):
-    service = EnterpriseService()
-    list = service.get_all_text_to_images_consistent(customer)
-    return jsonify(list)
-
-
 @enterprise_bp.route('/upscale-enhance', methods=['GET'])
 @api_key_required
-def get_upscale_enhances(customer):
+def get_all_upscale_enhances(customer):
     service = EnterpriseService()
     list = service.get_all_upscale_enhances(customer)
     return jsonify(list)
+
+@enterprise_bp.route('/text-to-video', methods=['GET'])
+@api_key_required
+def get_all_text_to_video(customer):
+    service = EnterpriseService()
+    try:
+        request = service.get_all_text_to_video(customer)
+        if not request:
+            return jsonify({"message": "Request not found"}), 404
+        return jsonify(request), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"message": str(e)}), 500
+
+@enterprise_bp.route('/image-to-video', methods=['GET'])
+@api_key_required
+def get_all_image_to_video(customer):
+    service = EnterpriseService()
+    try:
+        request = service.get_all_image_to_video(customer)
+        if not request:
+            return jsonify({"message": "Request not found"}), 404
+        return jsonify(request), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"message": str(e)}), 500
+
+# --------------------------------- Get One Requests -------------------------------------------------------------------
 
 @enterprise_bp.route('/text-to-image/<request_id>', methods=['GET'])
 @api_key_required
@@ -180,7 +202,7 @@ def get_one_text_to_image(customer, request_id):
         print(f"Error: {e}")
         return jsonify({"message": str(e)}), 500
 
-@enterprise_bp.route('/text-to-image/<request_id>', methods=['GET'])
+@enterprise_bp.route('/text-to-video/<request_id>', methods=['GET'])
 @api_key_required
 def get_one_text_to_video(customer, request_id):
     service = EnterpriseService()
@@ -193,7 +215,7 @@ def get_one_text_to_video(customer, request_id):
         print(f"Error: {e}")
         return jsonify({"message": str(e)}), 500
 
-@enterprise_bp.route('/text-to-image/<request_id>', methods=['GET'])
+@enterprise_bp.route('/image-to-video/<request_id>', methods=['GET'])
 @api_key_required
 def get_one_image_to_video(customer, request_id):
     service = EnterpriseService()

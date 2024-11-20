@@ -357,7 +357,7 @@ class EnterpriseService(BaseService):
         return new_request
 
 
-    # Get Fonksiyonları ----------------------------------------------------------------------------------------------------------------------
+    # Get All Fonksiyonları --------------------------------------------------------------------------------------------
 
     def get_all_text_to_images(self, customer):
         # Define the fields you want to include
@@ -373,24 +373,6 @@ class EnterpriseService(BaseService):
         ]
 
         requests_list = self.get_company_requests(customer_id=str(customer.id), request_type="text-to-image", fields=fields_to_include)
-
-        return requests_list
-
-    def get_all_text_to_images_consistent(self, customer):
-        # Define the fields you want to include
-        fields_to_include = [
-            'id',
-            'prompt',
-            'image',
-            'seed',
-            'model_type',
-            'resolution',
-            'created_at',
-            'webp_url'
-        ]
-
-        requests_list = self.get_company_requests(customer_id=str(customer.id), request_type="text-to-image-consistent",
-                                                  fields=fields_to_include)
 
         return requests_list
 
@@ -411,6 +393,41 @@ class EnterpriseService(BaseService):
         )
 
         return requests_list
+
+    def get_all_text_to_video(self, customer):
+        # Dönmek istediğiniz alanları tanımlayın
+        fields_to_include = [
+            'id',
+            'prompt',
+            'video_url',
+            'created_at',
+        ]
+
+        request = self.get_company_requests(
+            customer_id=str(customer.id),
+            request_type="text-to-video",
+            fields=fields_to_include,
+        )
+
+        return request
+
+    def get_all_image_to_video(self, customer):
+        # Dönmek istediğiniz alanları tanımlayın
+        fields_to_include = [
+            'id',
+            'prompt',
+            'ref_image'
+            'video_url',
+            'created_at',
+        ]
+
+        request = self.get_company_requests(
+            customer_id=str(customer.id),
+            request_type="image-to-video",
+            fields=fields_to_include,
+        )
+
+        return request
 
     def get_company_requests(self, customer_id, request_type, fields):
         # Query the database for the specific requests
@@ -436,6 +453,8 @@ class EnterpriseService(BaseService):
             requests_list.append(req_dict)
 
         return requests_list
+
+    # Get One Fonksiyonları --------------------------------------------------------------------------------------------
 
     def get_one_text_to_image(self, customer, request_id):
         # Dönmek istediğiniz alanları tanımlayın
@@ -495,7 +514,6 @@ class EnterpriseService(BaseService):
         )
 
         return request
-
 
     def get_one_upscale_enhance(self, customer, request_id):
         # Dönmek istediğiniz alanları tanımlayın
