@@ -489,7 +489,7 @@ class EnterpriseService(BaseService):
 
         request = self.get_company_request_by_id(
             customer_id=str(customer.id),
-            request_type="text-to-image",
+            request_type="text-to-video",
             fields=fields_to_include,
             request_id=request_id
         )
@@ -508,7 +508,7 @@ class EnterpriseService(BaseService):
 
         request = self.get_company_request_by_id(
             customer_id=str(customer.id),
-            request_type="text-to-image",
+            request_type="image_to_video",
             fields=fields_to_include,
             request_id=request_id
         )
