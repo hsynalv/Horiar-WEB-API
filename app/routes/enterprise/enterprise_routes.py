@@ -167,8 +167,6 @@ def get_all_text_to_video(customer):
     service = EnterpriseService()
     try:
         request = service.get_all_text_to_video(customer)
-        if not request:
-            return jsonify({"message": "Request not found"}), 404
         return jsonify(request), 200
     except Exception as e:
         print(f"Error: {e}")
@@ -180,8 +178,6 @@ def get_all_image_to_video(customer):
     service = EnterpriseService()
     try:
         request = service.get_all_image_to_video(customer)
-        if not request:
-            return jsonify({"message": "Request not found"}), 404
         return jsonify(request), 200
     except Exception as e:
         print(f"Error: {e}")
