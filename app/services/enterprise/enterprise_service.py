@@ -501,7 +501,7 @@ class EnterpriseService(BaseService):
         fields_to_include = [
             'id',
             'prompt',
-            'ref_image'
+            'ref_image',
             'video_url',
             'created_at',
         ]
