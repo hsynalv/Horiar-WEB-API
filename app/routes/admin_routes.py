@@ -145,6 +145,18 @@ def assign_credit():
         if not user:
             return jsonify({"success": False, "message": "Kullanıcı bulunamadı"}), 404
 
+        subs = Subscription.objects(user_id=user_id).first()
+        if subs:
+            subs.credit_balance += float(credit)
+            subs.max_credit_balance += int(credit)
+            subs.subscription_date = datetime.utcnow()
+            subs.subscription_end_date = datetime.strptime(expiry_date, '%Y-%m-%d')
+            subs.merchant_oid = "HORIAR-KREDI-TANIMLAMA"
+
+            subs.save()
+
+            return jsonify({"success": True, "message": "Kredi eklemesi başarıyla tanımlandı!"}), 200
+
         # Subscription nesnesini oluştur
         subscription = Subscription(
             user_id=str(user.id),
