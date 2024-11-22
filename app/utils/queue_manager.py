@@ -5,7 +5,7 @@ from rq import Queue
 from app.utils.notification import notify_status_update
 
 # Redis bağlantısı için 'redis-server' host ismini kullanıyoruz
-redis_conn = redis.Redis(host='redis-server', port=6380, db=0)
+redis_conn = redis.Redis(host='redis-server', port=6379, db=0)
 
 # Farklı iş türleri için ayrı kuyruklar tanımlıyoruz
 image_generation_queue = Queue('image_generation', connection=redis_conn)
