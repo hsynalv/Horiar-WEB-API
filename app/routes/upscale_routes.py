@@ -7,7 +7,7 @@ from app.auth import jwt_required
 from app.middlewares import check_credits
 from app.models.text_to_image_model import TextToImage
 from app.services.upscale_service import UpscaleService
-from app.utils.convert_to_webp import process_and_save_image
+from app.utils.convert_to_webp import process_and_save_image, download_image
 
 # Blueprint oluşturuluyor
 upscale_bp = Blueprint('upscale_bp', __name__)
@@ -42,6 +42,36 @@ def create_upscale(payload):
             )
 
             return jsonify({"message": "Upscale request has been queued", "job_id": job.id, "room": room}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@upscale_bp.route('/enhance-link', methods=['POST'])
+@jwt_required(pass_payload=True)
+@check_credits(5)
+def create_upscale_from_link(payload):
+    """
+    Yeni bir upscale talebi oluşturur.
+    """
+    data = request.json
+    image_link = data.get("image-link")
+
+    if not image_link:
+        return jsonify({"error": "Image Link is required"}), 400
+
+    try:
+        bytes_IO = download_image(image_link)
+        image_bytes = bytes_IO.getvalue()
+
+        # Kullanıcıya özel oda adı olarak user_id'yi kullanıyoruz
+        room = payload.get("sub")  # JWT payload'dan kullanıcı ID'sini alıyoruz
+        # Kuyruğa ekleme
+        job = UpscaleService.add_to_upscale_queue(
+            image_bytes=image_bytes, payload=payload, room=room
+        )
+
+        return jsonify({"message": "Upscale request has been queued", "job_id": job.id, "room": room}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
