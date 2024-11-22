@@ -5,12 +5,12 @@ from rq import Queue
 from app.utils.notification import notify_status_update
 
 # Redis bağlantısı için 'redis-server' host ismini kullanıyoruz
-redis_conn = redis.Redis(host='redis-server', port=6379, db=0)
+redis_conn = redis.Redis(host='redis-server-test', port=6380, db=0)
 
 # Farklı iş türleri için ayrı kuyruklar tanımlıyoruz
-image_generation_queue = Queue('image_generation', connection=redis_conn)
-video_generation_queue = Queue('video_generation', connection=redis_conn)
-upscale_queue = Queue('upscale', connection=redis_conn)
+image_generation_queue = Queue('image_generation-test', connection=redis_conn)
+video_generation_queue = Queue('video_generation-test', connection=redis_conn)
+upscale_queue = Queue('upscale-test', connection=redis_conn)
 
 def add_to_queue(queue, func, *args, **kwargs):
     """Genel kuyruk fonksiyonu. Verilen kuyrukta işlemi başlatır ve istemciye durum güncellemesi gönderir."""
