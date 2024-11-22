@@ -252,5 +252,9 @@ def register_blueprints(app):
             logging.error(f"Error processing webhook: {str(e)}")
             return jsonify({"message": f"Error processing webhook: {str(e)}"}), 500
 
+    @app.route('/', methods=['GET'])
+    def test_server():
+        return "Test Server has been Done"
+
 
 
