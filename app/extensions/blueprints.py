@@ -99,9 +99,7 @@ def register_blueprints(app):
             if status == "COMPLETED":
 
                 image_url = output.get("message")
-                model_type = str(request_info.get("model_type")),
-                resolution = str(request_info.get("resolution")),
-                prompt_fix = str(request_info.get("prompt_fix"))
+
 
                 # İş türüne göre ilgili kayıt fonksiyonunu çağır
                 if job_type == "image_generation":
@@ -111,13 +109,14 @@ def register_blueprints(app):
                         prompt=request_info.get("prompt"),
                         response=data,  # RunPod yanıtı
                         seed=request_info.get("seed"),
-                        model_type=model_type,
-                        resolution=resolution,
+                        model_type=request_info.get("model_type"),
+                        resolution=request_info.get("resolution"),
                         randomSeed=request_info.get("consistent"),
                         app=current_app,
-                        prompt_fix=prompt_fix
+                        prompt_fix=request_info.get("prompt_fix")
                     )
-                    message = {"status": status, "message": image_url, "model_type": model_type, "resolution":resolution, "prompt_fix": prompt_fix }
+                    message = {"status": status, "message": image_url, "model_type": request_info.get("model_type"),
+                               "resolution":request_info.get("resolution"), "prompt_fix": request_info.get("prompt_fix") }
 
 
                 elif job_type == "upscale":
