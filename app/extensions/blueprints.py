@@ -99,9 +99,9 @@ def register_blueprints(app):
             if status == "COMPLETED":
 
                 image_url = output.get("message")
-                model_type = request_info.get("model_type"),
-                resolution = request_info.get("resolution"),
-                prompt_fix = request_info.get("prompt_fix")
+                model_type = str(request_info.get("model_type")),
+                resolution = str(request_info.get("resolution")),
+                prompt_fix = str(request_info.get("prompt_fix"))
 
                 # İş türüne göre ilgili kayıt fonksiyonunu çağır
                 if job_type == "image_generation":
