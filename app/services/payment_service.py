@@ -297,6 +297,7 @@ class PaymentService:
 
                 existSubs.save()
                 purchase.save()
+                return True
 
             # Yeni Subscription kaydı oluştur
             subscription = Subscription(
