@@ -280,13 +280,13 @@ class PaymentService:
 
             existSubs = Subscription.objects(user_id=provision.user_id).first()
             if existSubs:
-                existSubs.subscription_date = subscription_date,
-                existSubs.subscription_end_date = subscription_end_date,
+                existSubs.subscription_date = subscription_date
+                existSubs.subscription_end_date = subscription_end_date
                 existSubs.credit_balance += float(package["credits"])
-                existSubs.max_credit_balance += package["credits"],
-                existSubs.used_coupon = used_coupon,
+                existSubs.max_credit_balance += int(package["credits"])
+                existSubs.used_coupon = used_coupon
                 existSubs.package = package["title"]
-                existSubs.merchant_oid = merchant_oid,
+                existSubs.merchant_oid = merchant_oid
 
                 purchase = Purchase(
                     username=provision.username,
