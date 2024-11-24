@@ -278,6 +278,26 @@ class PaymentService:
             else:
                 used_coupon = None
 
+            existSubs = Subscription.objects(user_id=provision.user_id).first()
+            if existSubs:
+                existSubs.subscription_date = subscription_date,
+                existSubs.subscription_end_date = subscription_end_date,
+                existSubs.credit_balance += float(package["credits"])
+                existSubs.max_credit_balance += int(package["credits"]),
+                existSubs.used_coupon = used_coupon,
+                existSubs.package = package["title"]
+                existSubs.merchant_oid = merchant_oid,
+
+                purchase = Purchase(
+                    username=provision.username,
+                    package=package["title"],
+                    amount=provision.amount / 100,
+                    currency=provision.currency
+                )
+
+                existSubs.save()
+                purchase.save()
+
             # Yeni Subscription kaydı oluştur
             subscription = Subscription(
                 subscription_date=subscription_date,
