@@ -1,0 +1,302 @@
+{
+    "input" : {
+        "workflow":{
+  "1": {
+    "inputs": {
+      "clip_l": "",
+      "t5xxl": "",
+      "guidance": 2.5,
+      "clip": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncodeFlux"
+  },
+  "2": {
+    "inputs": {
+      "clip_name1": "clip_l.safetensors",
+      "clip_name2": "t5xxl_fp16_e4m3fn.safetensors",
+      "type": "flux"
+    },
+    "class_type": "DualCLIPLoader"
+  },
+  "5": {
+    "inputs": {
+      "conditioning": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut"
+  },
+  "6": {
+    "inputs": {
+      "unet_name": "flux1-dev.safetensors",
+      "weight_dtype": "fp8_e4m3fn"
+    },
+    "class_type": "UNETLoader"
+  },
+  "7": {
+    "inputs": {
+      "vae_name": "ae.safetensors"
+    },
+    "class_type": "VAELoader"
+  },
+  "8": {
+    "inputs": {
+      "strength": 0.35000000000000003,
+      "start_percent": 0,
+      "end_percent": 0.4,
+      "positive": [
+        "1",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "control_net": [
+        "12",
+        0
+      ],
+      "image": [
+        "11",
+        0
+      ],
+      "vae": [
+        "7",
+        0
+      ]
+    },
+    "class_type": "ControlNetApplyAdvanced"
+  },
+  "9": {
+    "inputs": {
+      "image": "example.png",
+      "upload": "image"
+    },
+    "class_type": "LoadImage"
+  },
+  "11": {
+    "inputs": {
+      "preprocessor": "CannyEdgePreprocessor",
+      "resolution": [
+        "43",
+        0
+      ],
+      "image": [
+        "13",
+        0
+      ]
+    },
+    "class_type": "AIO_Preprocessor"
+  },
+  "12": {
+    "inputs": {
+      "control_net_name": "FLUX.1/flux_shakker_labs_union_pro-fp8_e4m3fn.safetensors"
+    },
+    "class_type": "ControlNetLoader"
+  },
+  "13": {
+    "inputs": {
+      "width": [
+        "27",
+        0
+      ],
+      "height": [
+        "27",
+        1
+      ],
+      "upscale_method": "nearest-exact",
+      "keep_proportion": false,
+      "divisible_by": 1,
+      "crop": "disabled",
+      "image": [
+        "9",
+        0
+      ]
+    },
+    "class_type": "ImageResizeKJ"
+  },
+  "14": {
+    "inputs": {
+      "noise": [
+        "15",
+        0
+      ],
+      "guider": [
+        "17",
+        0
+      ],
+      "sampler": [
+        "20",
+        0
+      ],
+      "sigmas": [
+        "21",
+        0
+      ],
+      "latent_image": [
+        "22",
+        0
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced"
+  },
+  "15": {
+    "inputs": {
+      "noise_seed": 1006758109899654
+    },
+    "class_type": "RandomNoise"
+  },
+  "17": {
+    "inputs": {
+      "cfg": 2.5,
+      "model": [
+        "6",
+        0
+      ],
+      "positive": [
+        "32",
+        0
+      ],
+      "negative": [
+        "32",
+        1
+      ]
+    },
+    "class_type": "CFGGuider"
+  },
+  "20": {
+    "inputs": {
+      "sampler_name": "ddim"
+    },
+    "class_type": "KSamplerSelect"
+  },
+  "21": {
+    "inputs": {
+      "scheduler": "beta",
+      "steps": 28,
+      "denoise": 1,
+      "model": [
+        "6",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler"
+  },
+  "22": {
+    "inputs": {
+      "width": [
+        "13",
+        1
+      ],
+      "height": [
+        "13",
+        2
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage"
+  },
+  "23": {
+    "inputs": {
+      "samples": [
+        "14",
+        1
+      ],
+      "vae": [
+        "7",
+        0
+      ]
+    },
+    "class_type": "VAEDecode"
+  },
+  "24": {
+    "inputs": {
+      "filename_prefix": "IMG2IMG",
+      "images": [
+        "23",
+        0
+      ]
+    },
+    "class_type": "SaveImage"
+  },
+  "27": {
+    "inputs": {
+      "image": [
+        "9",
+        0
+      ]
+    },
+    "class_type": "GetImageSize+"
+  },
+  "32": {
+    "inputs": {
+      "strength": 0.4,
+      "start_percent": 0,
+      "end_percent": 0.4,
+      "positive": [
+        "8",
+        0
+      ],
+      "negative": [
+        "8",
+        1
+      ],
+      "control_net": [
+        "34",
+        0
+      ],
+      "image": [
+        "33",
+        0
+      ],
+      "vae": [
+        "7",
+        0
+      ]
+    },
+    "class_type": "ControlNetApplyAdvanced"
+  },
+  "33": {
+    "inputs": {
+      "preprocessor": "DepthAnythingV2Preprocessor",
+      "image": [
+        "13",
+        0
+      ]
+    },
+    "class_type": "AIO_Preprocessor"
+  },
+  "34": {
+    "inputs": {
+      "control_net_name": "FLUX.1/flux_shakker_labs_union_pro-fp8_e4m3fn.safetensors"
+    },
+    "class_type": "ControlNetLoader"
+  },
+  "43": {
+    "inputs": {
+      "value": "max(a, b)",
+      "a": [
+        "27",
+        0
+      ],
+      "b": [
+        "27",
+        1
+      ]
+    },
+    "class_type": "SimpleMath+"
+  }
+},
+        "images": [
+      {
+        "name": "example.png",
+        "image": ""
+      }
+        ]
+    },
+    "webhook": "https://api.horiar.com/webhook"
+}

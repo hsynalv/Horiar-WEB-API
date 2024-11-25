@@ -7,6 +7,7 @@ import json
 from app.routes.admin_routes import admin_routes_bp
 from app.routes.coupon_routes import coupon_bp
 from app.routes.enterprise.enterprise_routes import enterprise_bp
+from app.routes.image_to_image_routes import image_to_image_bp
 from app.routes.mail_routes import mail_bp
 from app.routes.payment_routes import payment_bp
 from app.routes.support_routes import support_bp
@@ -16,6 +17,7 @@ from app.routes.package_routes import package_bp
 from app.routes.text_to_image_routes import text_to_image_bp
 from app.routes.video_generation_routes import video_generation_bp
 from app.services.enterprise.enterprise_service import EnterpriseService
+from app.services.image_to_image_service import ImageToImageService
 from app.services.text_to_image_service import TextToImageService
 from app.services.upscale_service import UpscaleService
 from app.services.video_generation_service import VideoGenerationService
@@ -37,6 +39,7 @@ def register_blueprints(app):
     app.register_blueprint(enterprise_bp, url_prefix='/enterprise')
     app.register_blueprint(video_generation_bp, url_prefix='/video_generation')
     app.register_blueprint(support_bp, url_prefix='/support')
+    app.register_blueprint(image_to_image_bp, url_prefix='/imagetoimage')
 
     @app.route('/favicon.ico')
     def favicon():
@@ -118,7 +121,6 @@ def register_blueprints(app):
                     message = {"status": status, "message": image_url, "model_type": request_info.get("model_type"),
                                "resolution":request_info.get("resolution"), "prompt_fix": request_info.get("prompt_fix") }
 
-
                 elif job_type == "upscale":
                     UpscaleService.save_request_to_db(
                         response=data,  # RunPod yanıtı
@@ -129,7 +131,6 @@ def register_blueprints(app):
                     )
                     message = {"status": status, "message": image_url, "ref_image_url": request_info.get("low_res_image_url")}
 
-
                 elif job_type == "text_to_video_generation":
                     VideoGenerationService.save_text_to_video_to_db(
                         user_id=user_id,
@@ -138,7 +139,6 @@ def register_blueprints(app):
                         prompt=request_info.get("prompt"),
                     )
                     message = {"status": status, "message": image_url}
-
 
                 elif job_type == "image_to_video_generation":
                     VideoGenerationService.save_image_to_video_to_db(
@@ -149,6 +149,18 @@ def register_blueprints(app):
                         image_url= request_info.get("image_url"),
                     )
                     message = {"status": status, "message": image_url, "ref_image_url": request_info.get("image_url")}
+
+                elif job_type == "image_to_image_generation":
+                    ImageToImageService.save_request_to_db(
+                        response=data,
+                        user_id=user_id,
+                        username=request_info.get("username"),
+                        ref_image=request_info.get("ref_image"),
+                        prompt=request_info.get("prompt"),
+                        app=current_app
+                    )
+                    message = {"status": status, "message": image_url, "ref_image_url": request_info.get("ref_image"),
+                               "prompt": request_info.get("prompt") }
 
                 elif job_type == "customer_image_generation":
                     enterpriseService = EnterpriseService()
