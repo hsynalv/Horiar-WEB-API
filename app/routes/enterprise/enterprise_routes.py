@@ -1,7 +1,10 @@
+import logging
+
 from flask import Blueprint, request, jsonify, current_app
 
 from app.middlewares import api_key_required
 from app.services.enterprise.enterprise_service import EnterpriseService
+from app.utils.convert_to_webp import download_image
 
 enterprise_bp = Blueprint('enterprise_bp', __name__)
 
@@ -82,26 +85,57 @@ def upscale_enhance(customer):
        Yeni bir upscale talebi oluşturur.
        Bu rota, front-end'den gelen düşük çözünürlüklü bir resmi alır ve upscale işlemini başlatır.
        """
+    room = str(customer.id)
+    image_file = request.files.get('image')
+    image_link = request.form.get('link')
+    image_base64 = request.form.get('base64')
+
+    # image_file, image_link ve image_base64 alanlarının yalnızca bir tanesinin dolu olmasını kontrol etme
+    filled_fields = sum(bool(field) for field in [image_file, image_link, image_base64])
+    logging.info(filled_fields)
+
+    if filled_fields == 0:
+        return jsonify({"error": "At least one image source must be provided"}), 400
+
+    if filled_fields > 1:
+        return jsonify({"error": "Only one image source can be provided at a time"}), 400
+
+    # image_bytes oluşturma
+    image_bytes = None
+
     try:
-        # İmajı request'ten almak
-        if 'image' not in request.files:
-            return jsonify({"error": "No image file part"}), 400
-
-        image_file = request.files['image']
-        # Eğer dosya ismi boş ise, kullanıcı dosya seçmemiş demektir
-        if image_file.filename == '':
-            return jsonify({"error": "No selected file"}), 400
-
         if image_file:
-            # Resim dosyasını istediğiniz işlemleri yapmak üzere okuyabilirsiniz
-            image_bytes = image_file.read()  # Bu binary veriyi işlemek için kullanabilirsiniz
+            # Eğer image_file doluysa, dosyadan image_bytes oluştur
+            if image_file.filename == '':
+                return jsonify({"error": "No selected file"}), 400
 
-            # Yeni upscale isteği oluşturuluyor
-            job = service.upscale(customer=customer, image_bytes=image_bytes, room=str(customer.id))
+            image_bytes = image_file.read()
 
-            return job, 200
+        elif image_link:
+            # Eğer image_link doluysa, getS3 metodunu kullanarak resmi indir
+            bytes_IO = download_image(image_link)
+            image_bytes = bytes_IO.getvalue()
+
+            if not image_bytes:
+                return jsonify({"error": "Could not download image from link"}), 400
+
+        elif image_base64:
+            # Eğer image_base64 doluysa, base64 stringini image_bytes'a dönüştür
+            try:
+                image_bytes = base64.b64decode(image_base64)
+            except:
+                return jsonify({"error": "Invalid base64 image data"}), 400
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+    if image_bytes:
+        # Kuyruğa göre video generation işlemini başlatma
+        job = service.upscale(customer=customer, image_bytes=image_bytes, room=str(customer.id))
+        return jsonify({"message": "Video generation request has been queued", "job_id": job.id, "room": room}), 200
+
+    return jsonify({"error": "An unexpected error occurred"}), 500
+
 
 @enterprise_bp.route('/text-to-video', methods=['POST'])
 @api_key_required
@@ -118,31 +152,66 @@ def generate_text_to_video(customer):
     job = EnterpriseService.text_to_video(prompt, customer, room)
 
     return job, 200
+import base64
+
+
 @enterprise_bp.route('/image-to-video', methods=['POST'])
 @api_key_required
 def generate_image_to_video(customer):
     room = str(customer.id)
     prompt = request.form.get('prompt')
+    image_file = request.files.get('image')
+    image_link = request.form.get('link')
+    image_base64 = request.form.get('base64')
 
     if not prompt:
         return jsonify({"message": "Missing required fields"}), 400
 
-    if 'image' not in request.files:
-        return jsonify({"error": "No image file part"}), 400
+    # image_file, image_link ve image_base64 alanlarının yalnızca bir tanesinin dolu olmasını kontrol etme
+    filled_fields = sum(bool(field) for field in [image_file, image_link, image_base64])
+    logging.info(filled_fields)
 
-    image_file = request.files['image']
-    if image_file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
+    if filled_fields == 0:
+        return jsonify({"error": "At least one image source must be provided"}), 400
 
-    if image_file:
-        image_bytes = image_file.read()
+    if filled_fields > 1:
+        return jsonify({"error": "Only one image source can be provided at a time"}), 400
 
+    # image_bytes oluşturma
+    image_bytes = None
+
+    try:
+        if image_file:
+            # Eğer image_file doluysa, dosyadan image_bytes oluştur
+            if image_file.filename == '':
+                return jsonify({"error": "No selected file"}), 400
+
+            image_bytes = image_file.read()
+
+        elif image_link:
+            # Eğer image_link doluysa, getS3 metodunu kullanarak resmi indir
+            bytes_IO = download_image(image_link)
+            image_bytes = bytes_IO.getvalue()
+
+            if not image_bytes:
+                return jsonify({"error": "Could not download image from link"}), 400
+
+        elif image_base64:
+            # Eğer image_base64 doluysa, base64 stringini image_bytes'a dönüştür
+            try:
+                image_bytes = base64.b64decode(image_base64)
+            except:
+                return jsonify({"error": "Invalid base64 image data"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    if image_bytes:
         # Kuyruğa göre video generation işlemini başlatma
         job = EnterpriseService.image_to_video(prompt, customer, image_bytes, room)
+        return jsonify({"message": "Video generation request has been queued", "job_id": job.id, "room": room}), 200
 
-        return job, 200
-
-    return 400
+    return jsonify({"error": "An unexpected error occurred"}), 500
 
 # -------------------------------- Get All Requests -------------------------------------------------------------------
 
