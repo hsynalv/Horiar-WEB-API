@@ -132,7 +132,7 @@ def upscale_enhance(customer):
     if image_bytes:
         # Kuyruğa göre video generation işlemini başlatma
         job = service.upscale(customer=customer, image_bytes=image_bytes, room=str(customer.id))
-        return jsonify({"message": "Video generation request has been queued", "job_id": job.id, "room": room}), 200
+        return job, 200
 
     return jsonify({"error": "An unexpected error occurred"}), 500
 
@@ -209,7 +209,7 @@ def generate_image_to_video(customer):
     if image_bytes:
         # Kuyruğa göre video generation işlemini başlatma
         job = EnterpriseService.image_to_video(prompt, customer, image_bytes, room)
-        return jsonify({"message": "Video generation request has been queued", "job_id": job.id, "room": room}), 200
+        return job, 200
 
     return jsonify({"error": "An unexpected error occurred"}), 500
 
