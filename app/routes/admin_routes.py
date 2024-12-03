@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 from flask import render_template, redirect, url_for, flash, Blueprint, session, request, jsonify
 from flask_login import login_user, logout_user
+from mongoengine import Q
 
 from app.models.coupon_model import Coupon
 from app.models.discord_image_request_model import DiscordImageRequest
@@ -590,25 +591,25 @@ def list_user_images():
         # Eğer verileri JSON olarak almak istiyorsak (JavaScript ile API isteği)
         page = int(request.args.get('page', 1))
         limit = int(request.args.get('limit', 30))  # Varsayılan olarak 30 görsel gösteriyoruz
+        query = request.args.get('query', '').strip()
 
         # TextToImage koleksiyonundan verileri sayfalama ile alıyoruz
-        user_images = TextToImage.objects.skip((page - 1) * limit).limit(limit)
-
-        # Toplam öğe sayısını alıyoruz
-        total_items = TextToImage.objects.count()
-
-        # Toplam sayfa sayısını hesaplıyoruz
-        total_pages = (total_items + limit - 1) // limit
+        if query:
+            user_images = TextToImage.objects.filter(
+                Q(username__icontains=query)
+            ).skip((page - 1) * limit).limit(limit)
+            total_items = TextToImage.objects.filter(
+                Q(username__icontains=query)
+            ).count()
+        else:
+            user_images = TextToImage.objects.skip((page - 1) * limit).limit(limit)
+            total_items = TextToImage.objects.count()
 
         # JSON formatına dönüştürme
         user_images_list = [image.to_dict() for image in user_images]
-        return jsonify({
-            "data": user_images_list,
-            "total_items": total_items,
-            "total_pages": total_pages,
-            "current_page": page,
-            "limit": limit
-        }), 200
+        total_pages = (total_items + limit - 1) // limit
+
+        return jsonify({"images": user_images_list, "total_pages": total_pages, "total_items": total_items}), 200
 
     except Exception as e:
         logging.error(f"Error listing user images: {e}")

@@ -1,17 +1,27 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container">
     <div class="row">
         <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3 mt-2">
             <h2>Kullanıcı Fotoğrafları</h2>
-            <hr>
+            <div class="d-flex">
+                <input type="text" id="search-input" class="form-control mr-2" placeholder="Kullanıcı Adı ile ara">
+                <button id="search-button" class="btn btn-primary">Ara</button>
+            </div>
+        </div>
+
+
+
+
             <!-- Yüklenme spinner'ı -->
             <div id="loading-spinner" class="text-center" style="display: none;">
                 <div class="spinner-border" role="status">
                     <span class="sr-only">Yükleniyor...</span>
                 </div>
             </div>
+
             <!-- Galeri -->
             <div class="row" id="user-images-gallery">
                 <!-- Kullanıcı fotoğraflarının kartları burada dinamik olarak yüklenecek -->
@@ -33,58 +43,68 @@
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    loadUserImages(1); // İlk sayfayı yüklüyoruz, limit 30 olacak şekilde
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        loadUserImages(1); // İlk sayfayı yüklüyoruz ve limit 30 olacak şekilde
 
-function loadUserImages(page) {
-    const limit = 20; // Görüntülenecek fotoğraf sayısı
-
-    document.getElementById('loading-spinner').style.display = 'block';
-
-    fetch(`/admin/user-images?page=${page}&limit=${limit}`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('loading-spinner').style.display = 'none';
-            const gallery = document.getElementById('user-images-gallery');
-            gallery.innerHTML = ''; // Eski verileri temizliyoruz
-
-            if (data.data.length === 0) {
-                gallery.innerHTML = `<div class="col-12 text-center"><p>Henüz oluşturulmuş bir fotoğraf bulunmamaktadır.</p></div>`;
-                return;
-            }
-
-            // Fotoğrafları ekleme
-            data.data.forEach(image => {
-                const cardHtml = `
-                <div class="col-md-3">
-                    <div class="card mb-4">
-                        <img src="${image.image_url_webp}" class="card-img-top" alt="User Image">
-                        <div class="card-body">
-                            <button class="btn btn-primary add-to-gallery-btn" data-id="${image.id}">Galerimize Ekle</button>
-                        </div>
-                    </div>
-                </div>`;
-                gallery.insertAdjacentHTML('beforeend', cardHtml);
-            });
-
-            // "Galerimize Ekle" butonlarına tıklama olaylarını ekliyoruz
-            document.querySelectorAll('.add-to-gallery-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const imageId = this.getAttribute('data-id');
-                    addToGallery(imageId);
-                });
-            });
-
-            // Sayfalamayı güncelle
-            updatePagination(data.current_page, data.total_pages);
-        })
-        .catch(error => {
-            document.getElementById('loading-spinner').style.display = 'none';
-            console.error('Error loading user images:', error);
-            alert('Bir hata oluştu, lütfen tekrar deneyin.');
+        // Arama butonuna tıklama
+        document.getElementById('search-button').addEventListener('click', function() {
+            const query = document.getElementById('search-input').value.trim();
+            loadUserImages(1, query);
         });
-}
+    });
+
+function loadUserImages(page, query = '') {
+        const limit = 20; // Görüntülenecek fotoğraf sayısı
+
+        document.getElementById('loading-spinner').style.display = 'block';
+
+        let url = `/admin/user-images?page=${page}&limit=${limit}`;
+        if (query) {
+            url += `&query=${encodeURIComponent(query)}`;
+        }
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading-spinner').style.display = 'none';
+                const gallery = document.getElementById('user-images-gallery');
+                gallery.innerHTML = ''; // Eski verileri temizliyoruz
+
+                if (data.images.length === 0) {
+                    gallery.innerHTML = `<div class="col-12 text-center"><p>Henüz oluşturulmuş bir fotoğraf bulunmamaktadır.</p></div>`;
+                    return;
+                }
+
+                data.images.forEach(image => {
+                    const cardHtml = `
+                    <div class="col-md-3">
+                        <div class="card mb-4">
+                            <img src="${image.image_url_webp}" class="card-img-top" alt="User Image">
+                            <div class="card-body">
+                                <button class="btn btn-primary add-to-gallery-btn" data-id="${image.id}">Galerimize Ekle</button>
+                            </div>
+                        </div>
+                    </div>`;
+                    gallery.insertAdjacentHTML('beforeend', cardHtml);
+                });
+
+                // "Galerimize Ekle" butonlarına tıklama olaylarını ekliyoruz
+                document.querySelectorAll('.add-to-gallery-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const imageId = this.getAttribute('data-id');
+                        addToGallery(imageId);
+                    });
+                });
+
+                // Toplam sayfa sayısını hesaplayıp sayfalamayı güncelle
+                updatePagination(page, data.total_pages);
+            })
+            .catch(error => {
+                document.getElementById('loading-spinner').style.display = 'none';
+                console.error('Error loading user images:', error);
+                alert('Bir hata oluştu, lütfen tekrar deneyin.');
+            });
+    }
 
 function updatePagination(currentPage, totalPages) {
     const paginationContainer = document.getElementById('pagination');
