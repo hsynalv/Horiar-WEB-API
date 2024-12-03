@@ -7,6 +7,7 @@ from flask_login import login_user, logout_user
 
 from app.models.coupon_model import Coupon
 from app.models.discord_image_request_model import DiscordImageRequest
+from app.models.galley_photo_model import GalleryPhoto
 from app.models.image_to_video_model import ImageToVideo
 from app.models.package_model import Package
 from app.models.purchase_model import Purchase
@@ -574,6 +575,128 @@ def get_text_to_video_chart_data():
         "imageToVideoData": image_to_video_counts,
         "videoGenerationData": video_generation_counts
     })
+
+
+# Dynamic Galery -------------------------------------------------------------------------------------------------
+
+# Kullanıcı tarafından oluşturulmuş TextToImage görsellerini listeleme rotası
+@admin_routes_bp.route('/user-images', methods=['GET'])
+def list_user_images():
+    try:
+        # Eğer sadece sayfayı yüklemek istiyorsak (sayfa GET isteği ile geliyorsa)
+        if 'page' not in request.args:
+            return render_template('admin/gallery/user_images.html')
+
+        # Eğer verileri JSON olarak almak istiyorsak (JavaScript ile API isteği)
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 30))  # Varsayılan olarak 30 görsel gösteriyoruz
+
+        # TextToImage koleksiyonundan verileri sayfalama ile alıyoruz
+        user_images = TextToImage.objects.skip((page - 1) * limit).limit(limit)
+
+        # Toplam öğe sayısını alıyoruz
+        total_items = TextToImage.objects.count()
+
+        # Toplam sayfa sayısını hesaplıyoruz
+        total_pages = (total_items + limit - 1) // limit
+
+        # JSON formatına dönüştürme
+        user_images_list = [image.to_dict() for image in user_images]
+        return jsonify({
+            "data": user_images_list,
+            "total_items": total_items,
+            "total_pages": total_pages,
+            "current_page": page,
+            "limit": limit
+        }), 200
+
+    except Exception as e:
+        logging.error(f"Error listing user images: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# Kullanıcı tarafından oluşturulmuş bir TextToImage görselini galeriye ekleme rotası
+@admin_routes_bp.route('/user-images/add-to-gallery', methods=['POST'])
+def add_user_image_to_gallery():
+    try:
+        image_id = request.form.get('image_id')
+
+        # Görselin varlığını kontrol et
+        user_image = TextToImage.objects(id=image_id).first()
+        if not user_image:
+            return jsonify({"error": "Görsel bulunamadı"}), 404
+
+        # Görseli GalleryPhoto olarak ekle
+        gallery_photo = GalleryPhoto(
+            title=user_image.prompt,  # Başlık olarak prompt kullanıyoruz
+            description="Kullanıcı tarafından oluşturulmuş text to image görseli",
+            prompt=user_image.prompt,
+            image=user_image.image,  # Görsel verisini alıyoruz
+            datetime=datetime.now()
+        )
+        gallery_photo.save()
+
+        return jsonify({"message": "Görsel galeriye başarıyla eklendi"}), 201
+
+    except Exception as e:
+        logging.error(f"Error adding user image to gallery: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# Fotoğrafları Listeleme Rotası
+@admin_routes_bp.route('/gallery', methods=['GET'])
+def list_gallery_photos():
+    try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+
+        # Sayfalama ile veritabanından fotoğrafları alıyoruz
+        photos = GalleryPhoto.objects.skip((page - 1) * limit).limit(limit)
+
+        # JSON formatına dönüştürme
+        photos_list = [photo.to_dict() for photo in photos]
+        return jsonify(photos_list), 200
+
+    except Exception as e:
+        logging.error(f"Error listing gallery photos: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# Fotoğraf Düzenleme Rotası
+@admin_routes_bp.route('/gallery/<photo_id>', methods=['PUT'])
+def update_gallery_photo(photo_id):
+    try:
+        photo = GalleryPhoto.objects(id=photo_id).first()
+        if not photo:
+            return jsonify({"error": "Fotoğraf bulunamadı"}), 404
+
+        # Güncellemeler
+        photo.title = request.form.get('title', photo.title)
+        photo.description = request.form.get('description', photo.description)
+        photo.prompt = request.form.get('prompt', photo.prompt)
+
+        # Görseli güncellemek istersek
+        if 'image' in request.files:
+            photo.image = request.files['image'].read()
+
+        photo.save()
+        return jsonify({"message": "Fotoğraf başarıyla güncellendi"}), 200
+
+    except Exception as e:
+        logging.error(f"Error updating gallery photo: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# Fotoğraf Silme Rotası
+@admin_routes_bp.route('/gallery/<photo_id>', methods=['DELETE'])
+def delete_gallery_photo(photo_id):
+    try:
+        photo = GalleryPhoto.objects(id=photo_id).first()
+        if not photo:
+            return jsonify({"error": "Fotoğraf bulunamadı"}), 404
+
+        photo.delete()
+        return jsonify({"message": "Fotoğraf başarıyla silindi"}), 200
+
+    except Exception as e:
+        logging.error(f"Error deleting gallery photo: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 

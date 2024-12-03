@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2>Kullanıcı Fotoğrafları</h2>
+            <hr>
+            <!-- Yüklenme spinner'ı -->
+            <div id="loading-spinner" class="text-center" style="display: none;">
+                <div class="spinner-border" role="status">
+                    <span class="sr-only">Yükleniyor...</span>
+                </div>
+            </div>
+            <!-- Galeri -->
+            <div class="row" id="user-images-gallery">
+                <!-- Kullanıcı fotoğraflarının kartları burada dinamik olarak yüklenecek -->
+            </div>
+        </div>
+    </div>
+    <!-- Sayfalama için -->
+    <div class="row mt-3">
+        <div class="col-12 d-flex justify-content-center">
+            <nav aria-label="Sayfalama">
+                <ul class="pagination" id="pagination">
+                    <!-- Sayfalama linkleri burada dinamik olarak yüklenecek -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadUserImages(1); // İlk sayfayı yüklüyoruz, limit 30 olacak şekilde
+});
+
+function loadUserImages(page) {
+    const limit = 20; // Görüntülenecek fotoğraf sayısı
+
+    document.getElementById('loading-spinner').style.display = 'block';
+
+    fetch(`/admin/user-images?page=${page}&limit=${limit}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('loading-spinner').style.display = 'none';
+            const gallery = document.getElementById('user-images-gallery');
+            gallery.innerHTML = ''; // Eski verileri temizliyoruz
+
+            if (data.data.length === 0) {
+                gallery.innerHTML = `<div class="col-12 text-center"><p>Henüz oluşturulmuş bir fotoğraf bulunmamaktadır.</p></div>`;
+                return;
+            }
+
+            // Fotoğrafları ekleme
+            data.data.forEach(image => {
+                const cardHtml = `
+                <div class="col-md-3">
+                    <div class="card mb-4">
+                        <img src="${image.image_url_webp}" class="card-img-top" alt="User Image">
+                        <div class="card-body">
+                            <button class="btn btn-primary add-to-gallery-btn" data-id="${image.id}">Galerimize Ekle</button>
+                        </div>
+                    </div>
+                </div>`;
+                gallery.insertAdjacentHTML('beforeend', cardHtml);
+            });
+
+            // "Galerimize Ekle" butonlarına tıklama olaylarını ekliyoruz
+            document.querySelectorAll('.add-to-gallery-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const imageId = this.getAttribute('data-id');
+                    addToGallery(imageId);
+                });
+            });
+
+            // Sayfalamayı güncelle
+            updatePagination(data.current_page, data.total_pages);
+        })
+        .catch(error => {
+            document.getElementById('loading-spinner').style.display = 'none';
+            console.error('Error loading user images:', error);
+            alert('Bir hata oluştu, lütfen tekrar deneyin.');
+        });
+}
+
+function updatePagination(currentPage, totalPages) {
+    const paginationContainer = document.getElementById('pagination');
+    paginationContainer.innerHTML = '';
+
+    // Sayfa göstermek için sınırlar (örneğin, her iki tarafta 2 sayfa)
+    const range = 3;
+
+    // İlk sayfa düğmesi
+    if (currentPage > 1) {
+        const firstPageItem = document.createElement('li');
+        firstPageItem.className = 'page-item';
+        const firstPageLink = document.createElement('a');
+        firstPageLink.className = 'page-link';
+        firstPageLink.href = '#';
+        firstPageLink.innerText = 'İlk';
+
+        firstPageLink.addEventListener('click', function(event) {
+            event.preventDefault();
+            loadUserImages(1);
+        });
+
+        firstPageItem.appendChild(firstPageLink);
+        paginationContainer.appendChild(firstPageItem);
+    }
+
+    // Önceki sayfa düğmesi
+    if (currentPage > 1) {
+        const prevPageItem = document.createElement('li');
+        prevPageItem.className = 'page-item';
+        const prevPageLink = document.createElement('a');
+        prevPageLink.className = 'page-link';
+        prevPageLink.href = '#';
+        prevPageLink.innerText = 'Önceki';
+
+        prevPageLink.addEventListener('click', function(event) {
+            event.preventDefault();
+            loadUserImages(currentPage - 1);
+        });
+
+        prevPageItem.appendChild(prevPageLink);
+        paginationContainer.appendChild(prevPageItem);
+    }
+
+    // Sayfa numaralarını oluşturma
+    for (let i = Math.max(1, currentPage - range); i <= Math.min(totalPages, currentPage + range); i++) {
+        const pageItem = document.createElement('li');
+        pageItem.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        const pageLink = document.createElement('a');
+        pageLink.className = 'page-link';
+        pageLink.href = `#`;
+        pageLink.innerText = i;
+
+        pageLink.addEventListener('click', function(event) {
+            event.preventDefault();
+            loadUserImages(i);  // Bu fonksiyon sayfada belirtilen sayfayı yükler
+        });
+
+        pageItem.appendChild(pageLink);
+        paginationContainer.appendChild(pageItem);
+    }
+
+    // Sonraki sayfa düğmesi
+    if (currentPage < totalPages) {
+        const nextPageItem = document.createElement('li');
+        nextPageItem.className = 'page-item';
+        const nextPageLink = document.createElement('a');
+        nextPageLink.className = 'page-link';
+        nextPageLink.href = '#';
+        nextPageLink.innerText = 'Sonraki';
+
+        nextPageLink.addEventListener('click', function(event) {
+            event.preventDefault();
+            loadUserImages(currentPage + 1);
+        });
+
+        nextPageItem.appendChild(nextPageLink);
+        paginationContainer.appendChild(nextPageItem);
+    }
+
+    // Son sayfa düğmesi
+    if (currentPage < totalPages) {
+        const lastPageItem = document.createElement('li');
+        lastPageItem.className = 'page-item';
+        const lastPageLink = document.createElement('a');
+        lastPageLink.className = 'page-link';
+        lastPageLink.href = '#';
+        lastPageLink.innerText = 'Son';
+
+        lastPageLink.addEventListener('click', function(event) {
+            event.preventDefault();
+            loadUserImages(totalPages);
+        });
+
+        lastPageItem.appendChild(lastPageLink);
+        paginationContainer.appendChild(lastPageItem);
+    }
+}
+
+
+function addToGallery(imageId) {
+    fetch('/admin/user-images/add-to-gallery', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `image_id=${imageId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(`Hata: ${data.error}`);
+        } else {
+            alert('Görsel galeriye başarıyla eklendi!');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding image to gallery:', error);
+        alert('Bir hata oluştu, lütfen tekrar deneyin.');
+    });
+}
+</script>
+{% endblock %}

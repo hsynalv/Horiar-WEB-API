@@ -40,7 +40,6 @@ class TextToImage(Document):
             "resolution": self.resolution,
             "image_url": self.image_url,
             "image_url_webp": self.image_url_webp,
-            "cost": float(self.cost) if isinstance(self.cost, Decimal128) else self.cost,
             "execution_time": self.execution_time,
             "source": self.source,
             "user_id": self.user_id,
