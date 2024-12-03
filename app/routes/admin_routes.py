@@ -631,8 +631,11 @@ def add_user_image_to_gallery():
             title=user_image.prompt,  # Başlık olarak prompt kullanıyoruz
             description="Kullanıcı tarafından oluşturulmuş text to image görseli",
             prompt=user_image.prompt,
-            image=user_image.image,  # Görsel verisini alıyoruz
-            datetime=datetime.now()
+            image_url_webp=user_image.image_url_webp,  # Görsel verisini alıyoruz
+            created_at=datetime.now(),
+            image_url=user_image.image_url,
+            user_id=str(user_image.id),
+            is_visible=True
         )
         gallery_photo.save()
 
