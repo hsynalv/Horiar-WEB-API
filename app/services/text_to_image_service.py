@@ -317,7 +317,7 @@ class TextToImageService(BaseService):
     def promptEnhance(text):
         prompts = []
 
-        response = openai.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model='gpt-4o-mini',
             messages=[
                 {"role": "system", "content": f"{TextToImageService.Duty['t5xxl']}"},
@@ -329,7 +329,7 @@ class TextToImageService(BaseService):
         )
         prompts.append(response.choices[0].message.content)
 
-        response = openai.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model='gpt-4o-mini',
             messages=[
                 {"role": "system", "content": f"{TextToImageService.Duty['clip_l']}"},
