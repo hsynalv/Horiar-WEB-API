@@ -1,4 +1,5 @@
-from mongoengine import Document, StringField, DateTimeField, BooleanField, IntField, FloatField
+from mongoengine import Document, StringField, DateTimeField, BooleanField, IntField, FloatField, ListField
+
 
 class GalleryPhoto(Document):
     user_id = StringField(required=True)  # Hangi kullanıcı tarafından oluşturulduğunu belirtir
@@ -12,7 +13,7 @@ class GalleryPhoto(Document):
     is_visible = BooleanField(default=True)  # Görselin galeride görünüp görünmeyeceği
     likes_count = IntField(default=0)  # Görselin kaç beğeni aldığı
     views_count = IntField(default=0)  # Görselin kaç kez görüntülendiği
-    tags = StringField()  # Görselle ilgili etiketler (virgülle ayrılmış şekilde)
+    tags = ListField(StringField())  # Görselle ilgili etiketler (virgülle ayrılmış şekilde)
 
     meta = {
         'collection': 'gallery',
@@ -26,7 +27,7 @@ class GalleryPhoto(Document):
 
     def to_dict(self):
         return {
-            "id": self.id,
+            "id": str(self.id),
             "user_id": self.user_id,
             "user_name": self.user_name,
             "title": self.title,
@@ -38,7 +39,5 @@ class GalleryPhoto(Document):
             "is_visible": self.is_visible,
             "likes_count": self.likes_count,
             "views_count": self.views_count,
-            "execution_time": self.execution_time,
-            "cost": self.cost,
             "tags": self.tags
         }

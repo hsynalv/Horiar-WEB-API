@@ -4,13 +4,13 @@
 <div class="container">
     <div class="row">
         <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-3 mt-2">
-            <h2>Kullanıcı Fotoğrafları</h2>
-            <div class="d-flex">
-                <input type="text" id="search-input" class="form-control mr-2" placeholder="Kullanıcı Adı ile ara">
-                <button id="search-button" class="btn btn-primary">Ara</button>
+            <div class="d-flex justify-content-between align-items-center mb-3 mt-2">
+                <h2>Kullanıcı Fotoğrafları</h2>
+                <div class="d-flex">
+                    <input type="text" id="search-input" class="form-control mr-2" placeholder="Kullanıcı Adı ile ara">
+                    <button id="search-button" class="btn btn-primary">Ara</button>
+                </div>
             </div>
-        </div>
             <!-- Yüklenme spinner'ı -->
             <div id="loading-spinner" class="text-center" style="display: none;">
                 <div class="spinner-border" role="status">
@@ -35,6 +35,26 @@
         </div>
     </div>
 </div>
+
+<!-- Prompt Modal -->
+<div class="modal fade" id="promptModal" tabindex="-1" role="dialog" aria-labelledby="promptModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content shadow-lg rounded-3" style="background-color: #0a0e14; color: #c3c4c8;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="promptModalLabel" style="font-weight: 600;">Prompt Bilgisi</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Kapat" style="color: #ffffff;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="prompt-modal-body" style="font-size: 1.1rem; line-height: 1.6;">
+                <!-- Prompt içeriği burada gösterilecek -->
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -49,7 +69,7 @@
         });
     });
 
-function loadUserImages(page, query = '') {
+    function loadUserImages(page, query = '') {
         const limit = 20; // Görüntülenecek fotoğraf sayısı
 
         document.getElementById('loading-spinner').style.display = 'block';
@@ -73,11 +93,17 @@ function loadUserImages(page, query = '') {
 
                 data.images.forEach(image => {
                     const cardHtml = `
-                    <div class="col-md-3">
+                    <div class="col-md-3 position-relative">
                         <div class="card mb-4">
+                            <!-- Sağ üst köşeye ekleme ikonu -->
+                            <div class="position-absolute top-0 right-0 mt-2 mr-2">
+                                <button class="btn btn-sm btn-warning add-to-gallery-btn" data-id="${image._id}" style="border-radius: 50%;">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
                             <img src="${image.image_url_webp}" class="card-img-top" alt="User Image">
                             <div class="card-body">
-                                <button class="btn btn-primary add-to-gallery-btn" data-id="${image._id}">Galeriye Ekle</button>
+                                <p class="card-text prompt-text" data-prompt="${image.prompt}">${image.prompt.substring(0, 30)}...</p>
                             </div>
                         </div>
                     </div>`;
@@ -92,6 +118,14 @@ function loadUserImages(page, query = '') {
                     });
                 });
 
+                // Prompt metnine tıklama olaylarını ekliyoruz
+                document.querySelectorAll('.prompt-text').forEach(promptElement => {
+                    promptElement.addEventListener('click', function() {
+                        const fullPrompt = this.getAttribute('data-prompt');
+                        showPromptModal(fullPrompt);
+                    });
+                });
+
                 // Toplam sayfa sayısını hesaplayıp sayfalamayı güncelle
                 updatePagination(page, data.total_pages);
             })
@@ -102,7 +136,7 @@ function loadUserImages(page, query = '') {
             });
     }
 
-function updatePagination(currentPage, totalPages) {
+    function updatePagination(currentPage, totalPages) {
     const paginationContainer = document.getElementById('pagination');
     paginationContainer.innerHTML = '';
 
@@ -200,27 +234,34 @@ function updatePagination(currentPage, totalPages) {
     }
 }
 
+    function addToGallery(imageId) {
+        fetch('/admin/user-images/add-to-gallery', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `image_id=${imageId}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(`Hata: ${data.error}`);
+            } else {
+                alert('Görsel galeriye başarıyla eklendi!');
+            }
+        })
+        .catch(error => {
+            console.error('Error adding image to gallery:', error);
+            alert('Bir hata oluştu, lütfen tekrar deneyin.');
+        });
+    }
 
-function addToGallery(imageId) {
-    fetch('/admin/user-images/add-to-gallery', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `image_id=${imageId}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            alert(`Hata: ${data.error}`);
-        } else {
-            alert('Görsel galeriye başarıyla eklendi!');
-        }
-    })
-    .catch(error => {
-        console.error('Error adding image to gallery:', error);
-        alert('Bir hata oluştu, lütfen tekrar deneyin.');
-    });
-}
+    function showPromptModal(prompt) {
+        const modalBody = document.getElementById('prompt-modal-body');
+        modalBody.textContent = prompt;
+
+        // Modal'ı açıyoruz
+        $('#promptModal').modal('show');
+    }
 </script>
 {% endblock %}

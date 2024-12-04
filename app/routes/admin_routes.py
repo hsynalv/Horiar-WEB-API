@@ -649,36 +649,51 @@ def add_user_image_to_gallery():
 @admin_routes_bp.route('/gallery', methods=['GET'])
 def list_gallery_photos():
     try:
+        # Eğer sadece sayfayı yüklemek istiyorsak (sayfa GET isteği ile geliyorsa)
+        if 'page' not in request.args:
+            return render_template('admin/gallery/edit_gallery.html')
+
+        # Eğer verileri JSON olarak almak istiyorsak (JavaScript ile API isteği)
         page = int(request.args.get('page', 1))
-        limit = int(request.args.get('limit', 10))
+        limit = int(request.args.get('limit', 10))  # Varsayılan olarak 10 görsel gösteriyoruz
 
         # Sayfalama ile veritabanından fotoğrafları alıyoruz
         photos = GalleryPhoto.objects.skip((page - 1) * limit).limit(limit)
+        total_items = GalleryPhoto.objects.count()  # Toplam öğe sayısını alıyoruz
 
         # JSON formatına dönüştürme
         photos_list = [photo.to_dict() for photo in photos]
-        return jsonify(photos_list), 200
+        total_pages = (total_items + limit - 1) // limit  # Toplam sayfa sayısını hesaplıyoruz
+
+        return jsonify({
+            "photos": photos_list,
+            "total_items": total_items,
+            "total_pages": total_pages,
+            "current_page": page
+        }), 200
 
     except Exception as e:
         logging.error(f"Error listing gallery photos: {e}")
         return jsonify({"error": str(e)}), 500
 
+
 # Fotoğraf Düzenleme Rotası
 @admin_routes_bp.route('/gallery/<photo_id>', methods=['PUT'])
 def update_gallery_photo(photo_id):
     try:
+        # JSON verisini al
+        data = request.get_json()
+
+        # Fotoğrafı bul
         photo = GalleryPhoto.objects(id=photo_id).first()
         if not photo:
             return jsonify({"error": "Fotoğraf bulunamadı"}), 404
 
         # Güncellemeler
-        photo.title = request.form.get('title', photo.title)
-        photo.description = request.form.get('description', photo.description)
-        photo.prompt = request.form.get('prompt', photo.prompt)
-
-        # Görseli güncellemek istersek
-        if 'image' in request.files:
-            photo.image = request.files['image'].read()
+        photo.title = data.get('title', photo.title)
+        photo.description = data.get('description', photo.description)
+        photo.tags = data.get('tags', photo.tags)  # Tags alanı da güncellenebilir.
+        photo.is_visible = data.get('is_visible', photo.is_visible)
 
         photo.save()
         return jsonify({"message": "Fotoğraf başarıyla güncellendi"}), 200
@@ -700,6 +715,21 @@ def delete_gallery_photo(photo_id):
 
     except Exception as e:
         logging.error(f"Error deleting gallery photo: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@admin_routes_bp.route('/gallery/<photo_id>', methods=['GET'])
+def get_gallery_photo(photo_id):
+    try:
+        # Veritabanından ilgili fotoğrafı alıyoruz
+        photo = GalleryPhoto.objects(id=photo_id).first()
+        if not photo:
+            return jsonify({"error": "Fotoğraf bulunamadı"}), 404
+
+        # Fotoğrafın JSON formatına dönüştürülmüş hali
+        return jsonify(photo.to_dict()), 200
+
+    except Exception as e:
+        logging.error(f"Error fetching gallery photo: {e}")
         return jsonify({"error": str(e)}), 500
 
 

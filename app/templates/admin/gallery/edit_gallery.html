@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3 mt-2">
+                <h2>Galeriyi Düzenle</h2>
+            </div>
+
+            <!-- Yüklenme spinner'ı -->
+            <div id="loading-spinner" class="text-center" style="display: none;">
+                <div class="spinner-border" role="status">
+                    <span class="sr-only">Yükleniyor...</span>
+                </div>
+            </div>
+
+            <!-- Galeri -->
+            <div class="row" id="gallery-photos">
+                <!-- Galeri fotoğraflarının kartları burada dinamik olarak yüklenecek -->
+            </div>
+        </div>
+    </div>
+    <!-- Sayfalama için -->
+    <div class="row mt-3">
+        <div class="col-12 d-flex justify-content-center">
+            <nav aria-label="Sayfalama">
+                <ul class="pagination" id="pagination">
+                    <!-- Sayfalama linkleri burada dinamik olarak yüklenecek -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+    <!-- Düzenleme Modali -->
+<div class="modal fade" id="editPhotoModal" tabindex="-1" role="dialog" aria-labelledby="editPhotoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content shadow-lg rounded-3" style="background-color: #0a0e14; color: #c3c4c8;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="editPhotoModalLabel" style="font-weight: 600;">Fotoğrafı Düzenle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat" style="color: #ffffff;"></button>
+            </div>
+            <div class="modal-body" style="font-size: 1.1rem; line-height: 1.6;">
+                <form id="editPhotoForm">
+                    <div class="form-group mb-3">
+                        <label for="photoTitle" class="form-label">Başlık</label>
+                        <input type="text" id="photoTitle" name="title" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="photoDescription" class="form-label">Açıklama</label>
+                        <textarea id="photoDescription" name="description" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="photoTags" class="form-label">Etiketler (Virgülle ayırarak yazın)</label>
+                        <input type="text" id="photoTags" name="tags" class="form-control">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" id="photoVisible" name="is_visible" class="form-check-input">
+                        <label class="form-check-label" for="photoVisible">Görünür mü?</label>
+                    </div>
+                    <input type="hidden" id="photoId" name="photo_id">
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <button type="button" class="btn btn-primary" onclick="savePhotoChanges()">Değişiklikleri Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='plugins/jquery/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/adminlte.min.js') }}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadGalleryPhotos(1); // İlk sayfayı yüklüyoruz ve limit 30 olacak şekilde
+    });
+
+    let editModal;
+
+    function loadGalleryPhotos(page) {
+        const limit = 20; // Görüntülenecek fotoğraf sayısı
+        document.getElementById('loading-spinner').style.display = 'block';
+
+        fetch(`/admin/gallery?page=${page}&limit=${limit}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading-spinner').style.display = 'none';
+                const gallery = document.getElementById('gallery-photos');
+                gallery.innerHTML = ''; // Eski verileri temizliyoruz
+
+                if (data.photos.length === 0) {
+                    gallery.innerHTML = `<div class="col-12 text-center"><p>Henüz eklenmiş bir fotoğraf bulunmamaktadır.</p></div>`;
+                    return;
+                }
+
+                data.photos.forEach(photo => {
+                    const cardHtml = `
+                    <div class="col-md-3">
+                        <div class="card mb-4">
+                            <img src="${photo.image_url_webp}" class="card-img-top" alt="Gallery Image">
+                            <div class="card-body">
+                                <h5 class="card-title">${photo.title}</h5>
+                                <p class="card-text">${photo.prompt}</p>
+                                <div class="d-flex justify-content-between">
+                                    <button class="btn btn-info edit-photo-btn" data-id="${photo.id}">Düzenle</button>
+                                    <button class="btn btn-danger delete-photo-btn" data-id="${photo.id}">Sil</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                    gallery.insertAdjacentHTML('beforeend', cardHtml);
+                });
+
+                document.querySelectorAll('.edit-photo-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const photoId = this.getAttribute('data-id');
+                        editPhoto(photoId);
+                    });
+                });
+
+                document.querySelectorAll('.delete-photo-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const photoId = this.getAttribute('data-id');
+                        deletePhoto(photoId);
+                    });
+                });
+
+                updatePagination(page, data.total_pages);
+            })
+            .catch(error => {
+                document.getElementById('loading-spinner').style.display = 'none';
+                console.error('Error loading gallery photos:', error);
+                alert('Bir hata oluştu, lütfen tekrar deneyin.');
+            });
+    }
+
+    function editPhoto(photoId) {
+        fetch(`/admin/gallery/${photoId}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('photoTitle').value = data.title || '';
+                document.getElementById('photoDescription').value = data.description || '';
+                document.getElementById('photoTags').value = data.tags ? data.tags.join(', ') : '';
+                document.getElementById('photoVisible').checked = data.is_visible || false;
+                document.getElementById('photoId').value = photoId;
+
+                editModal = new bootstrap.Modal(document.getElementById('editPhotoModal'), {});
+                editModal.show();
+            })
+            .catch(error => {
+                console.error('Error fetching photo details:', error);
+                alert('Fotoğraf bilgileri alınamadı, lütfen tekrar deneyin.');
+            });
+    }
+
+    function savePhotoChanges() {
+        const photoId = document.getElementById('photoId').value;
+        const title = document.getElementById('photoTitle').value.trim();
+        const description = document.getElementById('photoDescription').value.trim();
+        const tags = document.getElementById('photoTags').value.trim().split(',').map(tag => tag.trim());
+        const isVisible = document.getElementById('photoVisible').checked;
+
+        fetch(`/admin/gallery/${photoId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                title: title,
+                description: description,
+                tags: tags,
+                is_visible: isVisible
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(`Hata: ${data.error}`);
+            } else {
+                alert('Değişiklikler başarıyla kaydedildi!');
+                loadGalleryPhotos(1);
+            }
+        })
+        .catch(error => {
+            console.error('Error saving photo changes:', error);
+            alert('Bir hata oluştu, lütfen tekrar deneyin.');
+        });
+
+        if (editModal) {
+            editModal.hide();
+        }
+    }
+
+    function deletePhoto(photoId) {
+        if (confirm("Bu fotoğrafı silmek istediğinize emin misiniz?")) {
+            fetch(`/admin/gallery/${photoId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(`Hata: ${data.error}`);
+                } else {
+                    alert('Fotoğraf başarıyla silindi!');
+                    loadGalleryPhotos(1);
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting photo:', error);
+                alert('Bir hata oluştu, lütfen tekrar deneyin.');
+            });
+        }
+    }
+
+    function updatePagination(currentPage, totalPages) {
+        const paginationContainer = document.getElementById('pagination');
+        paginationContainer.innerHTML = '';
+
+        const range = 3;
+
+        if (currentPage > 1) {
+            const firstPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadGalleryPhotos(1)">İlk</a></li>`;
+            const prevPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadGalleryPhotos(${currentPage - 1})">Önceki</a></li>`;
+            paginationContainer.insertAdjacentHTML('beforeend', firstPageItem + prevPageItem);
+        }
+
+        for (let i = Math.max(1, currentPage - range); i <= Math.min(totalPages, currentPage + range); i++) {
+            const activeClass = i === currentPage ? 'active' : '';
+            const pageItem = `<li class="page-item ${activeClass}"><a class="page-link" href="#" onclick="loadGalleryPhotos(${i})">${i}</a></li>`;
+            paginationContainer.insertAdjacentHTML('beforeend', pageItem);
+        }
+
+        if (currentPage < totalPages) {
+            const nextPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadGalleryPhotos(${currentPage + 1})">Sonraki</a></li>`;
+            const lastPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadGalleryPhotos(${totalPages})">Son</a></li>`;
+            paginationContainer.insertAdjacentHTML('beforeend', nextPageItem + lastPageItem);
+        }
+    }
+</script>
+{% endblock %}
