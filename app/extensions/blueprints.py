@@ -69,7 +69,7 @@ def register_blueprints(app):
             if data is None:
                 # Eğer JSON değilse request.data kullanarak manuel olarak parse edelim
                 raw_data = request.data
-                logging.info(f"Raw webhook data: {raw_data}")
+                logging.info(f"Incoming data was received with request.data format")
 
                 try:
                     data = json.loads(raw_data)
@@ -77,7 +77,6 @@ def register_blueprints(app):
                     logging.error(f"Failed to parse JSON from raw data: {e}")
                     return jsonify({"error": "Invalid JSON format"}), 400
 
-            logging.info(f"Webhook received data {data}")
 
             # İşi tamamlayan job_id ve output bilgilerini alıyoruz
             job_id = data.get("id")
