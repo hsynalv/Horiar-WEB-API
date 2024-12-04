@@ -3,7 +3,7 @@ from mongoengine import Document, StringField, DateTimeField, BooleanField, IntF
 
 class GalleryPhoto(Document):
     user_id = StringField(required=True)  # Hangi kullanıcı tarafından oluşturulduğunu belirtir
-    user_name = StringField()  # Kullanıcının adı (opsiyonel)
+    username = StringField()  # Kullanıcının adı (opsiyonel)
     title = StringField(required=True)  # Görselin başlığı
     description = StringField()  # Görselin açıklaması (opsiyonel)
     prompt = StringField(required=True)  # Görseli oluşturmak için kullanılan prompt
@@ -33,7 +33,7 @@ class GalleryPhoto(Document):
         return {
             "id": str(self.id),
             "user_id": self.user_id,
-            "user_name": self.user_name,
+            "username": self.username,
             "title": self.title,
             "description": self.description,
             "prompt": self.prompt,

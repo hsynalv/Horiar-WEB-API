@@ -638,7 +638,8 @@ def add_user_image_to_gallery():
             is_visible=True,
             model_type=user_image.model_type,
             prompt_fix=user_image.prompt_fix,
-            resolution=user_image.resolution
+            resolution=user_image.resolution,
+            username=user_image.username
         )
         gallery_photo.save()
 
