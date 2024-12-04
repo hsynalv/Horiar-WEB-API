@@ -55,12 +55,16 @@
         </div>
     </div>
 </div>
+
+<!-- Geri bildirim kutusu -->
+<div id="notification" class="notification d-none">Görsel galeriye başarıyla eklendi!</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        loadUserImages(1); // İlk sayfayı yüklüyoruz ve limit 30 olacak şekilde
+        loadUserImages(1); // İlk sayfayı yüklüyoruz ve limit 20 olacak şekilde
 
         // Arama butonuna tıklama
         document.getElementById('search-button').addEventListener('click', function() {
@@ -136,104 +140,6 @@
             });
     }
 
-    function updatePagination(currentPage, totalPages) {
-    const paginationContainer = document.getElementById('pagination');
-    paginationContainer.innerHTML = '';
-
-    // Sayfa göstermek için sınırlar (örneğin, her iki tarafta 2 sayfa)
-    const range = 3;
-
-    // İlk sayfa düğmesi
-    if (currentPage > 1) {
-        const firstPageItem = document.createElement('li');
-        firstPageItem.className = 'page-item';
-        const firstPageLink = document.createElement('a');
-        firstPageLink.className = 'page-link';
-        firstPageLink.href = '#';
-        firstPageLink.innerText = 'İlk';
-
-        firstPageLink.addEventListener('click', function(event) {
-            event.preventDefault();
-            loadUserImages(1);
-        });
-
-        firstPageItem.appendChild(firstPageLink);
-        paginationContainer.appendChild(firstPageItem);
-    }
-
-    // Önceki sayfa düğmesi
-    if (currentPage > 1) {
-        const prevPageItem = document.createElement('li');
-        prevPageItem.className = 'page-item';
-        const prevPageLink = document.createElement('a');
-        prevPageLink.className = 'page-link';
-        prevPageLink.href = '#';
-        prevPageLink.innerText = 'Önceki';
-
-        prevPageLink.addEventListener('click', function(event) {
-            event.preventDefault();
-            loadUserImages(currentPage - 1);
-        });
-
-        prevPageItem.appendChild(prevPageLink);
-        paginationContainer.appendChild(prevPageItem);
-    }
-
-    // Sayfa numaralarını oluşturma
-    for (let i = Math.max(1, currentPage - range); i <= Math.min(totalPages, currentPage + range); i++) {
-        const pageItem = document.createElement('li');
-        pageItem.className = `page-item ${i === currentPage ? 'active' : ''}`;
-        const pageLink = document.createElement('a');
-        pageLink.className = 'page-link';
-        pageLink.href = `#`;
-        pageLink.innerText = i;
-
-        pageLink.addEventListener('click', function(event) {
-            event.preventDefault();
-            loadUserImages(i);  // Bu fonksiyon sayfada belirtilen sayfayı yükler
-        });
-
-        pageItem.appendChild(pageLink);
-        paginationContainer.appendChild(pageItem);
-    }
-
-    // Sonraki sayfa düğmesi
-    if (currentPage < totalPages) {
-        const nextPageItem = document.createElement('li');
-        nextPageItem.className = 'page-item';
-        const nextPageLink = document.createElement('a');
-        nextPageLink.className = 'page-link';
-        nextPageLink.href = '#';
-        nextPageLink.innerText = 'Sonraki';
-
-        nextPageLink.addEventListener('click', function(event) {
-            event.preventDefault();
-            loadUserImages(currentPage + 1);
-        });
-
-        nextPageItem.appendChild(nextPageLink);
-        paginationContainer.appendChild(nextPageItem);
-    }
-
-    // Son sayfa düğmesi
-    if (currentPage < totalPages) {
-        const lastPageItem = document.createElement('li');
-        lastPageItem.className = 'page-item';
-        const lastPageLink = document.createElement('a');
-        lastPageLink.className = 'page-link';
-        lastPageLink.href = '#';
-        lastPageLink.innerText = 'Son';
-
-        lastPageLink.addEventListener('click', function(event) {
-            event.preventDefault();
-            loadUserImages(totalPages);
-        });
-
-        lastPageItem.appendChild(lastPageLink);
-        paginationContainer.appendChild(lastPageItem);
-    }
-}
-
     function addToGallery(imageId) {
         fetch('/admin/user-images/add-to-gallery', {
             method: 'POST',
@@ -245,14 +151,14 @@
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                alert(`Hata: ${data.error}`);
+                showNotification(`Hata: ${data.error}`, 'error');
             } else {
-                alert('Görsel galeriye başarıyla eklendi!');
+                showNotification('Görsel galeriye başarıyla eklendi!', 'success');
             }
         })
         .catch(error => {
             console.error('Error adding image to gallery:', error);
-            alert('Bir hata oluştu, lütfen tekrar deneyin.');
+            showNotification('Bir hata oluştu, lütfen tekrar deneyin.', 'error');
         });
     }
 
@@ -263,5 +169,70 @@
         // Modal'ı açıyoruz
         $('#promptModal').modal('show');
     }
+
+        function updatePagination(currentPage, totalPages) {
+        const paginationContainer = document.getElementById('pagination');
+        paginationContainer.innerHTML = '';
+
+        const range = 3;
+
+        if (currentPage > 1) {
+            const firstPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadGalleryPhotos(1)">İlk</a></li>`;
+            const prevPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadGalleryPhotos(${currentPage - 1})">Önceki</a></li>`;
+            paginationContainer.insertAdjacentHTML('beforeend', firstPageItem + prevPageItem);
+        }
+
+        for (let i = Math.max(1, currentPage - range); i <= Math.min(totalPages, currentPage + range); i++) {
+            const activeClass = i === currentPage ? 'active' : '';
+            const pageItem = `<li class="page-item ${activeClass}"><a class="page-link" href="#" onclick="loadGalleryPhotos(${i})">${i}</a></li>`;
+            paginationContainer.insertAdjacentHTML('beforeend', pageItem);
+        }
+
+        if (currentPage < totalPages) {
+            const nextPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadGalleryPhotos(${currentPage + 1})">Sonraki</a></li>`;
+            const lastPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadGalleryPhotos(${totalPages})">Son</a></li>`;
+            paginationContainer.insertAdjacentHTML('beforeend', nextPageItem + lastPageItem);
+        }
+    }
+
+    function showNotification(message, type) {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.classList.remove('d-none', 'success', 'error');
+        notification.classList.add(type);
+
+        // Görüntüle ve belirli süre sonra kaybol
+        notification.classList.add('show');
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    }
 </script>
+
+<!-- CSS Kodu - Bildirim Kutusu -->
+<style>
+    #notification {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 9999;
+        padding: 10px 20px;
+        border-radius: 5px;
+        color: #fff;
+        transition: opacity 0.5s ease, top 0.5s ease;
+    }
+    .success {
+        background-color: #28a745;
+    }
+    .error {
+        background-color: #dc3545;
+    }
+    .show {
+        opacity: 1;
+    }
+    #notification:not(.show) {
+        opacity: 0;
+        top: 0;
+    }
+</style>
 {% endblock %}
