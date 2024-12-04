@@ -64,7 +64,17 @@ def register_blueprints(app):
         RunPod tamamlanan işler için webhook endpoint'i.
         """
         try:
-            data = request.json  # Gelen JSON veriyi alıyoruz
+            if request.content_type != 'application/json':
+                logging.error("Invalid Content-Type for webhook. Expected application/json.")
+                return jsonify({"error": "Invalid Content-Type"}), 400
+
+            raw_data = request.data
+            logging.info(f"Raw webhook data: {raw_data}")
+
+            data = request.get_json()
+            if data is None:
+                logging.error("Received empty or invalid JSON payload.")
+                return jsonify({"error": "Invalid JSON"}), 400
             logging.info(f"Webhook received data {data}")
             logging.info(f"Webhook received data {request}")
 
