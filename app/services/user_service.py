@@ -2,8 +2,10 @@ import logging
 import uuid
 from itertools import chain
 
-from flask import current_app
-from bson import ObjectId
+from mongoengine.errors import NotUniqueError
+from mongoengine import NotUniqueError
+from pymongo.errors import DuplicateKeyError
+
 from app.errors.not_found_error import NotFoundError
 from app.models.image_to_video_model import ImageToVideo
 from app.models.text_to_image_model import TextToImage
@@ -68,23 +70,37 @@ class UserService(BaseService):
         """
         Yeni bir kullanıcı ekler. Kullanıcı adı rastgele oluşturulur.
         """
-        # Kullanıcı verilerini doğrula
-        UserService.validate_user_data(email, password)
+        try:
+            # Kullanıcı verilerini doğrula
 
-        # Rastgele kullanıcı adı oluştur
-        random_username = f"user_{uuid.uuid4().hex[:8]}"  # 8 karakterlik rastgele bir kullanıcı adı
+            email = email.lower()
+            UserService.validate_user_data(email, password)
 
-        # Benzersiz bir kullanıcı adı oluşturulana kadar kontrol et
-        while User.objects(username=random_username).first():
-            random_username = f"user_{uuid.uuid4().hex[:8]}"
+            # Rastgele kullanıcı adı oluştur
+            random_username = f"user_{uuid.uuid4().hex[:8]}"  # 8 karakterlik rastgele bir kullanıcı adı
 
-        # Şifreyi hash'le ve kullanıcıyı ekle (pbkdf2_sha256 kullanılıyor)
-        hashed_password = pbkdf2_sha256.hash(password)
-        email = email.lower()
-        user = User(email=email, username=random_username, password=hashed_password)
-        user.save()
+            # Benzersiz bir kullanıcı adı oluşturulana kadar kontrol et
+            while User.objects(username=random_username).first():
+                random_username = f"user_{uuid.uuid4().hex[:8]}"
 
-        return str(user.id)
+            # Şifreyi hash'le ve kullanıcıyı ekle (pbkdf2_sha256 kullanılıyor)
+            hashed_password = pbkdf2_sha256.hash(password)
+            user = User(email=email, username=random_username, password=hashed_password)
+            user.save()
+
+            return str(user.id)
+
+        except DuplicateKeyError as e:
+            logging.error(f"Duplicate key error while adding user: {e}")
+            raise ValueError("Bu email adresi ile zaten kayıtlı bir kullanıcı mevcut.")
+
+        except NotUniqueError as e:
+            logging.error(f"Not unique error while adding user: {e}")
+            raise ValueError("Bu email adresi veya kullanıcı adı zaten mevcut.")
+
+        except Exception as e:
+            logging.error(f"Unhandled exception while adding user: {e}")
+            raise ValueError("User with this email already exists")
 
     @staticmethod
     def get_user_by_id(user_id):
