@@ -65,12 +65,14 @@ def register_blueprints(app):
         """
         try:
             data = request.json  # Gelen JSON veriyi alıyoruz
-            logging.info(f"Webhook received data")
+            logging.info(f"Webhook received data {data}")
 
             # İşi tamamlayan job_id ve output bilgilerini alıyoruz
             job_id = data.get("id")
             status = data.get("status")
             output = data.get("output")
+
+            logging.info("işi tamalanan job_id ve output bilgileri alındı")
 
 
             # Redis'ten ilgili job_id'yi alarak kaydı kontrol et
