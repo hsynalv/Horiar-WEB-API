@@ -66,7 +66,7 @@ def register_blueprints(app):
         try:
             if request.content_type != 'application/json':
                 logging.error("Invalid Content-Type for webhook. Expected application/json.")
-                return jsonify({"error": "Invalid Content-Type"}), 400
+                logging.error(f"Gelen veri şekli {request.content_type}")
 
             raw_data = request.data
             logging.info(f"Raw webhook data: {raw_data}")
