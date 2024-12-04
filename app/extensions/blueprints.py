@@ -7,6 +7,7 @@ import json
 from app.routes.admin_routes import admin_routes_bp
 from app.routes.coupon_routes import coupon_bp
 from app.routes.enterprise.enterprise_routes import enterprise_bp
+from app.routes.gallery_routes import gallery_routes_bp
 from app.routes.image_to_image_routes import image_to_image_bp
 from app.routes.mail_routes import mail_bp
 from app.routes.payment_routes import payment_bp
@@ -40,6 +41,7 @@ def register_blueprints(app):
     app.register_blueprint(video_generation_bp, url_prefix='/video_generation')
     app.register_blueprint(support_bp, url_prefix='/support')
     app.register_blueprint(image_to_image_bp, url_prefix='/imagetoimage')
+    app.register_blueprint(gallery_routes_bp, url_prefix='/gallery')
 
     @app.route('/favicon.ico')
     def favicon():

@@ -14,6 +14,10 @@ class GalleryPhoto(Document):
     likes_count = IntField(default=0)  # Görselin kaç beğeni aldığı
     views_count = IntField(default=0)  # Görselin kaç kez görüntülendiği
     tags = ListField(StringField())  # Görselle ilgili etiketler (virgülle ayrılmış şekilde)
+    liked_by_users = ListField(StringField())  # Beğenen kullanıcıların user_id'lerini tutar
+    model_type = StringField()
+    prompt_fix = StringField()
+    resolution = StringField()
 
     meta = {
         'collection': 'gallery',
@@ -39,5 +43,27 @@ class GalleryPhoto(Document):
             "is_visible": self.is_visible,
             "likes_count": self.likes_count,
             "views_count": self.views_count,
-            "tags": self.tags
+            "tags": self.tags,
+            "liked_by_users": self.liked_by_users,
+            "model_type": self.model_type,
+            "prompt_fix": self.prompt_fix,
+            "resolution": self.resolution
+        }
+
+    def to_dict_for_frontend(self):
+        return {
+            "id": str(self.id),
+            "user_id": self.user_id,
+            "user_name": self.user_name,
+            "title": self.title,
+            "description": self.description,
+            "prompt": self.prompt,
+            "image": self.image_url_webp,
+            "likes_count": self.likes_count,
+            "views_count": self.views_count,
+            "tags": self.tags,
+            "liked_by_users": self.liked_by_users,
+            "model_type": self.model_type,
+            "prompt_fix": self.prompt_fix,
+            "resolution": self.resolution
         }

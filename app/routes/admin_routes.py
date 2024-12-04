@@ -635,9 +635,18 @@ def add_user_image_to_gallery():
             created_at=datetime.now(),
             image_url=user_image.image_url,
             user_id=str(user_image.id),
-            is_visible=True
+            is_visible=True,
+            model_type=user_image.model_type,
+            prompt_fix=user_image.prompt_fix,
+            resolution=user_image.resolution
         )
         gallery_photo.save()
+
+        """
+            model_type = StringField()
+        prompt_fix = StringField()
+        resolution = StringField()
+    """
 
         return jsonify({"message": "Görsel galeriye başarıyla eklendi"}), 201
 
