@@ -150,6 +150,9 @@ class TextToImageService(BaseService):
         """
         workflow.json dosyasını okur ve verilen prompt ile günceller.
         """
+
+        prompt_fix = False
+
         with open(path, 'r') as file:
             workflow_data = json.load(file)
 
@@ -162,7 +165,7 @@ class TextToImageService(BaseService):
             workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = prompt #newPrompts[1]
         else:
             print("prompt fix False")
-            translatePrompt = TextToImageService.translatePrompt(prompt)
+            #translatePrompt = TextToImageService.translatePrompt(prompt)
             workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = prompt  #translatePrompt
             workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = prompt  #translatePrompt
 

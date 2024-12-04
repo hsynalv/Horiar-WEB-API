@@ -25,6 +25,7 @@ class VideoGenerationService(BaseService):
 
     @staticmethod
     def translatePrompt(text):
+        return text
         response = openai.chat.completions.create(
             model='gpt-4o-mini',
             messages=[

@@ -48,7 +48,7 @@ class ImageToImageService(BaseService):
 
         # image_bytes'ı base64 formatına dönüştür
         image_base64 = base64.b64encode(image_btyes).decode('utf-8')
-        translate_prompt = ImageToImageService.translatePrompt(prompt)
+        #translate_prompt = ImageToImageService.translatePrompt(prompt)
 
         # JSON verisinde gerekli değişiklikleri yap
         workflow_data["input"]["images"][0]["image"] = image_base64
