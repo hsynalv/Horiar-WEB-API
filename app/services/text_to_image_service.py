@@ -158,13 +158,13 @@ class TextToImageService(BaseService):
         if prompt_fix:
             print("prompt fix True")
             newPrompts = TextToImageService.promptEnhance(prompt)
-            workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = newPrompts[0]
-            workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = newPrompts[1]
+            workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = prompt #newPrompts[0]
+            workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = prompt #newPrompts[1]
         else:
             print("prompt fix False")
             translatePrompt = TextToImageService.translatePrompt(prompt)
-            workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = translatePrompt
-            workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = translatePrompt
+            workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = prompt  #translatePrompt
+            workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = prompt  #translatePrompt
 
         if(randomSeed == True):
             print("seed değişti")
