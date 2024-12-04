@@ -214,7 +214,7 @@ class EnterpriseService(BaseService):
         with app.app_context():
             workflow_path = os.path.join(os.getcwd(), 'app/workflows/T2V.json')
 
-            translatePrompt = VideoGenerationService.translatePrompt(prompt)
+            # translatePrompt = VideoGenerationService.translatePrompt(prompt)
 
             """
             # workflow.json dosyasını güncelle
@@ -287,7 +287,7 @@ class EnterpriseService(BaseService):
         with app.app_context():
             workflow_path = os.path.join(os.getcwd(), 'app/workflows/I2V.json')
 
-            translatePrompt = VideoGenerationService.translatePrompt(prompt)
+            # translatePrompt = VideoGenerationService.translatePrompt(prompt)
 
             """
             # workflow.json dosyasını güncelle
