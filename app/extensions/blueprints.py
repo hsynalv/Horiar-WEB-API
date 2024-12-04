@@ -64,19 +64,20 @@ def register_blueprints(app):
         RunPod tamamlanan işler için webhook endpoint'i.
         """
         try:
-            if request.content_type != 'application/json':
-                logging.error("Invalid Content-Type for webhook. Expected application/json.")
-                logging.error(f"Gelen veri şekli {request.content_type}")
-
-            raw_data = request.data
-            logging.info(f"Raw webhook data: {raw_data}")
-
             data = request.get_json()
+            logging.info(f"Content Type of Received Webhook data {request.content_type}")
             if data is None:
-                logging.error("Received empty or invalid JSON payload.")
-                return jsonify({"error": "Invalid JSON"}), 400
+                # Eğer JSON değilse request.data kullanarak manuel olarak parse edelim
+                raw_data = request.data
+                logging.info(f"Raw webhook data: {raw_data}")
+
+                try:
+                    data = json.loads(raw_data)
+                except json.JSONDecodeError as e:
+                    logging.error(f"Failed to parse JSON from raw data: {e}")
+                    return jsonify({"error": "Invalid JSON format"}), 400
+
             logging.info(f"Webhook received data {data}")
-            logging.info(f"Webhook received data {request}")
 
             # İşi tamamlayan job_id ve output bilgilerini alıyoruz
             job_id = data.get("id")
