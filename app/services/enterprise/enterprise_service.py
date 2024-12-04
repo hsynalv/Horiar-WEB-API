@@ -572,7 +572,7 @@ class EnterpriseService(BaseService):
         return req_dict
 
     def get_query_job_id(self, customer, job_id):
-        request = EnterpriseRequest.objects(job_id=job_id)
+        request = EnterpriseRequest.objects(job_id=job_id).first()
 
         if not request:
             return {"job_id":job_id, "message":"Your request has been queued."}
