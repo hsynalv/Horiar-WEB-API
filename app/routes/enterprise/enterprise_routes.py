@@ -312,7 +312,7 @@ def get_one_upscale_enhance(customer, request_id):
 def query_job_id(customer, job_id):
     service = EnterpriseService()
     try:
-        request = service.get_query_job_id(customer, job_id)
+        request = service.get_query_job_id(customer, job_id).first()
         if not request:
             return jsonify({"message": "Request not found"}), 404
         return jsonify(request), 200
