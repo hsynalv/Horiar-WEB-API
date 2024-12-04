@@ -71,11 +71,28 @@
                                 <p>Dashboard</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="{{ url_for('admin_routes_bp.list_user_images') }}" class="nav-link">
+                        <li class="nav-item menu-open"> <!-- Açılır menüyü varsayılan olarak açık tutmak isterseniz menu-open sınıfını ekleyebilirsiniz -->
+                            <div href="#" class="nav-link">
                                 <i class="nav-icon fas fa-tachometer-alt"></i>
-                                <p>Galeri</p>
-                            </a>
+                                <p>
+                                    Galeri
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </div>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ url_for('admin_routes_bp.list_user_images') }}" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Galeriye Gidiş</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ url_for('admin_routes_bp.list_gallery_photos') }}" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Galeriyi Düzenle</p>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                         <li class="nav-item">
                             <a href="{{ url_for('admin_routes_bp.admin_users') }}" class="nav-link">
@@ -171,6 +188,8 @@
     <!-- JS dosyaları -->
     <script src="{{ url_for('static', filename='plugins/jquery/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/adminlte.min.js') }}"></script>
+    <!-- Bootstrap 4 -->
+    <script src="{{ url_for('static', filename='plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
     <script>
       $.widget.bridge('uibutton', $.ui.button)
