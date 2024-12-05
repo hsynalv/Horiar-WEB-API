@@ -54,7 +54,7 @@ class GalleryPhoto(Document):
         return {
             "id": str(self.id),
             "user_id": self.user_id,
-            "user_name": self.user_name,
+            "username": self.username,
             "title": self.title,
             "description": self.description,
             "prompt": self.prompt,
