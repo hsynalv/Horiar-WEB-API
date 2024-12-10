@@ -2,92 +2,233 @@
 
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/user_page_styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='plugins/fontawesome-free/css/all.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/adminlte.min.css') }}">
-{% endblock %}
+    <style>
+        .table thead th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
 
+        .table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .prompt-text {
+            display: block;
+            max-height: 3rem; /* 2 satır */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .modal-body p {
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .page-item.active .page-link {
+            background-color: #007bff;
+            border-color: #007bff;
+            color: white;
+        }
+
+        .page-link {
+            color: #007bff;
+        }
+
+        .page-link:hover {
+            background-color: #f1f1f1;
+            color: #0056b3;
+        }
+
+        #loading-spinner {
+            margin: 20px 0;
+        }
+    </style>
+{% endblock %}
 
 {% block content %}
 <section class="content-header">
     <div class="container-fluid">
-        <div class="row mb-2">
+        <div class="row">
             <div class="col-sm-6">
-                <h1>Web Site Render Verileri</h1>
+                <h1><i class="fas fa-database"></i> Text To Image Verileri</h1>
             </div>
         </div>
     </div>
 </section>
 
 <section class="content">
-    <div class="card">
-        <div class="card-header">
-        </div>
+    <div class="card shadow-lg rounded">
         <div class="card-body">
-            <table id="imageRequestsTable" class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th>Kullanıcı Adı</th>
-                        <th>İstek Zamanı</th>
-                        <th>Prompt</th>
-                        <th>Prompt Fix</th>
-                        <th>İstek Tipi</th>
-                        <th>Görüntü</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for request in image_requests %}
-                    <tr>
-                        <td>{{ request.username }}</td>
-                        <td>{{ request.datetime.strftime('%Y/%m/%d %H:%M') }}</td>
-                        <td>{{ request.prompt }}</td>
-                        <td>{{ request.prompt_fix }}</td>
-                        <td>
-                          {% if request.consistent %}
-                            <span style="background-color: #4CAF50; color: white; padding: 4px 8px; border-radius: 4px;">Story</span>
-                          {% else %}
-                            <span style="background-color: #2196F3; color: white; padding: 4px 8px; border-radius: 4px;">Generate</span>
-                          {% endif %}
-                        </td>
-                        <td>
-                            {% if request.image_url_webp and "base64 verisi (yedeklendi)" not in request.image_url_webp %}
-                            <a href="{{ request.image_url_webp }}" target="_blank">
-                                <img src="{{ request.image_url_webp }}" alt="Image" style="width: 100px; height: auto;">
-                            </a>
-                            {% else %}
-                                Görüntü AWS S3'de mevcut değil
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table id="imageRequestsTable" class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Kullanıcı Adı</th>
+                            <th id="sort-datetime" style="cursor: pointer;">
+                                İstek Zamanı
+                                <i class="fas fa-sort" style="float: right;"></i>
+                            </th>
+                            <th>Prompt</th>
+                            <th>Prompt Fix</th>
+                            <th>İstek Tipi</th>
+                            <th>Görüntü</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Dinamik olarak yüklenecek -->
+                    </tbody>
+                </table>
+            </div>
+            <nav>
+                <ul class="pagination justify-content-center" id="pagination">
+                    <!-- Sayfalama butonları buraya yüklenecek -->
+                </ul>
+            </nav>
         </div>
     </div>
 </section>
+
+<div id="loading-spinner" class="text-center" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="sr-only">Yükleniyor...</span>
+    </div>
+</div>
+
+<!-- Prompt Modal -->
+<div class="modal fade" id="promptModal" tabindex="-1" role="dialog" aria-labelledby="promptModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content shadow-lg rounded-3">
+            <div class="modal-header">
+                <h5 class="modal-title" id="promptModalLabel">Prompt Detayı</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <p id="promptModalContent"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
     {{ super() }}
-    <script src="{{ url_for('static', filename='plugins/datatables/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/dataTables.buttons.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/jszip/jszip.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/pdfmake/pdfmake.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/pdfmake/vfs_fonts.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
     <script>
-        $(function () {
-            $("#imageRequestsTable").DataTable({
-                "responsive": true, "lengthChange": false, "autoWidth": false,
-                "buttons": ["csv", "excel", "print"]
-            }).buttons().container().appendTo('#imageRequestsTable_wrapper .col-md-6:eq(0)');
+document.addEventListener('DOMContentLoaded', function () {
+    let currentSortOrder = 'desc'; // Default sıralama durumu
+    loadImageRequests(1, currentSortOrder); // İlk sayfayı yükle
+
+    document.getElementById('sort-datetime').addEventListener('click', function () {
+        currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+        loadImageRequests(1, currentSortOrder);
+
+        const icon = this.querySelector('i');
+        icon.classList.toggle('fa-sort-up', currentSortOrder === 'asc');
+        icon.classList.toggle('fa-sort-down', currentSortOrder === 'desc');
+    });
+});
+
+function loadImageRequests(page, sortOrder = 'asc') {
+    const limit = 15;
+    const tableBody = document.getElementById('table-body');
+    const pagination = document.getElementById('pagination');
+    const spinner = document.getElementById('loading-spinner');
+
+    if (spinner) spinner.style.display = 'block';
+
+    fetch(`/admin/image-requests?page=${page}&limit=${limit}&sort_order=${sortOrder}`)
+        .then(response => response.json())
+        .then(data => {
+            if (spinner) spinner.style.display = 'none';
+
+            if (data.error) {
+                console.error('Error fetching data:', data.error);
+                return;
+            }
+
+            tableBody.innerHTML = '';
+            data.items.forEach(item => {
+                const truncatedPrompt = item.prompt.length > 100 ? item.prompt.substring(0, 100) + '...' : item.prompt;
+                const row = `
+                    <tr>
+                        <td>${item.username}</td>
+                        <td>${item.datetime}</td>
+                        <td class="prompt-text" onclick="showPromptModal('${escapeHTML(item.prompt)}')">${escapeHTML(truncatedPrompt)}</td>
+                        <td>${item.prompt_fix}</td>
+                        <td>
+                            ${item.consistent
+                                ? '<span class="badge badge-success">Story</span>'
+                                : '<span class="badge badge-primary">Generate</span>'}
+                        </td>
+                        <td style="text-align: center;">
+                                                    ${item.image_url_webp && !item.image_url_webp.includes("base64 verisi (yedeklendi)")
+                                        ? `<a href="${item.image_url_webp}" target="_blank">
+                                        <img src="${item.image_url_webp}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px;">
+                                   </a>`
+                                        : '<span class="text-muted">Görüntü AWS S3\'de mevcut değil</span>'                        }
+                        </td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+
+            updatePagination(page, data.total_pages, sortOrder);
+        })
+        .catch(error => {
+            console.error('Error loading image requests:', error);
+            if (spinner) spinner.style.display = 'none';
         });
+}
+
+function updatePagination(currentPage, totalPages, sortOrder) {
+    const paginationContainer = document.getElementById('pagination');
+    paginationContainer.innerHTML = '';
+
+    const range = 3;
+
+    if (currentPage > 1) {
+        paginationContainer.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadImageRequests(1, '${sortOrder}')">İlk</a></li>`);
+        paginationContainer.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadImageRequests(${currentPage - 1}, '${sortOrder}')">Önceki</a></li>`);
+    }
+
+    for (let i = Math.max(1, currentPage - range); i <= Math.min(totalPages, currentPage + range); i++) {
+        const activeClass = i === currentPage ? 'active' : '';
+        paginationContainer.insertAdjacentHTML('beforeend', `<li class="page-item ${activeClass}"><a class="page-link" href="#" onclick="loadImageRequests(${i}, '${sortOrder}')">${i}</a></li>`);
+    }
+
+    if (currentPage < totalPages) {
+        paginationContainer.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadImageRequests(${currentPage + 1}, '${sortOrder}')">Sonraki</a></li>`);
+        paginationContainer.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadImageRequests(${totalPages}, '${sortOrder}')">Son</a></li>`);
+    }
+}
+
+function showPromptModal(prompt) {
+    const modalContent = document.getElementById('promptModalContent');
+    modalContent.textContent = prompt;
+
+    const modal = new bootstrap.Modal(document.getElementById('promptModal'));
+    modal.show();
+}
+
+function escapeHTML(str) {
+    return str.replace(/[&<>"']/g, function (match) {
+        const escape = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        };
+        return escape[match];
+    });
+}
     </script>
 {% endblock %}

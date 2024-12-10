@@ -73,11 +73,54 @@ def admin_users():
     return render_template('admin/users.html', users=users)
 
 
-@admin_routes_bp.route('/image-requests')
+@admin_routes_bp.route('/image-requests', methods=['GET'])
 def list_image_requests():
-    # Veritabanından tüm ImageRequest nesnelerini çekiyoruz
-    image_requests = TextToImage.objects()
-    return render_template('admin/image_requests.html', image_requests=image_requests)
+    if 'page' not in request.args:
+        return render_template('admin/image_requests.html')
+
+    try:
+        # Sayfa ve limit parametrelerini al
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+        sort_order = request.args.get('sort_order', 'desc')  # Default olarak artan sıralama
+
+        # Toplam öğe sayısını al
+        total_items = TextToImage.objects.count()
+
+        # Sıralama parametresine göre sıralama yap
+        sort_field = 'datetime'
+        if sort_order == 'desc':
+            sort_field = '-datetime'
+
+        # Veritabanından verileri getir
+        image_requests = TextToImage.objects.order_by(sort_field).skip((page - 1) * limit).limit(limit)
+
+        # Toplam sayfa sayısını hesapla
+        total_pages = (total_items + limit - 1) // limit
+
+        # JSON formatına dönüştür
+        requests_list = [
+            {
+                "username": req.username,
+                "datetime": req.datetime.strftime('%Y/%m/%d %H:%M'),
+                "prompt": req.prompt,
+                "prompt_fix": req.prompt_fix,
+                "consistent": req.consistent,
+                "image_url_webp": req.image_url_webp,
+            }
+            for req in image_requests
+        ]
+
+        return jsonify({
+            "items": requests_list,
+            "total_pages": total_pages,
+            "current_page": page,
+        }), 200
+    except Exception as e:
+        logging.error(f"Error fetching image requests: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 
 @admin_routes_bp.route('/text-to-video-requests')
 def list_text_to_video_requests():
