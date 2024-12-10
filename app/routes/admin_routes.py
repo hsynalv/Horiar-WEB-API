@@ -676,7 +676,7 @@ def list_gallery_photos():
         total_pages = (total_items + limit - 1) // limit  # Toplam sayfa sayısını hesaplıyoruz
 
         return jsonify({
-            "photos": photos_list,
+            "photos": photos_list,  # Anahtar adı "photos" olmalı
             "total_items": total_items,
             "total_pages": total_pages,
             "current_page": page

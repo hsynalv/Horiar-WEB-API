@@ -81,7 +81,7 @@
 <script src="{{ url_for('static', filename='js/adminlte.min.js') }}"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         loadGalleryPhotos(1); // İlk sayfayı yüklüyoruz ve limit 30 olacak şekilde
     });
 
@@ -98,12 +98,12 @@
                 const gallery = document.getElementById('gallery-photos');
                 gallery.innerHTML = ''; // Önceki verileri temizle
 
-                if (!data.items || data.items.length === 0) {
+                if (!data.photos || data.photos.length === 0) {
                     gallery.innerHTML = `<div class="col-12 text-center"><p>Henüz eklenmiş bir fotoğraf bulunmamaktadır.</p></div>`;
                     return;
                 }
 
-                data.items.forEach(photo => {
+                data.photos.forEach(photo => {
                     const cardHtml = `
                     <div class="col-md-3">
                         <div class="card mb-4">
@@ -123,14 +123,14 @@
 
                 // "Düzenle" ve "Sil" butonlarına tıklama olaylarını bağlama
                 document.querySelectorAll('.edit-photo-btn').forEach(button => {
-                    button.addEventListener('click', function() {
+                    button.addEventListener('click', function () {
                         const photoId = this.getAttribute('data-id');
                         editPhoto(photoId);
                     });
                 });
 
                 document.querySelectorAll('.delete-photo-btn').forEach(button => {
-                    button.addEventListener('click', function() {
+                    button.addEventListener('click', function () {
                         const photoId = this.getAttribute('data-id');
                         deletePhoto(photoId);
                     });
@@ -184,19 +184,19 @@
                 is_visible: isVisible
             })
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                showNotification(`Hata: ${data.error}`, 'error');
-            } else {
-                showNotification('Değişiklikler başarıyla kaydedildi!', 'success');
-                loadGalleryPhotos(1);
-            }
-        })
-        .catch(error => {
-            console.error('Error saving photo changes:', error);
-            showNotification('Bir hata oluştu, lütfen tekrar deneyin.', 'error');
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showNotification(`Hata: ${data.error}`, 'error');
+                } else {
+                    showNotification('Değişiklikler başarıyla kaydedildi!', 'success');
+                    loadGalleryPhotos(1);
+                }
+            })
+            .catch(error => {
+                console.error('Error saving photo changes:', error);
+                showNotification('Bir hata oluştu, lütfen tekrar deneyin.', 'error');
+            });
 
         if (editModal) {
             editModal.hide();
@@ -210,19 +210,19 @@
                 'Content-Type': 'application/json',
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                showNotification(`Hata: ${data.error}`, 'error');
-            } else {
-                showNotification('Fotoğraf başarıyla silindi!', 'success');
-                loadGalleryPhotos(1);
-            }
-        })
-        .catch(error => {
-            console.error('Error deleting photo:', error);
-            showNotification('Bir hata oluştu, lütfen tekrar deneyin.', 'error');
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showNotification(`Hata: ${data.error}`, 'error');
+                } else {
+                    showNotification('Fotoğraf başarıyla silindi!', 'success');
+                    loadGalleryPhotos(1);
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting photo:', error);
+                showNotification('Bir hata oluştu, lütfen tekrar deneyin.', 'error');
+            });
     }
 
     function showNotification(message, type) {
@@ -237,7 +237,7 @@
         }, 3000);
     }
 
-     function updatePagination(currentPage, totalPages) {
+    function updatePagination(currentPage, totalPages) {
         const paginationContainer = document.getElementById('pagination');
         paginationContainer.innerHTML = ''; // Önceki sayfaları temizle
 
@@ -262,6 +262,7 @@
         }
     }
 </script>
+
 
 <!-- CSS Bildirimi - Kullanıcıya geri bildirim kutusu -->
 <style>
