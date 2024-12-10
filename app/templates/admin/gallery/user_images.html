@@ -170,30 +170,33 @@
         $('#promptModal').modal('show');
     }
 
-        function updatePagination(currentPage, totalPages) {
-        const paginationContainer = document.getElementById('pagination');
-        paginationContainer.innerHTML = '';
+    function updatePagination(currentPage, totalPages) {
+    const paginationContainer = document.getElementById('pagination');
+    paginationContainer.innerHTML = ''; // Önceki sayfa düğmelerini temizle
 
-        const range = 3;
+    const range = 3; // Sayfa düğmeleri aralığı
 
-        if (currentPage > 1) {
-            const firstPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadGalleryPhotos(1)">İlk</a></li>`;
-            const prevPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadGalleryPhotos(${currentPage - 1})">Önceki</a></li>`;
-            paginationContainer.insertAdjacentHTML('beforeend', firstPageItem + prevPageItem);
-        }
-
-        for (let i = Math.max(1, currentPage - range); i <= Math.min(totalPages, currentPage + range); i++) {
-            const activeClass = i === currentPage ? 'active' : '';
-            const pageItem = `<li class="page-item ${activeClass}"><a class="page-link" href="#" onclick="loadGalleryPhotos(${i})">${i}</a></li>`;
-            paginationContainer.insertAdjacentHTML('beforeend', pageItem);
-        }
-
-        if (currentPage < totalPages) {
-            const nextPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadGalleryPhotos(${currentPage + 1})">Sonraki</a></li>`;
-            const lastPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadGalleryPhotos(${totalPages})">Son</a></li>`;
-            paginationContainer.insertAdjacentHTML('beforeend', nextPageItem + lastPageItem);
-        }
+    // İlk ve önceki sayfa düğmeleri
+    if (currentPage > 1) {
+        const firstPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadUserImages(1)">İlk</a></li>`;
+        const prevPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadUserImages(${currentPage - 1})">Önceki</a></li>`;
+        paginationContainer.insertAdjacentHTML('beforeend', firstPageItem + prevPageItem);
     }
+
+    // Sayfa numaralarını oluşturma
+    for (let i = Math.max(1, currentPage - range); i <= Math.min(totalPages, currentPage + range); i++) {
+        const activeClass = i === currentPage ? 'active' : '';
+        const pageItem = `<li class="page-item ${activeClass}"><a class="page-link" href="#" onclick="loadUserImages(${i})">${i}</a></li>`;
+        paginationContainer.insertAdjacentHTML('beforeend', pageItem);
+    }
+
+    // Sonraki ve son sayfa düğmeleri
+    if (currentPage < totalPages) {
+        const nextPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadUserImages(${currentPage + 1})">Sonraki</a></li>`;
+        const lastPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadUserImages(${totalPages})">Son</a></li>`;
+        paginationContainer.insertAdjacentHTML('beforeend', nextPageItem + lastPageItem);
+    }
+}
 
     function showNotification(message, type) {
         const notification = document.getElementById('notification');

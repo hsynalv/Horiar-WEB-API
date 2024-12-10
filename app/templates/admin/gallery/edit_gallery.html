@@ -88,7 +88,7 @@
     let editModal;
 
     function loadGalleryPhotos(page) {
-        const limit = 20; // Görüntülenecek fotoğraf sayısı
+        const limit = 20; // Sayfa başına kaç öğe gösterileceği
         document.getElementById('loading-spinner').style.display = 'block';
 
         fetch(`/admin/gallery?page=${page}&limit=${limit}`)
@@ -96,21 +96,21 @@
             .then(data => {
                 document.getElementById('loading-spinner').style.display = 'none';
                 const gallery = document.getElementById('gallery-photos');
-                gallery.innerHTML = ''; // Eski verileri temizliyoruz
+                gallery.innerHTML = ''; // Önceki verileri temizle
 
-                if (data.photos.length === 0) {
+                if (!data.items || data.items.length === 0) {
                     gallery.innerHTML = `<div class="col-12 text-center"><p>Henüz eklenmiş bir fotoğraf bulunmamaktadır.</p></div>`;
                     return;
                 }
 
-                data.photos.forEach(photo => {
+                data.items.forEach(photo => {
                     const cardHtml = `
                     <div class="col-md-3">
                         <div class="card mb-4">
                             <img src="${photo.image_url_webp}" class="card-img-top" alt="Gallery Image">
                             <div class="card-body">
                                 <h5 class="card-title">${photo.title}</h5>
-                                <p class="card-text">${photo.prompt}</p>
+                                <p class="card-text">${photo.prompt || 'Prompt bilgisi yok'}</p>
                                 <div class="d-flex justify-content-between">
                                     <button class="btn btn-info edit-photo-btn" data-id="${photo.id}">Düzenle</button>
                                     <button class="btn btn-danger delete-photo-btn" data-id="${photo.id}">Sil</button>
@@ -121,6 +121,7 @@
                     gallery.insertAdjacentHTML('beforeend', cardHtml);
                 });
 
+                // "Düzenle" ve "Sil" butonlarına tıklama olaylarını bağlama
                 document.querySelectorAll('.edit-photo-btn').forEach(button => {
                     button.addEventListener('click', function() {
                         const photoId = this.getAttribute('data-id');
@@ -135,6 +136,7 @@
                     });
                 });
 
+                // Pagination'ı güncelle
                 updatePagination(page, data.total_pages);
             })
             .catch(error => {
@@ -235,11 +237,11 @@
         }, 3000);
     }
 
-    function updatePagination(currentPage, totalPages) {
+     function updatePagination(currentPage, totalPages) {
         const paginationContainer = document.getElementById('pagination');
-        paginationContainer.innerHTML = '';
+        paginationContainer.innerHTML = ''; // Önceki sayfaları temizle
 
-        const range = 3;
+        const range = 3; // Görüntülenecek sayfa düğmesi aralığı
 
         if (currentPage > 1) {
             const firstPageItem = `<li class="page-item"><a class="page-link" href="#" onclick="loadGalleryPhotos(1)">İlk</a></li>`;
