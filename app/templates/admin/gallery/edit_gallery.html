@@ -106,14 +106,19 @@
                 data.photos.forEach(photo => {
                     const cardHtml = `
                     <div class="col-md-3">
-                        <div class="card mb-4">
-                            <img src="${photo.image_url_webp}" class="card-img-top" alt="Gallery Image">
+                        <div class="card mb-4 shadow-sm" style="border-radius: 10px; overflow: hidden;">
+                            <img src="${photo.image_url_webp}" class="card-img-top" alt="Gallery Image" style="object-fit: cover; height: 200px;">
                             <div class="card-body">
-                                <h5 class="card-title">${photo.title}</h5>
-                                <!--<p class="card-text">${photo.prompt || 'Prompt bilgisi yok'}</p>-->
-                                <div class="d-flex justify-content-between">
-                                    <button class="btn btn-info edit-photo-btn" data-id="${photo.id}">Düzenle</button>
-                                    <button class="btn btn-danger delete-photo-btn" data-id="${photo.id}">Sil</button>
+                                <p class="card-text text-truncate" title="${photo.prompt}" style="font-size: 0.9rem; color: #6c757d;">
+                                    ${photo.prompt || 'Prompt bilgisi yok'}
+                                </p>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <button class="btn btn-outline-primary btn-sm edit-photo-btn" data-id="${photo.id}" style="border-radius: 20px;">
+                                        <i class="fas fa-edit"></i> Düzenle
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm delete-photo-btn" data-id="${photo.id}" style="border-radius: 20px;">
+                                        <i class="fas fa-trash-alt"></i> Sil
+                                    </button>
                                 </div>
                             </div>
                         </div>
