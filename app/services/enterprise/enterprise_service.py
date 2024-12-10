@@ -214,17 +214,12 @@ class EnterpriseService(BaseService):
         with app.app_context():
             workflow_path = os.path.join(os.getcwd(), 'app/workflows/T2V.json')
 
-            # translatePrompt = VideoGenerationService.translatePrompt(prompt)
+            translatePrompt = VideoGenerationService.translatePrompt(prompt)
 
-            """
+
             # workflow.json dosyasını güncelle
             updated_workflow = VideoGenerationService.update_workflow_with_t2v(
                 path=workflow_path, prompt=translatePrompt,
-            )
-            """
-
-            updated_workflow = VideoGenerationService.update_workflow_with_t2v(
-                path=workflow_path, prompt=prompt,
             )
 
             customer_id = str(customer.id)
@@ -287,17 +282,11 @@ class EnterpriseService(BaseService):
         with app.app_context():
             workflow_path = os.path.join(os.getcwd(), 'app/workflows/I2V.json')
 
-            # translatePrompt = VideoGenerationService.translatePrompt(prompt)
+            translatePrompt = VideoGenerationService.translatePrompt(prompt)
 
-            """
             # workflow.json dosyasını güncelle
             updated_workflow = VideoGenerationService.update_workflow_with_i2v(
                 path=workflow_path, prompt=translatePrompt, image_bytes=image_bytes
-            )
-            """
-
-            updated_workflow = VideoGenerationService.update_workflow_with_i2v(
-                path=workflow_path, prompt=prompt, image_bytes=image_bytes
             )
 
             image_url = upload_image_to_s3(

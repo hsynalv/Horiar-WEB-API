@@ -151,7 +151,6 @@ class TextToImageService(BaseService):
         workflow.json dosyasını okur ve verilen prompt ile günceller.
         """
 
-        prompt_fix = False
 
         with open(path, 'r') as file:
             workflow_data = json.load(file)
@@ -161,13 +160,13 @@ class TextToImageService(BaseService):
         if prompt_fix:
             print("prompt fix True")
             newPrompts = TextToImageService.promptEnhance(prompt)
-            workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = prompt #newPrompts[0]
-            workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = prompt #newPrompts[1]
+            workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = newPrompts[0]
+            workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = newPrompts[1]
         else:
             print("prompt fix False")
-            #translatePrompt = TextToImageService.translatePrompt(prompt)
-            workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = prompt  #translatePrompt
-            workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = prompt  #translatePrompt
+            translatePrompt = TextToImageService.translatePrompt(prompt)
+            workflow_data["input"]["workflow"]["61"]["inputs"]["clip_l"] = translatePrompt
+            workflow_data["input"]["workflow"]["61"]["inputs"]["t5xxl"] = translatePrompt
 
         if(randomSeed == True):
             print("seed değişti")
@@ -320,7 +319,7 @@ class TextToImageService(BaseService):
     def promptEnhance(text):
         prompts = []
 
-        response = openai.ChatCompletion.create(
+        response = openai.chat.completions.create(
             model='gpt-4o-mini',
             messages=[
                 {"role": "system", "content": f"{TextToImageService.Duty['t5xxl']}"},
@@ -332,7 +331,7 @@ class TextToImageService(BaseService):
         )
         prompts.append(response.choices[0].message.content)
 
-        response = openai.ChatCompletion.create(
+        response = openai.chat.completions.create(
             model='gpt-4o-mini',
             messages=[
                 {"role": "system", "content": f"{TextToImageService.Duty['clip_l']}"},

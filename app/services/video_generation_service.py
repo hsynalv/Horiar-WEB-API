@@ -25,7 +25,6 @@ class VideoGenerationService(BaseService):
 
     @staticmethod
     def translatePrompt(text):
-        return text
         response = openai.chat.completions.create(
             model='gpt-4o-mini',
             messages=[
@@ -167,14 +166,9 @@ class VideoGenerationService(BaseService):
             translatePrompt = VideoGenerationService.translatePrompt(prompt)
 
             # workflow.json dosyasını güncelle
-            """
-            updated_workflow = VideoGenerationService.update_workflow_with_t2v(
-                path=workflow_path, prompt=translatePrompt,
-            )
-            """
 
             updated_workflow = VideoGenerationService.update_workflow_with_t2v(
-                path=workflow_path, prompt=prompt,
+                path=workflow_path, prompt=translatePrompt,
             )
 
 
@@ -289,15 +283,10 @@ class VideoGenerationService(BaseService):
 
             translatePrompt = VideoGenerationService.translatePrompt(prompt)
 
-            """
+
             # workflow.json dosyasını güncelle
             updated_workflow = VideoGenerationService.update_workflow_with_i2v(
                 path=workflow_path, prompt=translatePrompt, image_bytes=image_bytes
-            )
-            """
-
-            updated_workflow = VideoGenerationService.update_workflow_with_i2v(
-                path=workflow_path, prompt=prompt, image_bytes=image_bytes
             )
 
             image_url = upload_image_to_s3(
