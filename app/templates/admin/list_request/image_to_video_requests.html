@@ -10,19 +10,28 @@
 {% block content %}
 <section class="content-header">
     <div class="container-fluid">
-        <div class="row">
+        <div class="row mb-2">
             <div class="col-sm-6">
                 <h1>Image to Video Render Verileri</h1>
+            </div>
+            <div class="col-sm-6 d-flex justify-content-end">
+                <div class="input-group" style="width: 300px;">
+                    <input type="text" id="search-input" class="form-control" placeholder="Kullanıcı adı veya e-posta ile ara...">
+                    <button class="btn btn-primary" id="search-button">Ara</button>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
 <section class="content">
-    <div class="card">
+    <div class="card shadow-lg rounded">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span id="total-items-text">Toplam: 0 öğe</span>
+        </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered table-striped">
+                <table class="table table-bordered table-hover">
                     <thead>
                         <tr>
                             <th>Kullanıcı Adı</th>
@@ -46,122 +55,137 @@
     </div>
 </section>
 
-<!-- Prompt Modal -->
-<div class="modal fade" id="promptModal" tabindex="-1" role="dialog" aria-labelledby="promptModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="promptModalLabel">Prompt Detayı</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body" id="prompt-modal-body">
-                <!-- Prompt içeriği burada gösterilecek -->
-            </div>
-        </div>
+<div id="loading-spinner" class="text-center" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="sr-only">Yükleniyor...</span>
     </div>
 </div>
 
-<!-- Yüklenme Spinner -->
-<div id="loading-spinner" class="text-center" style="display: none;">
-    <div class="spinner-border" role="status">
-        <span class="sr-only">Yükleniyor...</span>
+<!-- Modal -->
+<div class="modal fade" id="promptModal" tabindex="-1" role="dialog" aria-labelledby="promptModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content shadow-lg rounded-3">
+            <div class="modal-header">
+                <h5 class="modal-title" id="promptModalLabel">Prompt İçeriği</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body" id="prompt-modal-body" style="white-space: pre-wrap; word-wrap: break-word;"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-{{ super() }}
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        let currentSortOrder = 'desc'; // Varsayılan sıralama
-        loadImageRequests(1, currentSortOrder);
+document.addEventListener('DOMContentLoaded', function () {
+    let currentSortOrder = 'desc';
+    let currentSearchQuery = '';
 
-        // "İstek Zamanı" başlığına tıklama
-        document.getElementById('sort-datetime').addEventListener('click', function () {
-            currentSortOrder = currentSortOrder === 'desc' ? 'desc' : 'asc';
-            loadImageRequests(1, currentSortOrder);
-        });
+    loadImageRequests(1, currentSortOrder, currentSearchQuery);
+
+    document.getElementById('sort-datetime').addEventListener('click', function () {
+        currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+        loadImageRequests(1, currentSortOrder, currentSearchQuery);
     });
 
-    function loadImageRequests(page, sortOrder = 'asc') {
-        const limit = 10;
-        const tableBody = document.getElementById('table-body');
-        const pagination = document.getElementById('pagination');
-        const spinner = document.getElementById('loading-spinner');
+    document.getElementById('search-button').addEventListener('click', function () {
+        currentSearchQuery = document.getElementById('search-input').value.trim();
+        loadImageRequests(1, currentSortOrder, currentSearchQuery);
+    });
+});
 
-        if (spinner) spinner.style.display = 'block';
+function loadImageRequests(page, sortOrder = 'asc', searchQuery = '') {
+    const limit = 10;
+    const tableBody = document.getElementById('table-body');
+    const pagination = document.getElementById('pagination');
+    const totalItemsText = document.getElementById('total-items-text');
+    const spinner = document.getElementById('loading-spinner');
 
-        fetch(`/admin/image-to-video-requests?page=${page}&limit=${limit}&sort_order=${sortOrder}`)
-            .then(response => response.json())
-            .then(data => {
-                if (spinner) spinner.style.display = 'none';
+    if (spinner) spinner.style.display = 'block';
 
-                if (data.error) {
-                    console.error('Error fetching data:', data.error);
-                    return;
-                }
+    fetch(`/admin/image-to-video-requests?page=${page}&limit=${limit}&sort_order=${sortOrder}&search=${searchQuery}`)
+        .then(response => response.json())
+        .then(data => {
+            if (spinner) spinner.style.display = 'none';
 
-                tableBody.innerHTML = '';
-                data.items.forEach(item => {
-                    const row = `
-                        <tr>
-                            <td>${item.username}</td>
-                            <td>${item.datetime}</td>
-                            <td>
-                                ${item.prompt.length > 50
-                                    ? `${item.prompt.substring(0, 50)}... <a href="#" onclick="showPromptModal('${item.prompt.replace(/'/g, "\\'")}')">daha fazla</a>`
-                                    : item.prompt}
-                            </td>
-                            <td>
-                                ${item.image_url
-                                    ? `<a href="${item.image_url}" target="_blank"><img src="${item.image_url}" class="img-thumbnail" style="width: 100px; height: auto;"></a>`
-                                    : '<span class="text-muted">Görsel mevcut değil</span>'}
-                            </td>
-                            <td>
-                                <video width="200" controls preload="metadata">
-                                    <source src="${item.video_url}" type="video/mp4">
-                                    Tarayıcınız video etiketini desteklemiyor.
-                                </video>
-                            </td>
-                        </tr>`;
-                    tableBody.insertAdjacentHTML('beforeend', row);
-                });
+            if (data.error) {
+                console.error('Error fetching data:', data.error);
+                return;
+            }
 
-                updatePagination(page, data.total_pages, sortOrder);
-            })
-            .catch(error => {
-                console.error('Error loading image requests:', error);
-                if (spinner) spinner.style.display = 'none';
+            totalItemsText.textContent = `Toplam: ${data.total_items} öğe`;
+            tableBody.innerHTML = '';
+
+            data.items.forEach(item => {
+                const truncatedPrompt = item.prompt.length > 50 ? item.prompt.substring(0, 50) + '...' : item.prompt;
+                const row = `
+                    <tr>
+                        <td>${item.username}</td>
+                        <td>${item.datetime}</td>
+                        <td>${truncatedPrompt} <a href="#" onclick="showPromptModal('${escapeHtml(item.prompt)}')">daha fazla</a></td>
+                        <td>
+                            ${item.image_url
+                                ? `<a href="${item.image_url}" target="_blank"><img src="${item.image_url}" class="img-thumbnail" style="width: 100px; height: auto;"></a>`
+                                : '<span class="text-muted">Görsel mevcut değil</span>'}
+                        </td>
+                        <td>
+                            <video width="200" controls preload="metadata">
+                                <source src="${item.video_url}" type="video/mp4">
+                                Tarayıcınız video etiketini desteklemiyor.
+                            </video>
+                        </td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', row);
             });
+
+            updatePagination(page, data.total_pages, sortOrder, searchQuery);
+        })
+        .catch(error => {
+            console.error('Error loading video requests:', error);
+            if (spinner) spinner.style.display = 'none';
+        });
+}
+
+function updatePagination(currentPage, totalPages, sortOrder, searchQuery) {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+
+    const range = 3;
+    if (currentPage > 1) {
+        pagination.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadImageRequests(1, '${sortOrder}', '${searchQuery}')">İlk</a></li>`);
+        pagination.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadImageRequests(${currentPage - 1}, '${sortOrder}', '${searchQuery}')">Önceki</a></li>`);
     }
 
-    function updatePagination(currentPage, totalPages, sortOrder) {
-        const pagination = document.getElementById('pagination');
-        pagination.innerHTML = '';
-
-        const range = 3;
-        if (currentPage > 1) {
-            pagination.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadImageRequests(1, '${sortOrder}')">İlk</a></li>`);
-            pagination.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadImageRequests(${currentPage - 1}, '${sortOrder}')">Önceki</a></li>`);
-        }
-
-        for (let i = Math.max(1, currentPage - range); i <= Math.min(totalPages, currentPage + range); i++) {
-            const active = i === currentPage ? 'active' : '';
-            pagination.insertAdjacentHTML('beforeend', `<li class="page-item ${active}"><a class="page-link" href="#" onclick="loadImageRequests(${i}, '${sortOrder}')">${i}</a></li>`);
-        }
-
-        if (currentPage < totalPages) {
-            pagination.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadImageRequests(${currentPage + 1}, '${sortOrder}')">Sonraki</a></li>`);
-            pagination.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadImageRequests(${totalPages}, '${sortOrder}')">Son</a></li>`);
-        }
+    for (let i = Math.max(1, currentPage - range); i <= Math.min(totalPages, currentPage + range); i++) {
+        const active = i === currentPage ? 'active' : '';
+        pagination.insertAdjacentHTML('beforeend', `<li class="page-item ${active}"><a class="page-link" href="#" onclick="loadImageRequests(${i}, '${sortOrder}', '${searchQuery}')">${i}</a></li>`);
     }
 
-    function showPromptModal(prompt) {
-        document.getElementById('prompt-modal-body').textContent = prompt;
-        $('#promptModal').modal('show');
+    if (currentPage < totalPages) {
+        pagination.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadImageRequests(${currentPage + 1}, '${sortOrder}', '${searchQuery}')">Sonraki</a></li>`);
+        pagination.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadImageRequests(${totalPages}, '${sortOrder}', '${searchQuery}')">Son</a></li>`);
     }
+}
+
+function showPromptModal(prompt) {
+    const modalContent = document.getElementById('prompt-modal-body');
+    modalContent.textContent = prompt;
+
+    const modal = new bootstrap.Modal(document.getElementById('promptModal'));
+    modal.show();
+}
+
+function escapeHtml(text) {
+    return text.replace(/&/g, '&amp;')
+               .replace(/</g, '&lt;')
+               .replace(/>/g, '&gt;')
+               .replace(/"/g, '&quot;')
+               .replace(/'/g, '&#039;');
+}
 </script>
 {% endblock %}
 
