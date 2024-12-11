@@ -162,12 +162,47 @@ def list_text_to_video_requests():
         logging.error(f"Error fetching video requests: {e}")
         return jsonify({"error": str(e)}), 500
 
-@admin_routes_bp.route('/image-to-video-requests')
+@admin_routes_bp.route('/image-to-video-requests', methods=['GET'])
 def list_image_to_video_requests():
-    # Veritabanından tüm ImageRequest nesnelerini çekiyoruz
-    requests = ImageToVideo.objects()
-    return render_template('admin/list_request/image_to_video_requests.html', video_requests=requests)
+    if 'page' not in request.args:
+        return render_template('admin/list_request/image_to_video_requests.html')
 
+    try:
+        # Parametreleri al
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+        sort_order = request.args.get('sort_order', 'desc')  # Varsayılan sıralama artan (asc)
+
+        # Sıralama düzeni ayarla
+        sort_criteria = '+datetime' if sort_order == 'asc' else '-datetime'
+
+        # Veritabanı sorgusu
+        total_items = ImageToVideo.objects.count()
+        video_requests = ImageToVideo.objects.order_by(sort_criteria).skip((page - 1) * limit).limit(limit)
+
+        # Sayfa sayısını hesapla
+        total_pages = (total_items + limit - 1) // limit
+
+        # JSON formatına dönüştür
+        requests_list = [
+            {
+                "username": req.username,
+                "datetime": req.datetime.strftime('%Y/%m/%d %H:%M'),
+                "prompt": req.prompt,
+                "image_url": req.image_url,
+                "video_url": req.video_url
+            }
+            for req in video_requests
+        ]
+
+        return jsonify({
+            "items": requests_list,
+            "total_pages": total_pages,
+            "current_page": page
+        }), 200
+    except Exception as e:
+        logging.error(f"Error fetching image-to-video requests: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @admin_routes_bp.route('/upscale-requests')
 def list_upscale_requests():
