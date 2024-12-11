@@ -205,11 +205,50 @@ def list_image_to_video_requests():
         logging.error(f"Error fetching image-to-video requests: {e}")
         return jsonify({"error": str(e)}), 500
 
-@admin_routes_bp.route('/upscale-requests')
+@admin_routes_bp.route('/upscale-requests', methods=['GET'])
 def list_upscale_requests():
-    # Veritabanından tüm ImageRequest nesnelerini çekiyoruz
-    requests = Upscale.objects()
-    return render_template('admin/upscale_requests.html', image_requests=requests)
+
+    if 'page' not in request.args:
+        return render_template('admin/upscale_requests.html')
+
+    page = int(request.args.get('page', 1))
+    limit = int(request.args.get('limit', 10))
+    sort_order = request.args.get('sort_order', 'desc')
+    search_query = request.args.get('search_query', '')
+
+    query = {}
+    if search_query:
+        query['$or'] = [
+            {'username': {'$regex': search_query, '$options': 'i'}},
+            {'email': {'$regex': search_query, '$options': 'i'}}
+        ]
+
+    total_items = Upscale.objects(__raw__=query).count()
+    upscale_requests = (Upscale.objects(__raw__=query)
+                        .order_by(f"-datetime" if sort_order == "desc" else "datetime")
+                        .skip((page - 1) * limit)
+                        .limit(limit))
+
+    requests_list = [
+        {
+            "username": req.username,
+            "email": req.email if hasattr(req, "email") else None,
+            "datetime": req.datetime.strftime('%Y/%m/%d %H:%M'),
+            "low_res_image_url": req.low_res_image_url,
+            "image_url_webp": req.image_url_webp
+        }
+        for req in upscale_requests
+    ]
+
+    total_pages = (total_items + limit - 1) // limit
+
+    return jsonify({
+        "items": requests_list,
+        "total_pages": total_pages,
+        "current_page": page,
+        "total_items": total_items
+    }), 200
+
 
 
 @admin_routes_bp.route('/discord-requests', methods=['GET'])
