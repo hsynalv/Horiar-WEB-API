@@ -53,14 +53,15 @@
 
 <!-- Modal -->
 <div class="modal fade" id="promptModal" tabindex="-1" role="dialog" aria-labelledby="promptModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content shadow-lg rounded-3">
             <div class="modal-header">
-                <h5 class="modal-title" id="promptModalLabel">Prompt Detayı</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="promptModalLabel">Prompt İçeriği</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
             </div>
-            <div class="modal-body" id="modal-prompt-body">
-                <!-- Prompt içeriği buraya yüklenecek -->
+            <div class="modal-body" id="prompt-modal-body" style="white-space: pre-wrap; word-wrap: break-word;"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
             </div>
         </div>
     </div>
@@ -68,95 +69,106 @@
 {% endblock %}
 
 {% block scripts %}
-    {{ super() }}
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            let currentSortOrder = 'asc'; // Default sıralama
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let currentSortOrder = 'desc'; // Varsayılan sıralama
+        loadVideoRequests(1, currentSortOrder);
+
+        // "İstek Zamanı" başlığına tıklama
+        document.getElementById('sort-datetime').addEventListener('click', function () {
+            currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
             loadVideoRequests(1, currentSortOrder);
-
-            document.getElementById('sort-datetime').addEventListener('click', function () {
-                currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
-                loadVideoRequests(1, currentSortOrder);
-            });
         });
+    });
 
-        function loadVideoRequests(page, sortOrder = 'asc') {
-            const limit = 10;
-            const tableBody = document.getElementById('table-body');
-            const pagination = document.getElementById('pagination');
-            const spinner = document.getElementById('loading-spinner');
+    function loadVideoRequests(page, sortOrder = 'asc') {
+    const limit = 10;
+    const tableBody = document.getElementById('table-body');
+    const pagination = document.getElementById('pagination');
+    const spinner = document.getElementById('loading-spinner');
 
-            if (spinner) spinner.style.display = 'block';
+    if (spinner) spinner.style.display = 'block';
 
-            fetch(`/admin/text-to-video-requests?page=${page}&limit=${limit}&sort_order=${sortOrder}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (spinner) spinner.style.display = 'none';
-                    tableBody.innerHTML = '';
-                    if (data.items.length === 0) {
-                        tableBody.innerHTML = `<tr><td colspan="4" class="text-center">Henüz istek bulunmamaktadır.</td></tr>`;
-                        return;
-                    }
+    fetch(`/admin/text-to-video-requests?page=${page}&limit=${limit}&sort_order=${sortOrder}`)
+        .then(response => response.json())
+        .then(data => {
+            if (spinner) spinner.style.display = 'none';
 
-                    data.items.forEach(item => {
-                        const shortPrompt = item.prompt.length > 50
-                            ? item.prompt.substring(0, 50) + '...'
-                            : item.prompt;
-                        const row = `
-                            <tr>
-                                <td>${item.username}</td>
-                                <td>${item.datetime}</td>
-                                <td>
-                                    <span class="short-prompt" data-full="${item.prompt}">
-                                        ${shortPrompt}
-                                    </span>
-                                </td>
-                                <td>
-                                    <video width="200" controls preload="metadata">
-                                        <source src="${item.video_url}" type="video/mp4">
-                                        Tarayıcınız video etiketini desteklemiyor.
-                                    </video>
-                                </td>
-                            </tr>
-                        `;
-                        tableBody.insertAdjacentHTML('beforeend', row);
-                    });
+            if (data.error) {
+                console.error('Error fetching data:', data.error);
+                return;
+            }
 
-                    updatePagination(page, data.total_pages, sortOrder);
+            tableBody.innerHTML = '';
+            data.items.forEach(item => {
+                const escapedPrompt = escapeHtml(item.prompt);
+                const row = `
+                    <tr>
+                        <td>${item.username}</td>
+                        <td>${item.datetime}</td>
+                        <td>
+                            ${item.prompt.length > 50
+                                ? `${item.prompt.substring(0, 50)}... <a href="#" onclick="showPromptModal('${escapedPrompt}')">daha fazla</a>`
+                                : item.prompt}
+                        </td>
+                             <td>
+                                <video width="200" controls preload="metadata">
+                                    <source src="${item.video_url}" type="video/mp4">
+                                    Tarayıcınız video etiketini desteklemiyor.
+                                </video>
+                            </td>
+                    </tr>`;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
 
-                    document.querySelectorAll('.short-prompt').forEach(prompt => {
-                        prompt.addEventListener('click', function () {
-                            const fullPrompt = this.dataset.full;
-                            document.getElementById('modal-prompt-body').textContent = fullPrompt;
-                            new bootstrap.Modal(document.getElementById('promptModal')).show();
-                        });
-                    });
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    if (spinner) spinner.style.display = 'none';
-                });
+            updatePagination(page, data.total_pages, sortOrder);
+        })
+        .catch(error => {
+            console.error('Error loading video requests:', error);
+            if (spinner) spinner.style.display = 'none';
+        });
+}
+
+function escapeHtml(text) {
+    return text.replace(/&/g, '&amp;')
+               .replace(/</g, '&lt;')
+               .replace(/>/g, '&gt;')
+               .replace(/"/g, '&quot;')
+               .replace(/'/g, '&#039;');
+}
+
+function showPromptModal(prompt) {
+    document.getElementById('prompt-modal-body').textContent = prompt;
+    $('#promptModal').modal('show');
+}
+
+
+    function updatePagination(currentPage, totalPages, sortOrder) {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+
+        const range = 3;
+        if (currentPage > 1) {
+            pagination.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadVideoRequests(1, '${sortOrder}')">İlk</a></li>`);
+            pagination.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadVideoRequests(${currentPage - 1}, '${sortOrder}')">Önceki</a></li>`);
         }
 
-        function updatePagination(currentPage, totalPages, sortOrder) {
-            const pagination = document.getElementById('pagination');
-            pagination.innerHTML = '';
-            const range = 3;
-
-            if (currentPage > 1) {
-                pagination.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadVideoRequests(1, '${sortOrder}')">İlk</a></li>`;
-                pagination.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadVideoRequests(${currentPage - 1}, '${sortOrder}')">Önceki</a></li>`;
-            }
-
-            for (let i = Math.max(1, currentPage - range); i <= Math.min(totalPages, currentPage + range); i++) {
-                const active = i === currentPage ? 'active' : '';
-                pagination.innerHTML += `<li class="page-item ${active}"><a class="page-link" href="#" onclick="loadVideoRequests(${i}, '${sortOrder}')">${i}</a></li>`;
-            }
-
-            if (currentPage < totalPages) {
-                pagination.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadVideoRequests(${currentPage + 1}, '${sortOrder}')">Sonraki</a></li>`;
-                pagination.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadVideoRequests(${totalPages}, '${sortOrder}')">Son</a></li>`;
-            }
+        for (let i = Math.max(1, currentPage - range); i <= Math.min(totalPages, currentPage + range); i++) {
+            const active = i === currentPage ? 'active' : '';
+            pagination.insertAdjacentHTML('beforeend', `<li class="page-item ${active}"><a class="page-link" href="#" onclick="loadVideoRequests(${i}, '${sortOrder}')">${i}</a></li>`);
         }
-    </script>
+
+        if (currentPage < totalPages) {
+            pagination.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadVideoRequests(${currentPage + 1}, '${sortOrder}')">Sonraki</a></li>`);
+            pagination.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadVideoRequests(${totalPages}, '${sortOrder}')">Son</a></li>`);
+        }
+    }
+
+    function showPromptModal(prompt) {
+        document.getElementById('prompt-modal-body').textContent = prompt;
+        $('#promptModal').modal('show');
+    }
+</script>
 {% endblock %}
+

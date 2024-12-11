@@ -127,19 +127,19 @@ def list_text_to_video_requests():
         return render_template('admin/list_request/text_to_video_requests.html')
 
     try:
-        # Sayfa ve limit parametrelerini al
+        # Parametreleri al
         page = int(request.args.get('page', 1))
-        limit = int(request.args.get('limit', 10))  # Varsayılan olarak 10 öğe
-        sort_order = request.args.get('sort_order', 'asc')
+        limit = int(request.args.get('limit', 10))
+        sort_order = request.args.get('sort_order', 'desc')  # Varsayılan sıralama artan (asc)
 
-        # Toplam öğe sayısını al
+        # Sıralama düzeni ayarla
+        sort_criteria = '+datetime' if sort_order == 'asc' else '-datetime'
+
+        # Veritabanı sorgusu
         total_items = TextToVideoGeneration.objects.count()
+        video_requests = TextToVideoGeneration.objects.order_by(sort_criteria).skip((page - 1) * limit).limit(limit)
 
-        # Verileri sıralama
-        query = TextToVideoGeneration.objects.order_by(f"{'-' if sort_order == 'desc' else ''}datetime")
-        video_requests = query.skip((page - 1) * limit).limit(limit)
-
-        # Toplam sayfa sayısını hesapla
+        # Sayfa sayısını hesapla
         total_pages = (total_items + limit - 1) // limit
 
         # JSON formatına dönüştür
@@ -159,8 +159,9 @@ def list_text_to_video_requests():
             "current_page": page
         }), 200
     except Exception as e:
-        logging.error(f"Error fetching video requests: {e}")
+        logging.error(f"Error fetching text-to-video requests: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 @admin_routes_bp.route('/image-to-video-requests', methods=['GET'])
 def list_image_to_video_requests():
