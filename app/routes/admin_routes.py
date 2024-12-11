@@ -121,11 +121,46 @@ def list_image_requests():
         return jsonify({"error": str(e)}), 500
 
 
-@admin_routes_bp.route('/text-to-video-requests')
+@admin_routes_bp.route('/text-to-video-requests', methods=['GET'])
 def list_text_to_video_requests():
-    # Veritabanından tüm ImageRequest nesnelerini çekiyoruz
-    requests = TextToVideoGeneration.objects()
-    return render_template('admin/list_request/text_to_video_requests.html', video_requests=requests)
+    if 'page' not in request.args:
+        return render_template('admin/list_request/text_to_video_requests.html')
+
+    try:
+        # Sayfa ve limit parametrelerini al
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))  # Varsayılan olarak 10 öğe
+        sort_order = request.args.get('sort_order', 'asc')
+
+        # Toplam öğe sayısını al
+        total_items = TextToVideoGeneration.objects.count()
+
+        # Verileri sıralama
+        query = TextToVideoGeneration.objects.order_by(f"{'-' if sort_order == 'desc' else ''}datetime")
+        video_requests = query.skip((page - 1) * limit).limit(limit)
+
+        # Toplam sayfa sayısını hesapla
+        total_pages = (total_items + limit - 1) // limit
+
+        # JSON formatına dönüştür
+        requests_list = [
+            {
+                "username": req.username,
+                "datetime": req.datetime.strftime('%Y/%m/%d %H:%M'),
+                "prompt": req.prompt,
+                "video_url": req.video_url
+            }
+            for req in video_requests
+        ]
+
+        return jsonify({
+            "items": requests_list,
+            "total_pages": total_pages,
+            "current_page": page
+        }), 200
+    except Exception as e:
+        logging.error(f"Error fetching video requests: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @admin_routes_bp.route('/image-to-video-requests')
 def list_image_to_video_requests():
@@ -340,8 +375,6 @@ def update_coupon_status():
     except Exception as e:
         logging.error(f"Kupon durumu güncellenirken hata: {str(e)}")
         return jsonify({"message": "Kupon durumu güncellenirken bir hata oluştu"}), 500
-
-
 
 @admin_routes_bp.route('/coupons/delete', methods=['DELETE'])
 def delete_coupon():
