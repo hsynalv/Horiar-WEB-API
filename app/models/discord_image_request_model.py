@@ -21,7 +21,27 @@ class DiscordImageRequest(Document):
     cost = DecimalField(precision=20, rounding='ROUND_HALF_UP', required=False)  # Bu işlem için toplam maliyet
     time = FloatField(required=False)  # Bu işlem için geçen zaman
 
-
     meta = {
         'collection': 'image_requests_from_discord'  # MongoDB'deki koleksiyon adı
     }
+
+    def to_dict(self):
+        return {
+            "id": str(self.id),
+            "user_id": self.user_id,
+            "username": self.username,
+            "prompt": self.prompt,
+            "datetime": self.datetime.strftime('%Y-%m-%d %H:%M:%S') if self.datetime else None,
+            "guild": self.guild,
+            "channel": self.channel,
+            "resolution": self.resolution,
+            "aspect_ratio": self.aspect_ratio,
+            "seed": self.seed,
+            "prompt_fix": self.prompt_fix,
+            "model_type": self.model_type,
+            "re_request": self.re_request,
+            "execution_time": self.execution_time,
+            "spent_money": float(self.spent_money) if self.spent_money else None,
+            "cost": float(self.cost) if self.cost else None,
+            "time": self.time
+        }

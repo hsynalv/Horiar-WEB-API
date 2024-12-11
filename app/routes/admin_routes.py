@@ -121,7 +121,6 @@ def list_image_requests():
         return jsonify({"error": str(e)}), 500
 
 
-
 @admin_routes_bp.route('/text-to-video-requests')
 def list_text_to_video_requests():
     # Veritabanından tüm ImageRequest nesnelerini çekiyoruz
@@ -142,11 +141,49 @@ def list_upscale_requests():
     return render_template('admin/upscale_requests.html', image_requests=requests)
 
 
-@admin_routes_bp.route('/discord_requests')
+@admin_routes_bp.route('/discord-requests', methods=['GET'])
 def discord_requests():
-    discord_requests = DiscordImageRequest.objects.all()  # Discord isteklerini al
-    return render_template('admin/discord_requests.html', discord_requests=discord_requests)
+    try:
 
+        if 'page' not in request.args:
+            return render_template('admin/discord_requests.html')
+
+        # Sayfa ve limit parametrelerini al
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))  # Varsayılan olarak 10 öğe
+
+        # Toplam öğe sayısını al
+        total_items = DiscordImageRequest.objects.count()
+
+        # Sayfalama için veritabanından öğeleri al
+        discord_requests = DiscordImageRequest.objects.skip((page - 1) * limit).limit(limit)
+
+        # Toplam sayfa sayısını hesapla
+        total_pages = (total_items + limit - 1) // limit
+
+        # JSON formatına dönüştür
+        requests_list = [
+            {
+                "username": req.username,
+                "prompt": req.prompt,
+                "guild": req.guild,
+                "channel": req.channel,
+                "datetime": req.datetime.strftime('%Y-%m-%d %H:%M'),
+                "resolution": req.resolution,
+                "model_type": req.model_type,
+                "re_request": req.re_request,
+            }
+            for req in discord_requests
+        ]
+
+        return jsonify({
+            "items": requests_list,
+            "total_pages": total_pages,
+            "current_page": page
+        }), 200
+    except Exception as e:
+        logging.error(f"Error fetching discord requests: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @admin_routes_bp.route('/subscriptions')
 def list_subscription():

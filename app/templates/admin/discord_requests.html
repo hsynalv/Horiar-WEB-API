@@ -2,9 +2,6 @@
 
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/user_page_styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='plugins/fontawesome-free/css/all.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/adminlte.min.css') }}">
@@ -23,63 +20,150 @@
 
 <section class="content">
     <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Discord İstekleri Tablosu</h3>
-        </div>
         <div class="card-body">
-            <table id="imageRequestsTable" class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th>Kullanıcı Adı</th>
-                        <th>Prompt</th>
-                        <th>Sunucu</th>
-                        <th>Kanal</th>
-                        <th>Tarih ve Saat</th>
-                        <th>Çözünürlük</th>
-                        <th>Model Türü</th>
-                        <th>Yeniden İstek</th>
-                        <th>Harcanan Para ($)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for request in discord_requests %}
-                    <tr>
-                        <td>{{ request.username }}</td>
-                        <td>{{ request.prompt }}</td>
-                        <td>{{ request.guild }}</td>
-                        <td>{{ request.channel }}</td>
-                        <td>{{ request.datetime }}</td>
-                        <td>{{ request.resolution }}</td>
-                        <td>{{ request.model_type }}</td>
-                        <td>{{ 'Evet' if request.re_request else 'Hayır' }}</td>
-                        <td>{{ request.spent_money }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table id="discordRequestsTable" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Kullanıcı Adı</th>
+                            <th>Prompt</th>
+                            <th>Sunucu</th>
+                            <th>Kanal</th>
+                            <th>Tarih ve Saat</th>
+                            <th>Çözünürlük</th>
+                            <th>Model Türü</th>
+                            <th>Yeniden İstek</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Dinamik olarak yüklenecek -->
+                    </tbody>
+                </table>
+            </div>
+            <nav>
+                <ul class="pagination justify-content-center" id="pagination">
+                    <!-- Sayfalama düğmeleri dinamik olarak yüklenecek -->
+                </ul>
+            </nav>
         </div>
     </div>
 </section>
+
+<!-- Prompt Modal -->
+<div class="modal fade" id="promptModal" tabindex="-1" role="dialog" aria-labelledby="promptModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content shadow-lg rounded-3" style="background-color: #0a0e14; color: #c3c4c8;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="promptModalLabel" style="font-weight: 600;">Prompt Detayları</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body" id="prompt-modal-body" style="font-size: 1.1rem; line-height: 1.6;">
+                <!-- Prompt içeriği burada görünecek -->
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="loading-spinner" class="text-center" style="display: none;">
+    <div class="spinner-border" role="status">
+        <span class="sr-only">Yükleniyor...</span>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
-    {{ super() }}
-    <script src="{{ url_for('static', filename='plugins/datatables/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/dataTables.buttons.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/jszip/jszip.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/pdfmake/pdfmake.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/pdfmake/vfs_fonts.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
-    <script>
-        $(function () {
-            $("#imageRequestsTable").DataTable({
-                "responsive": true, "lengthChange": false, "autoWidth": false,
-                "buttons": ["csv", "excel", "print"]
-            }).buttons().container().appendTo('#imageRequestsTable_wrapper .col-md-6:eq(0)');
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    loadDiscordRequests(1);
+
+    // Modal için click olaylarını dinle
+    document.getElementById('table-body').addEventListener('click', function (e) {
+        if (e.target.classList.contains('view-prompt')) {
+            const prompt = e.target.getAttribute('data-prompt');
+            showPromptModal(prompt);
+        }
+    });
+});
+
+function loadDiscordRequests(page) {
+    const limit = 15; // Her sayfada gösterilecek öğe sayısı
+    const tableBody = document.getElementById('table-body');
+    const pagination = document.getElementById('pagination');
+    const spinner = document.getElementById('loading-spinner');
+
+    // Spinner göster
+    if (spinner) spinner.style.display = 'block';
+
+    fetch(`/admin/discord-requests?page=${page}&limit=${limit}`)
+        .then(response => response.json())
+        .then(data => {
+            // Spinner gizle
+            if (spinner) spinner.style.display = 'none';
+
+            // Tabloyu temizle
+            tableBody.innerHTML = '';
+
+            data.items.forEach(item => {
+                const truncatedPrompt = item.prompt.length > 50 ? item.prompt.substring(0, 50) + '...' : item.prompt;
+                const row = `
+                    <tr>
+                        <td>${item.username}</td>
+                        <td>
+                            ${truncatedPrompt}
+                            ${item.prompt.length > 50
+                                ? `<button class="btn btn-link view-prompt text-primary p-0" data-prompt="${item.prompt}">(Devamını Gör)</button>`
+                                : ''}
+                        </td>
+                        <td>${item.guild || '-'}</td>
+                        <td>${item.channel || '-'}</td>
+                        <td>${item.datetime}</td>
+                        <td>${item.resolution || '-'}</td>
+                        <td>${item.model_type || '-'}</td>
+                        <td>${item.re_request ? 'Evet' : 'Hayır'}</td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+
+            updatePagination(page, data.total_pages);
+        })
+        .catch(error => {
+            console.error('Error loading data:', error);
+            if (spinner) spinner.style.display = 'none';
         });
-    </script>
+}
+
+function updatePagination(currentPage, totalPages) {
+    const paginationContainer = document.getElementById('pagination');
+    paginationContainer.innerHTML = '';
+
+    const range = 3;
+
+    if (currentPage > 1) {
+        paginationContainer.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadDiscordRequests(1)">İlk</a></li>`);
+        paginationContainer.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadDiscordRequests(${currentPage - 1})">Önceki</a></li>`);
+    }
+
+    for (let i = Math.max(1, currentPage - range); i <= Math.min(totalPages, currentPage + range); i++) {
+        const activeClass = i === currentPage ? 'active' : '';
+        paginationContainer.insertAdjacentHTML('beforeend', `<li class="page-item ${activeClass}"><a class="page-link" href="#" onclick="loadDiscordRequests(${i})">${i}</a></li>`);
+    }
+
+    if (currentPage < totalPages) {
+        paginationContainer.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadDiscordRequests(${currentPage + 1})">Sonraki</a></li>`);
+        paginationContainer.insertAdjacentHTML('beforeend', `<li class="page-item"><a class="page-link" href="#" onclick="loadDiscordRequests(${totalPages})">Son</a></li>`);
+    }
+}
+
+function showPromptModal(prompt) {
+    const modalBody = document.getElementById('prompt-modal-body');
+    modalBody.textContent = prompt;
+    const modal = new bootstrap.Modal(document.getElementById('promptModal'));
+    modal.show();
+}
+</script>
 {% endblock %}
