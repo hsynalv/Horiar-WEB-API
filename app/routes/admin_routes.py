@@ -137,14 +137,23 @@ def list_text_to_video_requests():
         # Parametreleri al
         page = int(request.args.get('page', 1))
         limit = int(request.args.get('limit', 10))
-        sort_order = request.args.get('sort_order', 'desc')  # Varsayılan sıralama artan (asc)
+        sort_order = request.args.get('sort_order', 'desc')
+        search_query = request.args.get('search', '').strip()
+
+        # Sorgu oluştur
+        query = TextToVideoGeneration.objects()
+        if search_query:
+            query = query.filter(username__icontains=search_query)
 
         # Sıralama düzeni ayarla
         sort_criteria = '+datetime' if sort_order == 'asc' else '-datetime'
+        query = query.order_by(sort_criteria)
 
-        # Veritabanı sorgusu
-        total_items = TextToVideoGeneration.objects.count()
-        video_requests = TextToVideoGeneration.objects.order_by(sort_criteria).skip((page - 1) * limit).limit(limit)
+        # Toplam öğe sayısını al
+        total_items = query.count()
+
+        # Sayfalama işlemi
+        video_requests = query.skip((page - 1) * limit).limit(limit)
 
         # Sayfa sayısını hesapla
         total_pages = (total_items + limit - 1) // limit
@@ -163,7 +172,8 @@ def list_text_to_video_requests():
         return jsonify({
             "items": requests_list,
             "total_pages": total_pages,
-            "current_page": page
+            "current_page": page,
+            "total_items": total_items
         }), 200
     except Exception as e:
         logging.error(f"Error fetching text-to-video requests: {e}")
