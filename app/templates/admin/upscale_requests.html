@@ -21,6 +21,12 @@
 
 <section class="content">
     <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <!-- Toplam öğe sayısını gösterecek alan -->
+            <div>
+                <span id="total-items-text">Toplam: 0 öğe</span>
+            </div>
+        </div>
         <div class="card-body">
             <table id="imageRequestsTable" class="table table-bordered table-striped">
                 <thead>
@@ -36,10 +42,6 @@
                 </tbody>
             </table>
             <nav>
-                            <!-- Toplam öğe sayısını gösterecek alan -->
-            <div>
-                <span id="total-items-text">Toplam: 0 öğe</span>
-            </div>
                 <ul class="pagination justify-content-center" id="pagination">
                     <!-- Sayfalama butonları buraya yüklenecek -->
                 </ul>
@@ -70,23 +72,15 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-function loadUpscaleRequests(page, sortOrder = 'asc', searchQuery = '') {
-    const limit = 10; // Her sayfada gösterilecek öğe sayısı
+function loadUpscaleRequests(page, sortOrder = 'desc', searchQuery = '') {
+    const limit = 15;
     const tableBody = document.getElementById('table-body');
     const pagination = document.getElementById('pagination');
     const totalItemsText = document.getElementById('total-items-text');
-    const spinner = document.getElementById('loading-spinner');
 
-    // Yükleme spinner'ı göster
-    if (spinner) spinner.style.display = 'block';
-
-    // API isteği
-    fetch(`/admin/upscale-requests?page=${page}&limit=${limit}&sort_order=${sortOrder}&search=${searchQuery}`)
+    fetch(`/admin/upscale-requests?page=${page}&limit=${limit}&sort_order=${sortOrder}&search_query=${encodeURIComponent(searchQuery)}`)
         .then(response => response.json())
         .then(data => {
-            // Yükleme spinner'ını gizle
-            if (spinner) spinner.style.display = 'none';
-
             if (data.error) {
                 console.error('Error fetching data:', data.error);
                 return;
@@ -98,7 +92,7 @@ function loadUpscaleRequests(page, sortOrder = 'asc', searchQuery = '') {
             // Tabloyu temizle
             tableBody.innerHTML = '';
 
-            // Tablo verilerini yükle
+            // Tablo verilerini ekle
             data.items.forEach(item => {
                 const row = `
                     <tr>
@@ -106,12 +100,12 @@ function loadUpscaleRequests(page, sortOrder = 'asc', searchQuery = '') {
                         <td>${item.datetime}</td>
                         <td>
                             <a href="${item.low_res_image_url}" target="_blank">
-                                <img src="${item.low_res_image_url}" style="width: 100px; height: auto;" alt="Low Resolution Image">
+                                <img src="${item.low_res_image_url}" class="img-thumbnail" style="width: 100px; height: auto;">
                             </a>
                         </td>
                         <td>
                             <a href="${item.image_url_webp}" target="_blank">
-                                <img src="${item.image_url_webp}" style="width: 100px; height: auto;" alt="Upscaled Image">
+                                <img src="${item.image_url_webp}" class="img-thumbnail" style="width: 100px; height: auto;">
                             </a>
                         </td>
                     </tr>
@@ -119,15 +113,13 @@ function loadUpscaleRequests(page, sortOrder = 'asc', searchQuery = '') {
                 tableBody.insertAdjacentHTML('beforeend', row);
             });
 
-            // Sayfalama düğmelerini oluştur
+            // Sayfalama düğmelerini güncelle
             updatePagination(page, data.total_pages, sortOrder, searchQuery);
         })
         .catch(error => {
             console.error('Error loading upscale requests:', error);
-            if (spinner) spinner.style.display = 'none';
         });
 }
-
 
 function updatePagination(currentPage, totalPages, sortOrder, searchQuery) {
     const paginationContainer = document.getElementById('pagination');

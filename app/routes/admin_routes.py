@@ -79,21 +79,26 @@ def list_image_requests():
         return render_template('admin/image_requests.html')
 
     try:
-        # Sayfa ve limit parametrelerini al
+        # Sayfa, limit, sıralama ve arama parametrelerini al
         page = int(request.args.get('page', 1))
         limit = int(request.args.get('limit', 10))
-        sort_order = request.args.get('sort_order', 'desc')  # Default olarak artan sıralama
+        sort_order = request.args.get('sort_order', 'desc')
+        search_query = request.args.get('search', '').strip()
+
+        # Sorgu işlemi
+        query = TextToImage.objects()
+        if search_query:
+            query = query.filter(username__icontains=search_query)
+
+        # Sıralama işlemi
+        sort_field = '-datetime' if sort_order == 'desc' else '+datetime'
+        query = query.order_by(sort_field)
 
         # Toplam öğe sayısını al
-        total_items = TextToImage.objects.count()
+        total_items = query.count()
 
-        # Sıralama parametresine göre sıralama yap
-        sort_field = 'datetime'
-        if sort_order == 'desc':
-            sort_field = '-datetime'
-
-        # Veritabanından verileri getir
-        image_requests = TextToImage.objects.order_by(sort_field).skip((page - 1) * limit).limit(limit)
+        # Sayfalama işlemi
+        image_requests = query.skip((page - 1) * limit).limit(limit)
 
         # Toplam sayfa sayısını hesapla
         total_pages = (total_items + limit - 1) // limit
@@ -115,10 +120,12 @@ def list_image_requests():
             "items": requests_list,
             "total_pages": total_pages,
             "current_page": page,
+            "total_items": total_items,
         }), 200
     except Exception as e:
         logging.error(f"Error fetching image requests: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 
 @admin_routes_bp.route('/text-to-video-requests', methods=['GET'])
