@@ -73,7 +73,7 @@ def register_blueprints(app):
         try:
             # İstekten JSON verilerini al
             data = request.get_json()
-            userId = data.get('userId')
+            user_id = data.get('userId')
             credit = data.get('credit')
 
             # User ID ile veritabanından kullanıcıyı sorgula (örneğin User modelini kullanarak)
