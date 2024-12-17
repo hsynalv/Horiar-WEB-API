@@ -1,9 +1,13 @@
 import os
+from datetime import datetime, timedelta
 
 from flask import send_from_directory, current_app, jsonify, request
 import logging
 import json
 
+from app.auth import jwt_required
+from app.models.subscription_model import Subscription
+from app.models.user_model import User
 from app.routes.admin_routes import admin_routes_bp
 from app.routes.coupon_routes import coupon_bp
 from app.routes.enterprise.enterprise_routes import enterprise_bp
@@ -59,6 +63,47 @@ def register_blueprints(app):
     @app.route('/robots.txt')
     def robots_txt():
         return send_from_directory(app.static_folder, 'robots.txt')
+
+    @app.route('/campaign/assign-credits', methods=['POST'])
+    @jwt_required(pass_payload=False)
+    def assign_credit():
+        """
+        Kullanıcıya kredi tanımlama işlemini gerçekleştirir.
+        """
+        try:
+            # İstekten JSON verilerini al
+            data = request.get_json()
+            user_id = data.get('user_id')
+            credit = data.get('credit')
+
+            # User ID ile veritabanından kullanıcıyı sorgula (örneğin User modelini kullanarak)
+            # (Bu kısımda mevcut bir kullanıcıyı doğrulamak isteyebilirsiniz.)
+            user = User.objects(id=user_id).first()
+            if not user:
+                return jsonify({"success": False, "message": "Kullanıcı bulunamadı"}), 404
+
+
+            # Subscription nesnesini oluştur
+            subscription = Subscription(
+                user_id=str(user.id),
+                username=user.username,
+                email=user.email,
+                subscription_date=datetime.utcnow(),
+                subscription_end_date=datetime.utcnow() + timedelta(days=60),
+                credit_balance=float(credit),
+                merchant_oid="HORIAR-UNIVERSITE-KAMPANYASI",  # Manuel eklemelerde özel bir tanımlama
+                used_coupon=None,  # İsteğe bağlı olarak kullanılabilir,
+                max_credit_balance=int(credit)
+            )
+
+            # Yeni abonelik kaydını veritabanına kaydet
+            subscription.save()
+
+            return jsonify({"success": True, "message": "Kredi başarıyla tanımlandı!"}), 200
+
+        except Exception as e:
+            logging.error(f"Kredi tanımlama hatası: {str(e)}")
+            return jsonify({"success": False, "message": "Kredi tanımlama sırasında bir hata oluştu"}), 500
 
     @app.route('/webhook', methods=['POST'])
     def runpod_webhook():
