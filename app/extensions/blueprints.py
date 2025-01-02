@@ -112,11 +112,9 @@ def register_blueprints(app):
         """
         try:
             data = request.get_json()
-            logging.info(f"Content Type of Received Webhook data {request.content_type}")
             if data is None:
                 # Eğer JSON değilse request.data kullanarak manuel olarak parse edelim
                 raw_data = request.data
-                logging.info(f"Incoming data was received with request.data format")
 
                 try:
                     data = json.loads(raw_data)
@@ -129,6 +127,7 @@ def register_blueprints(app):
             job_id = data.get("id")
             status = data.get("status")
             output = data.get("output")
+            inner_status = output.get("status")
 
             logging.info("işi tamalanan job_id ve output bilgileri alındı")
 
@@ -159,7 +158,7 @@ def register_blueprints(app):
 
 
             # İşlem tamamlandıysa iş türüne göre veritabanına kayıt işlemi yapalım
-            if status == "COMPLETED":
+            if status == "COMPLETED" and inner_status == "success":
 
                 image_url = output.get("message")
 
@@ -315,12 +314,59 @@ def register_blueprints(app):
                 return jsonify(message), 200
 
             else:
-                # Başarısız durum güncellemesi ve bildirim gönderme
-                request_info['status'] = status
-                redis_conn.set(request_key, json.dumps(request_info), ex=3600)
-                notify_user_via_websocket(user_id, {"status": "failed", "message": "A server error occurred while processing your request"})
-                logging.warning(f"Job {job_id} failed with status: {status}")
-                return jsonify({"message": f"Job {job_id} failed with status {status}"}), 200
+
+                if job_type == "customer_image_generation":
+                    enterpriseService = EnterpriseService()
+                    enterpriseService.save_request_to_db_error(
+                        customer_id=request_info.get("customer_id"),
+                        company_name=request_info.get("company_name"),
+                        request_type="text-to-image",
+                        request_id=request_info.get("request_id"),
+                        error_message= "A server error occurred while processing your request"
+
+                    )
+                    return "customer_image_generation with error", 200
+
+                elif job_type == "customer_upscale":
+                    enterpriseService = EnterpriseService()
+                    enterpriseService.save_request_to_db_error(
+                        customer_id=request_info.get("customer_id"),
+                        company_name=request_info.get("company_name"),
+                        request_type="upscale",
+                        request_id=request_info.get("request_id"),
+                        error_message= "A server error occurred while processing your request"
+                    )
+                    return "customer_upscale with error", 200
+
+                elif job_type == "customer_text_to_video":
+                    enterpriseService = EnterpriseService()
+                    enterpriseService.save_request_to_db_error(
+                        customer_id=request_info.get("customer_id"),
+                        company_name=request_info.get("company_name"),
+                        request_type="text-to-video",
+                        request_id=request_info.get("request_id"),
+                        error_message= "A server error occurred while processing your request"
+                    )
+                    return "customer_text_to_video with error", 200
+
+                elif job_type == "customer_image_to_video":
+                    enterpriseService = EnterpriseService()
+                    enterpriseService.save_request_to_db_error(
+                        customer_id=request_info.get("customer_id"),
+                        company_name=request_info.get("company_name"),
+                        request_type="image-to-video",
+                        request_id=request_info.get("request_id"),
+                        error_message= "A server error occurred while processing your request"
+                    )
+                    return "customer_image_to_video with error", 200
+
+                else:
+                    # Başarısız durum güncellemesi ve bildirim gönderme
+                    request_info['status'] = status
+                    redis_conn.set(request_key, json.dumps(request_info), ex=3600)
+                    notify_user_via_websocket(user_id, {"status": "failed", "message": "A server error occurred while processing your request"})
+                    logging.warning(f"Job {job_id} failed with status: {status}")
+                    return jsonify({"message": f"Job {job_id} failed with status {status}"}), 200
 
         except Exception as e:
             logging.error(f"Error processing webhook: {str(e)}")

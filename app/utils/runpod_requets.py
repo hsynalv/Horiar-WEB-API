@@ -24,6 +24,8 @@ def send_runpod_request(app, data, runpod_url, user_id, username, timeout=360):
         # RunPod API'sine POST isteği gönderme
         response = requests.post(runpod_url, headers=headers, data=data, timeout=timeout)
 
+        runpod_logger.info(str(response.json))
+
         # İsteğe ait yanıtı JSON formatında döndürme
         return response.json(), response.status_code
 

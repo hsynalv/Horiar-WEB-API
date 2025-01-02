@@ -357,6 +357,17 @@ class EnterpriseService(BaseService):
         new_request.save()
         return new_request
 
+    def save_request_to_db_error(self, customer_id, company_name, request_type, request_id, error_message):
+        new_request = EnterpriseRequest(
+            company_id=customer_id,
+            company_name=company_name,
+            request_type=request_type,
+            job_id=request_id,
+            error_message = error_message
+        )
+        new_request.save()
+        return new_request
+
 
     # Get All Fonksiyonları --------------------------------------------------------------------------------------------
 
@@ -564,6 +575,13 @@ class EnterpriseService(BaseService):
         request = EnterpriseRequest.objects(job_id=job_id).first()
 
         if not request:
-            return {"job_id":job_id, "message":"Your request has been queued."}
+            return {"job_id": job_id, "message": "Your request has been queued.", "status": "queued"}
 
-        return request
+        if request.error_message == "A server error occurred while processing your request":
+            return {"job_id": job_id, "message": request.error_message, "status": "failed"}
+
+        return jsonify({
+            "status": "completed",
+            "job_id": job_id,
+            "output": request
+        })

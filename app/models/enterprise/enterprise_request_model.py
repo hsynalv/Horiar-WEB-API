@@ -21,6 +21,7 @@ class EnterpriseRequest(Document):
     ref_image = StringField(required=False)
     job_id = StringField(required=False)
     consistent = StringField(required=False)
+    error_message = StringField(required=False)
 
     meta = {'collection': 'enterprise_requests'}  # MongoDB koleksiyonu
 
@@ -41,5 +42,6 @@ class EnterpriseRequest(Document):
             "video_url": self.video_url,
             "ref_image": self.ref_image,
             "job_id":self.job_id,
-            "consistent":self.consistent
+            "consistent":self.consistent,
+            "error_message": self.error_message
         }
