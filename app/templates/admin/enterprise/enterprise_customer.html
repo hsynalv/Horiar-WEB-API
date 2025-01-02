@@ -1,0 +1,133 @@
+{% extends 'admin/adminlte_index.html' %}
+
+{% block content %}
+<div class="container">
+
+    <div class="row" style="padding-top: 3%">
+        <div class="col-md-6">
+            <h2>Enterprise Customers</h2>
+        </div>
+        <div class="col-md-6 text-right">
+            <button class="btn btn-success" data-toggle="modal" data-target="#addCustomerModal">
+                Yeni Müşteri Ekle
+            </button>
+        </div>
+    </div>
+
+
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Company Name</th>
+                <th>Contact Email</th>
+                <th>API Key</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in customers %}
+            <tr>
+                <td>{{ customer.company_name }}</td>
+                <td>{{ customer.contact_email }}</td>
+                <td>
+                    {% if customer.api_key %}
+                        {{ customer.api_key }}
+                    {% else %}
+                        <span class="text-danger">No API Key</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not customer.api_key %}
+                        <button class="btn btn-primary" onclick="generateApiKey('{{ customer.id }}')">
+                            Generate API Key
+                        </button>
+                    {% else %}
+                        <button class="btn btn-secondary" disabled>API Key Exists</button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Yeni Müşteri Ekle Modal -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1" role="dialog" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addCustomerModalLabel">Yeni Müşteri Ekle</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="addCustomerForm">
+          <div class="form-group">
+            <label for="companyName">Company Name</label>
+            <input type="text" class="form-control" id="companyName" required>
+          </div>
+          <div class="form-group">
+            <label for="contactEmail">Contact Email</label>
+            <input type="email" class="form-control" id="contactEmail" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Müşteri Ekle</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    // API Key oluşturma fonksiyonu
+    function generateApiKey(customerId) {
+        console.log(customerId)
+    fetch(`/enterprise/create-token`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            customer_id: customerId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        location.reload();
+    })
+    .catch(error => {
+        alert('Error generating API key.');
+    });
+}
+
+
+    // Müşteri ekleme işlemi
+    document.getElementById('addCustomerForm').onsubmit = function(event) {
+        event.preventDefault();
+
+        const companyName = document.getElementById('companyName').value;
+        const contactEmail = document.getElementById('contactEmail').value;
+
+        fetch('/enterprise/create-customer', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                company_name: companyName,
+                contact_email: contactEmail
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        })
+        .catch(error => {
+            alert('Error adding customer.');
+        });
+    }
+</script>
+{% endblock %}

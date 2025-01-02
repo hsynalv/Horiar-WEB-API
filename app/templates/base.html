@@ -94,6 +94,29 @@
                                 </li>
                             </ul>
                         </li>
+                        <li class="nav-item menu-open"> <!-- Açılır menüyü varsayılan olarak açık tutmak isterseniz menu-open sınıfını ekleyebilirsiniz -->
+                            <div href="#" class="nav-link">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>
+                                    Enterprise
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </div>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ url_for('admin_routes_bp.list_customers') }}" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Müşteriler</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ url_for('admin_routes_bp.list_gallery_photos') }}" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Müşteri Renderları</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
                         <li class="nav-item">
                             <a href="{{ url_for('admin_routes_bp.admin_users') }}" class="nav-link">
                                 <i class="nav-icon fas fa-users"></i>
