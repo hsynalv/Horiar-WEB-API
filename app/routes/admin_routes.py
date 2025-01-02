@@ -8,6 +8,7 @@ from mongoengine import Q
 
 from app.models.coupon_model import Coupon
 from app.models.discord_image_request_model import DiscordImageRequest
+from app.models.enterprise.enterprise_customer_model import EnterpriseCustomer
 from app.models.galley_photo_model import GalleryPhoto
 from app.models.image_to_video_model import ImageToVideo
 from app.models.package_model import Package
@@ -18,6 +19,7 @@ from app.models.text_to_video_model import TextToVideoGeneration
 from app.models.upscale_model import Upscale
 from app.models.user_model import User
 from app.services.coupon_service import CouponService
+from app.services.enterprise.enterprise_service import EnterpriseService
 from app.services.user_service import UserService
 from app.forms.forms import LoginForm
 
@@ -957,6 +959,12 @@ def get_gallery_photo(photo_id):
     except Exception as e:
         logging.error(f"Error fetching gallery photo: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+@admin_routes_bp.route('/admin/enterprise/customers', methods=['GET'])
+def list_customers():
+    customers = EnterpriseCustomer.objects.all()
+    return render_template('admin/enterprise/enterprise_customer.html', customers=customers)
 
 
 
