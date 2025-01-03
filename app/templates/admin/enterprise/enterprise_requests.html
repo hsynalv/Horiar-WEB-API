@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/adminlte.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/fontawesome-free/css/all.min.css') }}">
+    <style>
+        .table thead th {
+            background-color: #007bff;
+            color: white;
+        }
+        .prompt-text {
+            max-height: 3rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h1><i class="fas fa-clipboard-list"></i> Enterprise Talepleri</h1>
+            </div>
+            <div class="col-sm-6 d-flex justify-content-end">
+                <select id="customer-select" class="form-control" style="width: 300px;">
+                    <option value="">Tüm Müşteriler</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Toplam Öge: <span id="total-items-count">0</span></h3>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Firma Adı</th>
+                        <th>Prompt</th>
+                        <th>Tarih</th>
+                        <th>İstek Tipi</th>
+                        <th>Görüntü</th>
+                    </tr>
+                </thead>
+                <tbody id="requests-table">
+                    <!-- Talepler buraya yüklenecek -->
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer d-flex justify-content-center">
+            <ul class="pagination" id="pagination">
+                <!-- Sayfalama buraya gelecek -->
+            </ul>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="promptModal" tabindex="-1" role="dialog" aria-labelledby="promptModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="promptModalLabel">Prompt Detayı</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="promptModalContent">
+                <!-- Prompt Detayı -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        loadCustomers();
+        loadRequests();
+
+        document.getElementById('customer-select').addEventListener('change', function () {
+            loadRequests(1);
+        });
+    });
+
+    function loadCustomers() {
+        fetch('/admin/list-customers')
+            .then(response => response.json())
+            .then(data => {
+                const select = document.getElementById('customer-select');
+                select.innerHTML = '<option value="">Tüm Müşteriler</option>';
+                data.customers.forEach(customer => {
+                    const option = document.createElement('option');
+                    option.value = customer._id;
+                    option.textContent = customer.company_name;
+                    select.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Müşteriler yüklenemedi:', error));
+    }
+
+    function loadRequests(page = 1) {
+        const customerId = document.getElementById('customer-select').value;
+        fetch(`/admin/enterprise-requests?page=${page}&customer_id=${customerId}`)
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('requests-table');
+                const totalItemsCount = document.getElementById('total-items-count');
+                tableBody.innerHTML = '';
+
+                // Toplam öge sayısını güncelle
+                totalItemsCount.textContent = data.total_items;
+
+                data.items.forEach(item => {
+                    const prompt = item.prompt || '';  // item.prompt null ise boş string kullan
+                    const truncatedPrompt = prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt;
+                    const row = `<tr>
+                        <td>${item.company_name}</td>
+                        <td class="prompt-text" onclick="showPromptModal('${prompt.replace(/'/g, "&#39;")}')">${truncatedPrompt}</td>
+                        <td>${item.created_at}</td>
+                        <td>
+                            <span class="badge
+                                ${item.request_type === 'text-to-image' ? 'badge-primary' :
+                                item.request_type === 'upscale' ? 'badge-success' :
+                                item.request_type === 'text-to-video' ? 'badge-warning' :
+                                item.request_type === 'image-to-video' ? 'badge-danger' : 'badge-secondary'}">
+                                ${item.request_type}
+                            </span>
+                        </td>
+                        <td>
+                             ${item.request_type === 'text-to-image' || item.request_type === 'upscale' ?
+                            (item.image ? '<img src="' + item.image + '" alt="Görüntü" style="max-width:100px; max-height:100px;">' : 'Yok') :
+                            (item.video_url ? '<video width="100" controls><source src="' + item.video_url + '" type="video/mp4">Tarayıcınız video etiketini desteklemiyor.</video>' : 'Yok')        }
+            </td>
+         </tr>`;
+    tableBody.insertAdjacentHTML('beforeend', row);
+});
+
+                updatePagination(data.current_page, data.total_pages);
+            })
+            .catch(error => console.error('Talepler yüklenemedi:', error));
+    }
+
+    function updatePagination(currentPage, totalPages) {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+        const maxPagesToShow = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+        let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+        if (endPage - startPage + 1 < maxPagesToShow) {
+            startPage = Math.max(1, endPage - maxPagesToShow + 1);
+        }
+
+        if (currentPage > 1) {
+            pagination.innerHTML += `<li class="page-item">
+                <a class="page-link" href="#" onclick="loadRequests(1)">&laquo;</a>
+            </li>`;
+            pagination.innerHTML += `<li class="page-item">
+                <a class="page-link" href="#" onclick="loadRequests(${currentPage - 1})">&lsaquo;</a>
+            </li>`;
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pagination.innerHTML += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="loadRequests(${i})">${i}</a>
+            </li>`;
+        }
+
+        if (currentPage < totalPages) {
+            pagination.innerHTML += `<li class="page-item">
+                <a class="page-link" href="#" onclick="loadRequests(${currentPage + 1})">&rsaquo;</a>
+            </li>`;
+            pagination.innerHTML += `<li class="page-item">
+                <a class="page-link" href="#" onclick="loadRequests(${totalPages})">&raquo;</a>
+            </li>`;
+        }
+            }
+
+    function showPromptModal(prompt) {
+        document.getElementById('promptModalContent').textContent = prompt;
+        $('#promptModal').modal('show');
+    }
+</script>
+{% endblock %}
