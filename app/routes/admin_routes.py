@@ -983,7 +983,7 @@ def list_enterprise_requests():
             query = query.filter(company_id=customer_id)
 
         total_items = query.count()
-        requests = query.skip((page - 1) * limit).limit(limit)
+        requests = query.order_by('-created_at').skip((page - 1) * limit).limit(limit)
         total_pages = (total_items + limit - 1) // limit
 
         requests_list = [
