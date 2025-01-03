@@ -668,12 +668,16 @@ def dashboard():
     upscale_requets = Upscale.objects.count()
     text_to_video = TextToVideoGeneration.objects.count()
     image_to_video = ImageToVideo.objects.count()
+    purchase = Purchase.objects.count()
+    enterprise_customer = EnterpriseCustomer.objects.count()
+    enterprise_request = EnterpriseRequest.objects.count()
 
     # Başka istatistikler de eklenebilir
     return render_template('admin/dashboard.html', subscription_count=subscription_count,
-                           web_site_users=web_site_users, distinct_discord_user_count=distinct_discord_user_count,
+                           web_site_users=web_site_users, discord_requests=discord_requests.count(),
                            text_to_image_requests=text_to_image_requests, upscale_requets=upscale_requets,
-                           text_to_video=text_to_video, image_to_video=image_to_video)
+                           text_to_video=text_to_video, image_to_video=image_to_video, purchase=purchase,
+                           enterprise_customer=enterprise_customer, enterprise_request=enterprise_request)
 
 
 @admin_routes_bp.route('/text_to_image_requests_chart_data')

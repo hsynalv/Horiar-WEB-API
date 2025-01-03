@@ -26,7 +26,7 @@
             <div class="small-box bg-info">
               <div class="inner">
                 <h3>{{ subscription_count }}</h3>
-                <p>Satın Alımlar</p>
+                <p>Abonelikler</p>
               </div>
               <div class="icon">
                 <i class="ion ion-bag"></i>
@@ -35,6 +35,23 @@
             </div>
           </div>
                  <!-- ./col -->
+                {% if current_user.is_authenticated and 'bc8650b1-a41f-417d-a4c2-ab59b2738195' in current_user.roles %}
+                 <div class="col-lg-3 col-6">
+                      <!-- small box -->
+                      <div class="small-box bg-gradient-gray">
+                        <div class="inner">
+                          <h3>{{ purchase }}</h3>
+                          <p>Satın Alımlar</p>
+                        </div>
+                        <div class="icon">
+                          <i class="ion ion-bag"></i>
+                        </div>
+                        <a href="{{ url_for('admin_routes_bp.list_purchase') }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                      </div>
+                 </div>
+                 <!-- ./col -->
+                {% endif %}
+
                 <div class="col-lg-3 col-6">
             <!-- small box -->
             <div class="small-box bg-success">
@@ -54,14 +71,14 @@
             <!-- small box -->
             <div class="small-box bg-warning">
               <div class="inner">
-                <h3>{{ distinct_discord_user_count }}</h3>
+                <h3>{{ enterprise_customer }}</h3>
 
-                <p>Discord Kullanıcı Sayısı</p>
+                <p>Enterprise Müşteriler</p>
               </div>
               <div class="icon">
                 <i class="ion ion-person-add"></i>
               </div>
-              <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+              <a href="{{ url_for('admin_routes_bp.list_customers') }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
             </div>
@@ -69,7 +86,7 @@
         <!-- /.row -->
         <div class="row">
             <div class="card-body" style="display: inline-flex">
-                <div class="col-lg-3 col-6">
+                <div class="col-lg-2 col-6">
                     <!-- small box -->
                     <div class="small-box bg-info">
                         <div class="inner">
@@ -83,8 +100,7 @@
                         <a href="{{ url_for('admin_routes_bp.list_image_requests') }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
                     </div>
                 </div>
-                 <!-- ./col -->
-                <div class="col-lg-3 col-6">
+                <div class="col-lg-2 col-6">
                     <!-- small box -->
                     <div class="small-box bg-success">
                       <div class="inner">
@@ -98,7 +114,7 @@
                       <a href="{{ url_for('admin_routes_bp.list_upscale_requests') }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
                     </div>
                 </div>
-                <div class="col-lg-3 col-6">
+                <div class="col-lg-2 col-6">
                     <!-- small box -->
                     <div class="small-box bg-gradient-gray-dark">
                       <div class="inner">
@@ -112,7 +128,7 @@
                       <a href="{{ url_for('admin_routes_bp.list_text_to_video_requests') }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
                     </div>
                 </div>
-                <div class="col-lg-3 col-6">
+                <div class="col-lg-2 col-6">
                     <!-- small box -->
                     <div class="small-box bg-fuchsia">
                       <div class="inner">
@@ -124,6 +140,34 @@
                         <i class="ion ion-stats-bars"></i>
                       </div>
                       <a href="{{ url_for('admin_routes_bp.list_image_to_video_requests') }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-gradient-indigo">
+                      <div class="inner">
+                        <h3>{{ enterprise_request }}</h3>
+
+                        <p>Enterprise Request</p>
+                      </div>
+                      <div class="icon">
+                        <i class="ion ion-stats-bars"></i>
+                      </div>
+                      <a href="{{ url_for('admin_routes_bp.list_enterprise_requests') }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-gradient-maroon">
+                      <div class="inner">
+                        <h3>{{ discord_requests }}</h3>
+
+                        <p>Discord Request</p>
+                      </div>
+                      <div class="icon">
+                        <i class="ion ion-stats-bars"></i>
+                      </div>
+                      <a href="{{ url_for('admin_routes_bp.discord_requests') }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
                     </div>
                 </div>
             </div>
