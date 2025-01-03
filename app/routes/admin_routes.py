@@ -9,6 +9,7 @@ from mongoengine import Q
 from app.models.coupon_model import Coupon
 from app.models.discord_image_request_model import DiscordImageRequest
 from app.models.enterprise.enterprise_customer_model import EnterpriseCustomer
+from app.models.enterprise.enterprise_request_model import EnterpriseRequest
 from app.models.galley_photo_model import GalleryPhoto
 from app.models.image_to_video_model import ImageToVideo
 from app.models.package_model import Package
@@ -966,7 +967,62 @@ def list_customers():
     customers = EnterpriseCustomer.objects.all()
     return render_template('admin/enterprise/enterprise_customer.html', customers=customers)
 
+@admin_routes_bp.route('/enterprise-requests', methods=['GET'])
+def list_enterprise_requests():
+    try:
 
+        if 'page' not in request.args:
+            return render_template('admin/enterprise/enterprise_requests.html')
+
+        page = int(request.args.get('page', 1))
+        customer_id = request.args.get('customer_id', '')
+        limit = 10
+
+        query = EnterpriseRequest.objects()
+        if customer_id:
+            query = query.filter(company_id=customer_id)
+
+        total_items = query.count()
+        requests = query.skip((page - 1) * limit).limit(limit)
+        total_pages = (total_items + limit - 1) // limit
+
+        requests_list = [
+            {
+                "company_name": req.company_name,
+                "prompt": req.prompt,
+                "created_at": req.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                "request_type": req.request_type,
+                "image": req.image,
+                "video_url": req.video_url
+            }
+            for req in requests
+        ]
+
+        return jsonify({
+            "items": requests_list,
+            "current_page": page,
+            "total_pages": total_pages,
+            "total_items": total_items,
+        })
+    except Exception as e:
+        logging.error(f"Error fetching enterprise requests: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@admin_routes_bp.route('/list-customers', methods=['GET'])
+def list_customers_for_select():
+    try:
+        customers = EnterpriseRequest.objects().distinct(field='company_id')
+        customer_list = [
+            {
+                "_id": customer,
+                "company_name": EnterpriseRequest.objects(company_id=customer).first().company_name
+            }
+            for customer in customers
+        ]
+        return jsonify({"customers": customer_list}), 200
+    except Exception as e:
+        logging.error(f"Error fetching customers: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 
