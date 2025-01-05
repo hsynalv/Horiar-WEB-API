@@ -47,15 +47,14 @@ def login():
 
         # Kullanıcı varsa ve şifre doğruysa giriş başarılı olur
         if user and UserService.check_password(user.password, form.password.data):
-
-            # Kullanıcının roles alanında ilgili rol var mı kontrol edelim
-            admin_role = "9951a9b2-f455-4940-931e-432bc057179a"  # Admin rolü ID'si
-            if admin_role in user.roles:  # Kullanıcıda bu rol var mı kontrol et
-                login_user(user)  # Kullanıcıyı giriş yaptır
-                session['admin_logged_in'] = True  # Admin oturumunu işaretle
-                return redirect(url_for('admin.index'))  # Admin index sayfasına yönlendir
+            admin_role = "9951a9b2-f455-4940-931e-432bc057179a"
+            if admin_role in user.roles:
+                remember = form.remember_me.data  # Formdan 'Beni Hatırla' seçeneğini al
+                login_user(user, remember=remember)  # Kalıcı oturum seçeneği
+                session['admin_logged_in'] = True
+                return redirect(url_for('admin.index'))
             else:
-                flash('Admin yetkisine sahip değilsiniz.', 'danger')  # Rol yoksa hata mesajı
+                flash('Admin yetkisine sahip değilsiniz.', 'danger')
 
         # Eğer kullanıcı adı veya şifre hatalıysa flash mesajı göster
         flash('Yanlış kullanıcı adı veya şifre', 'danger')
