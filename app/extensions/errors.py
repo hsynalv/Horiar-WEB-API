@@ -34,7 +34,7 @@ def register_error_handlers(app):
             f"Method: {request.method}, "
             f"IP: {get_client_ip()}"
         )
-        send_error_email(subject="Critical Error in Application", error_details="deneme hata live")
+        #send_error_email(subject="Critical Error in Application", error_details="deneme hata live")
         # İsteğe bağlı olarak kullanıcıya 404 yanıtı döndürme
         return jsonify({"error": "Not Found"}), 404
 
@@ -67,7 +67,7 @@ def register_error_handlers(app):
                         f"Method: {request.method}\n" \
                         f"IP: {client_ip}\n" \
                         f"Traceback: {error_trace}"
-        send_error_email(subject="Critical Error in Application", error_details=error_details)
+        #send_error_email(subject="Critical Error in Application", error_details=error_details)
         # Hata cevabı döndürme
         return jsonify({
             "error": "Internal Server Error",
