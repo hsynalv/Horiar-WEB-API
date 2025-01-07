@@ -37,6 +37,8 @@ def check_coupon(payload):
         coupon = CouponService.check_coupon(coupon_name, payload)  # Kuponu kontrol ediyoruz
         return jsonify({"message": "Coupon found", "coupon": coupon}), 200
     except ValueError as e:
+        return jsonify({"message": str(e)}), 400
+    except FileNotFoundError as e:
         return jsonify({"message": str(e)}), 404
     except Exception as e:
         return jsonify({"message": str(e)}), 500

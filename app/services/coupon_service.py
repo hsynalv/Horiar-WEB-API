@@ -43,7 +43,7 @@ class CouponService(BaseService):
 
 
         if not coupon:
-            raise ValueError("Kupon bulunamadı.")
+            raise FileNotFoundError("Kupon bulunamadı.")
 
         # Kuponun aktif olup olmadığını kontrol et
         if not coupon.is_active:
