@@ -127,7 +127,6 @@ def register_blueprints(app):
             job_id = data.get("id")
             status = data.get("status")
             output = data.get("output")
-            inner_status = output.get("status")
 
 
             # Redis'ten ilgili job_id'yi alarak kaydı kontrol et
@@ -156,7 +155,7 @@ def register_blueprints(app):
 
 
             # İşlem tamamlandıysa iş türüne göre veritabanına kayıt işlemi yapalım
-            if status == "COMPLETED" and inner_status == "success":
+            if status == "COMPLETED":
 
                 image_url = output.get("message")
 
