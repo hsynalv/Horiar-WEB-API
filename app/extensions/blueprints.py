@@ -30,8 +30,6 @@ from app.utils.notification import notify_user_via_websocket
 from app.utils.queue_manager import redis_conn
 
 
-runpod_logger = logging.getLogger("runpod")
-
 def register_blueprints(app):
     # Parent Blueprint tanımlaması
 
@@ -121,7 +119,7 @@ def register_blueprints(app):
                 try:
                     data = json.loads(raw_data)
                 except json.JSONDecodeError as e:
-                    runpod_logger.error(f"Failed to parse JSON from raw data: {e}")
+                    logging.error(f"Failed to parse JSON from raw data: {e}")
                     return jsonify({"error": "Invalid JSON format"}), 400
 
 
@@ -137,13 +135,13 @@ def register_blueprints(app):
             stored_data = redis_conn.get(request_key)
 
             if redis_conn.exists(request_key):
-                runpod_logger.info(f"Key {request_key} exists in Redis")
+                logging.info(f"Key {request_key} exists in Redis")
             else:
-                runpod_logger.info(f"Key {request_key} does not exist in Redis")
+                logging.info(f"Key {request_key} does not exist in Redis")
 
 
             if not stored_data:
-                runpod_logger.warning(f"No pending request found for job_id: {job_id}")
+                logging.warning(f"No pending request found for job_id: {job_id}")
                 return jsonify({"message": f"No pending request found for job_id: {job_id}"}), 404
 
             # Redis'te bulunan veriyi çözümle ve iş durumu "COMPLETED" mi diye kontrol et
@@ -302,14 +300,14 @@ def register_blueprints(app):
 
                 # Kullanıcıya bildirim gönder (frontend'e WebSocket ile veya diğer yöntemlerle)
                 notify_user_via_websocket(user_id, message)
-                runpod_logger.info(f"Job {job_id} completed with image URL: {image_url}")
+                logging.info(f"Job {job_id} completed with image URL: {image_url}")
 
                 # Redis'ten veriyi sil
                 redis_conn.unlink(request_key)
                 if redis_conn.exists(request_key):
-                    runpod_logger.info(f"Key {request_key} exists in Redis")
+                    logging.info(f"Key {request_key} exists in Redis")
                 else:
-                    runpod_logger.info(f"Key {request_key} does not exist in Redis")
+                    logging.info(f"Key {request_key} does not exist in Redis")
 
                 return jsonify(message), 200
 
@@ -365,14 +363,14 @@ def register_blueprints(app):
                     request_info['status'] = status
                     redis_conn.set(request_key, json.dumps(request_info), ex=3600)
                     notify_user_via_websocket(user_id, {"status": "failed", "message": "A server error occurred while processing your request"})
-                    runpod_logger.warning(f"Job {job_id} failed with status: {status}")
+                    logging.warning(f"Job {job_id} failed with status: {status}")
                     return jsonify({"message": f"Job {job_id} failed with status {status}"}), 200
 
         except Exception as e:
             raw_request_data = request.get_data(as_text=True)  # Gelen veriyi string formatında al
-            runpod_logger.error(f"Error processing webhook: {str(e)}")
-            runpod_logger.error(f"Request body at error: {raw_request_data}")  # Hatalı gelen veriyi log'la
-            runpod_logger.info(f"-------------------------------------------------------------------------------------")
+            logging.error(f"Error processing webhook: {str(e)}")
+            logging.error(f"Request body at error: {raw_request_data}")  # Hatalı gelen veriyi log'la
+            logging.info(f"-------------------------------------------------------------------------------------")
             return jsonify({"message": f"Error processing webhook: {str(e)}"}), 500
 
 
