@@ -302,14 +302,14 @@ def register_blueprints(app):
 
                 # Kullanıcıya bildirim gönder (frontend'e WebSocket ile veya diğer yöntemlerle)
                 notify_user_via_websocket(user_id, message)
-                logging.info(f"Job {job_id} completed with image URL: {image_url}")
+                runpod_logger.info(f"Job {job_id} completed with image URL: {image_url}")
 
                 # Redis'ten veriyi sil
                 redis_conn.unlink(request_key)
                 if redis_conn.exists(request_key):
-                    logging.info(f"Key {request_key} exists in Redis")
+                    runpod_logger.info(f"Key {request_key} exists in Redis")
                 else:
-                    logging.info(f"Key {request_key} does not exist in Redis")
+                    runpod_logger.info(f"Key {request_key} does not exist in Redis")
 
                 return jsonify(message), 200
 
@@ -365,7 +365,7 @@ def register_blueprints(app):
                     request_info['status'] = status
                     redis_conn.set(request_key, json.dumps(request_info), ex=3600)
                     notify_user_via_websocket(user_id, {"status": "failed", "message": "A server error occurred while processing your request"})
-                    logging.warning(f"Job {job_id} failed with status: {status}")
+                    runpod_logger.warning(f"Job {job_id} failed with status: {status}")
                     return jsonify({"message": f"Job {job_id} failed with status {status}"}), 200
 
         except Exception as e:
