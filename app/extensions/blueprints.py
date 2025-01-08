@@ -30,6 +30,8 @@ from app.utils.notification import notify_user_via_websocket
 from app.utils.queue_manager import redis_conn
 
 
+runpod_logger = logging.getLogger("runpod")
+
 def register_blueprints(app):
     # Parent Blueprint tanımlaması
 
@@ -119,7 +121,7 @@ def register_blueprints(app):
                 try:
                     data = json.loads(raw_data)
                 except json.JSONDecodeError as e:
-                    logging.error(f"Failed to parse JSON from raw data: {e}")
+                    runpod_logger.error(f"Failed to parse JSON from raw data: {e}")
                     return jsonify({"error": "Invalid JSON format"}), 400
 
 
@@ -129,21 +131,19 @@ def register_blueprints(app):
             output = data.get("output")
             inner_status = output.get("status")
 
-            logging.info("işi tamalanan job_id ve output bilgileri alındı")
-
 
             # Redis'ten ilgili job_id'yi alarak kaydı kontrol et
             request_key = f"runpod_request:{job_id}"
             stored_data = redis_conn.get(request_key)
 
             if redis_conn.exists(request_key):
-                logging.info(f"Key {request_key} exists in Redis")
+                runpod_logger.info(f"Key {request_key} exists in Redis")
             else:
-                logging.info(f"Key {request_key} does not exist in Redis")
+                runpod_logger.info(f"Key {request_key} does not exist in Redis")
 
 
             if not stored_data:
-                logging.warning(f"No pending request found for job_id: {job_id}")
+                runpod_logger.warning(f"No pending request found for job_id: {job_id}")
                 return jsonify({"message": f"No pending request found for job_id: {job_id}"}), 404
 
             # Redis'te bulunan veriyi çözümle ve iş durumu "COMPLETED" mi diye kontrol et
@@ -369,7 +369,10 @@ def register_blueprints(app):
                     return jsonify({"message": f"Job {job_id} failed with status {status}"}), 200
 
         except Exception as e:
-            logging.error(f"Error processing webhook: {str(e)}")
+            raw_request_data = request.get_data(as_text=True)  # Gelen veriyi string formatında al
+            runpod_logger.error(f"Error processing webhook: {str(e)}")
+            runpod_logger.error(f"Request body at error: {raw_request_data}")  # Hatalı gelen veriyi log'la
+            runpod_logger.info(f"-------------------------------------------------------------------------------------")
             return jsonify({"message": f"Error processing webhook: {str(e)}"}), 500
 
 
