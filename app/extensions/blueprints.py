@@ -149,7 +149,7 @@ def register_blueprints(app):
             job_type = request_info.get("job_type")
 
 
-            if not job_id or not status or not output:
+            if not job_id or not status:
                 notify_user_via_websocket(user_id, {"status": "failed", "message": "A server error occurred while processing your request"})
                 return jsonify({"message": "Invalid data"}), 400
 
@@ -311,6 +311,8 @@ def register_blueprints(app):
                 return jsonify(message), 200
 
             else:
+
+                logging.info("not completed")
 
                 if job_type == "customer_image_generation":
                     enterpriseService = EnterpriseService()
