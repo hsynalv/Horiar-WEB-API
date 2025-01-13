@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/adminlte.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='plugins/fontawesome-free/css/all.min.css') }}">
+
+
+<style>
+#submit-announcement-btn .spinner-border {
+    display: none; /* Varsayılan olarak gizli */
+    width: 1rem;
+    height: 1rem;
+    vertical-align: middle;
+}
+#submit-announcement-btn.loading .spinner-border {
+    display: inline-block; /* Yükleme sırasında görünür */
+}
+</style>
+
+
+{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h1><i class="fas fa-bullhorn"></i> Duyurular</h1>
+            </div>
+            <div class="col-sm-6 d-flex justify-content-end">
+                <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#addAnnouncementModal">Yeni Duyuru Ekle</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Sistemdeki Tüm Duyurular</h3>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Başlık</th>
+                        <th>İçerik</th>
+                        <th>Yayın Durumu</th>
+                        <th>Oluşturulma Tarihi</th>
+                        <th>Görsel</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="announcements-table">
+                    <!-- Dinamik içerik buraya yüklenecek -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- Yeni Duyuru Modal -->
+<div class="modal fade" id="addAnnouncementModal" tabindex="-1" role="dialog" aria-labelledby="addAnnouncementModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addAnnouncementModalLabel">Yeni Duyuru Ekle</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Kapat">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="add-announcement-form">
+                    <div class="form-group">
+                        <label for="title">Başlık</label>
+                        <input type="text" id="title" name="title" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="content">İçerik</label>
+                        <textarea id="content" name="content" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="tags">Etiketler</label>
+                        <input type="text" id="tags" name="tags" class="form-control" placeholder="Virgülle ayırarak ekleyin (örn. güncelleme,haber)">
+                    </div>
+                    <div class="form-group">
+                        <label for="is_published">Yayın Durumu</label>
+                        <select id="is_published" name="is_published" class="form-control">
+                            <option value="true" selected>Yayınla</option>
+                            <option value="false">Taslak</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="image">Görsel</label>
+                        <input type="file" id="image" name="image" class="form-control-file">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                <button type="button" id="submit-announcement-btn" class="btn btn-primary">
+                    Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Güncelleme Modal -->
+<div class="modal fade" id="editAnnouncementModal" tabindex="-1" role="dialog" aria-labelledby="editAnnouncementModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAnnouncementModalLabel">Duyuruyu Güncelle</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Kapat">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-announcement-form">
+                    <input type="hidden" id="edit-announcement-id">
+                    <div class="form-group">
+                        <label for="edit-title">Başlık</label>
+                        <input type="text" id="edit-title" name="title" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-content">İçerik</label>
+                        <textarea id="edit-content" name="content" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-tags">Etiketler</label>
+                        <input type="text" id="edit-tags" name="tags" class="form-control" placeholder="Virgülle ayırarak ekleyin">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-is-published">Yayın Durumu</label>
+                        <select id="edit-is-published" name="is_published" class="form-control">
+                            <option value="true">Yayınla</option>
+                            <option value="false">Taslak</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-image">Görsel</label>
+                        <input type="file" id="edit-image" name="image" class="form-control-file">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                <button type="button" id="update-announcement-btn" class="btn btn-primary">Güncelle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    loadAnnouncements();
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const submitButton = document.getElementById('submit-announcement-btn');
+
+    submitButton.addEventListener('click', function () {
+        const form = document.getElementById('add-announcement-form');
+        const formData = new FormData(form);
+
+        // Butona "loading" sınıfı ekleyerek spinner'ı göster
+        submitButton.classList.add('loading');
+        submitButton.setAttribute('disabled', 'disabled');
+
+        fetch('/announcements/add', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            submitButton.classList.remove('loading');
+            submitButton.removeAttribute('disabled'); // Butonu tekrar etkinleştir
+
+            if (data.error) {
+                alert(`Hata: ${data.error}`);
+            } else {
+                alert('Duyuru başarıyla eklendi!');
+                $('#addAnnouncementModal').modal('hide'); // Modal'ı kapat
+                loadAnnouncements(); // Tabloyu güncelle
+            }
+        })
+        .catch(error => {
+            console.error('Duyuru eklenemedi:', error);
+            submitButton.classList.remove('loading');
+            submitButton.removeAttribute('disabled'); // Butonu tekrar etkinleştir
+        });
+    });
+});
+
+function loadAnnouncements() {
+        fetch('/announcements/getall')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('announcements-table');
+                tableBody.innerHTML = '';
+                data.forEach(announcement => {
+                    const row = `
+                        <tr>
+                            <td>${announcement.title}</td>
+                            <td>${announcement.content.substring(0, 50)}...</td>
+                            <td>
+                                <span class="badge ${announcement.is_published ? 'badge-success' : 'badge-danger'}">
+                                    ${announcement.is_published ? 'Yayınlanmış' : 'Taslak'}
+                                </span>
+                            </td>
+                            <td>${new Date(announcement.created_at).toLocaleString()}</td>
+                            <td>
+                                ${
+                                    announcement.image_url
+                                    ? `<img src="${announcement.image_url}" alt="Görsel" style="max-width: 100px; max-height: 100px;">`
+                                    : 'Görsel Yok'
+                                }
+                            </td>
+                            <td>
+                                <a href="#" class="btn btn-sm btn-warning" onclick="openEditModal('${announcement.id}')">Düzenle</a>
+                                <a href="#" class="btn btn-sm btn-danger" onclick="deleteAnnouncement('${announcement.id}')">Sil</a>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+            })
+            .catch(error => console.error('Duyurular yüklenemedi:', error));
+    }
+
+function deleteAnnouncement(announcementId) {
+    if (!confirm('Bu duyuruyu silmek istediğinizden emin misiniz?')) {
+        return; // Kullanıcı "Hayır" dediyse işlemi durdur
+    }
+
+    fetch(`/announcements/delete/${announcementId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Duyuru başarıyla silindi.');
+            loadAnnouncements(); // Tabloyu güncelle
+        } else {
+            return response.json().then(data => {
+                throw new Error(data.error || 'Bir hata oluştu.');
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Duyuru silinemedi:', error);
+        alert(`Hata: ${error.message}`);
+    });
+}
+
+function openEditModal(announcementId) {
+    fetch(`/announcements/get/${announcementId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('edit-announcement-id').value = data.id;
+            document.getElementById('edit-title').value = data.title;
+            document.getElementById('edit-content').value = data.content;
+            document.getElementById('edit-tags').value = data.tags.join(', ');
+            document.getElementById('edit-is-published').value = data.is_published.toString();
+
+            // Modal'ı aç
+            $('#editAnnouncementModal').modal('show');
+        })
+        .catch(error => console.error('Duyuru bilgileri alınamadı:', error));
+}
+
+document.getElementById('update-announcement-btn').addEventListener('click', function () {
+    const form = document.getElementById('edit-announcement-form');
+    const formData = new FormData(form);
+    const announcementId = document.getElementById('edit-announcement-id').value;
+
+    fetch(`/announcements/${announcementId}`, {
+        method: 'PUT',
+        body: formData
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(`Hata: ${data.error}`);
+            } else {
+                alert('Duyuru başarıyla güncellendi!');
+                $('#editAnnouncementModal').modal('hide'); // Modal'ı kapat
+                loadAnnouncements(); // Tabloyu güncelle
+            }
+        })
+        .catch(error => {
+            console.error('Duyuru güncellenemedi:', error);
+            alert('Bir hata oluştu, lütfen tekrar deneyin.');
+        });
+});
+
+</script>
+{% endblock %}

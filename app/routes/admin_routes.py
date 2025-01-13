@@ -1027,6 +1027,11 @@ def list_customers_for_select():
         logging.error(f"Error fetching customers: {e}")
         return jsonify({"error": str(e)}), 500
 
+@admin_routes_bp.route('/announcements', methods=['GET'])
+def announcements():
+    return render_template('admin/announcements.html')
+
+
 
 
 

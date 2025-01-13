@@ -36,6 +36,7 @@ class ProductionConfig:
     S3_FOLDER_WEBP_IMAGE = os.getenv('S3_FOLDER_WEBP_IMAGE')
     S3_FOLDER_VIDEO = os.getenv('S3_FOLDER_VIDEO')
     S3_FOLDER_I2I_IMAGE = os.getenv('S3_FOLDER_I2I_IMAGE')
+    S3_FOLDER_ANNOUNCEMENT = os.getenv('S3_FOLDER_ANNOUNCEMENT')
     MERCHANT_ID = os.getenv('MERCHANT_ID')
     MERCHANT_KEY = os.getenv('MERCHANT_KEY')
     MERCHANT_SALT = os.getenv('MERCHANT_SALT')
