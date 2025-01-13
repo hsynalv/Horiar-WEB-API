@@ -52,8 +52,15 @@ class PaymentService:
 
         # İndirim varsa kuponu al ve uygula
         if coupon_name:
-            # Kuponu al
-            coupon = CouponService.check_coupon(coupon_name, payload)
+
+            try:
+                coupon = CouponService.check_coupon(coupon_name, payload)
+            except FileNotFoundError as e:
+                raise
+            except ValueError as e:
+                raise
+            except Exception as e:
+                raise
 
             if not coupon:
                 raise ValueError("Invalid coupon code")  # Kupon bulunamazsa hata fırlatıyoruz
