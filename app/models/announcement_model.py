@@ -2,8 +2,10 @@ import datetime
 from mongoengine import Document, StringField, DateTimeField, BooleanField, ListField
 
 class Announcement(Document):
-    title = StringField(required=True, max_length=255)  # Başlık
-    content = StringField(required=True)  # İçerik
+    title_tr = StringField(required=True, max_length=255)  # Başlık
+    title_en = StringField(required=True, max_length=255)  # Başlık
+    content_tr = StringField(required=True)  # İçerik
+    content_en = StringField(required=True)  # İçerik
     created_at = DateTimeField(default=datetime.datetime.utcnow)  # Oluşturulma Tarihi
     image_url = StringField(max_length=1024)  # Görsel URL (Opsiyonel)
     video_url = StringField(max_length=1024)  # Video URL (Opsiyonel)

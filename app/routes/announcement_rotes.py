@@ -38,8 +38,10 @@ def update_announcement(announcement_id):
     """
     try:
         updates = {
-            "title": request.form.get('title'),
-            "content": request.form.get('content'),
+            "title_tr": request.form.get('title'),
+            "title_en": AnnouncementService.translatePrompt(request.form.get('title')),
+            "content_tr": request.form.get('content'),
+            "content_en": AnnouncementService.translatePrompt(request.form.get('content')),
             "tags": request.form.get('tags', '').split(','),
             "is_published": request.form.get('is_published', 'true').lower() == 'true'
         }
@@ -63,8 +65,10 @@ def get_announcement(announcement_id):
         announcement = AnnouncementService.get_announcement(announcement_id)
         return jsonify({
             "id": announcement_id,
-            "title": announcement.title,
-            "content": announcement.content,
+            "title_tr": announcement.title_tr,
+            "title_en": announcement.title_en,
+            "content_tr": announcement.content_tr,
+            "content_en": announcement.content_en,
             "image_url": announcement.image_url,
             "tags": announcement.tags,
             "is_published": announcement.is_published,
@@ -89,8 +93,10 @@ def get_all_announcements():
         response = [
             {
                 "id": str(announcement.id),
-                "title": announcement.title,
-                "content": announcement.content,
+                "title_tr": announcement.title_tr,
+                "title_en": announcement.title_en,
+                "content_tr": announcement.content_tr,
+                "content_en": announcement.content_en,
                 "image_url": announcement.image_url,
                 "tags": announcement.tags,
                 "is_published": announcement.is_published,

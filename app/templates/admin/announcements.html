@@ -206,8 +206,8 @@ function loadAnnouncements() {
                 data.forEach(announcement => {
                     const row = `
                         <tr>
-                            <td>${announcement.title}</td>
-                            <td>${announcement.content.substring(0, 50)}...</td>
+                            <td>${announcement.title_tr}</td>
+                            <td>${announcement.content_tr.substring(0, 50)}...</td>
                             <td>
                                 <span class="badge ${announcement.is_published ? 'badge-success' : 'badge-danger'}">
                                     ${announcement.is_published ? 'Yayınlanmış' : 'Taslak'}
@@ -265,8 +265,8 @@ function openEditModal(announcementId) {
         .then(response => response.json())
         .then(data => {
             document.getElementById('edit-announcement-id').value = data.id;
-            document.getElementById('edit-title').value = data.title;
-            document.getElementById('edit-content').value = data.content;
+            document.getElementById('edit-title').value = data.title_tr;
+            document.getElementById('edit-content').value = data.content_tr;
             document.getElementById('edit-tags').value = data.tags.join(', ');
             document.getElementById('edit-is-published').value = data.is_published.toString();
 
