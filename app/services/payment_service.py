@@ -297,6 +297,7 @@ class PaymentService:
 
                 purchase = Purchase(
                     username=provision.username,
+                    email=provision.email,
                     package=package["title"],
                     amount=provision.amount / 100,
                     currency=provision.currency

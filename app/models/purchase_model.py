@@ -3,6 +3,7 @@ from datetime import datetime
 
 class Purchase(Document):
     username = StringField(required=True)  # Satın alımı yapan kullanıcı
+    email = StringField(required=False)
     package = StringField(required=True)  # Satın alınan paket
     amount = FloatField(required=True)  # Satın alım tutarı (gelir)
     payment_date = DateTimeField(default=datetime.utcnow)  # Satın alımın gerçekleştiği tarih
@@ -14,6 +15,7 @@ class Purchase(Document):
         return {
             "id": str(self.id),
             "username": self.username,
+            "email": self.email,
             "package": self.package,
             "amount": self.amount,
             "payment_date": self.payment_date.isoformat(),

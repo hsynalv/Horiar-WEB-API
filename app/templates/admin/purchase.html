@@ -29,6 +29,7 @@
                 <thead>
                     <tr>
                         <th>Kullanıcı Adı</th>
+                        <th>E-Mail</th>
                         <th>Tarih</th>
                         <th>Amount</th>
                     </tr>
@@ -37,6 +38,7 @@
                     {% for request in purchases %}
                     <tr>
                         <td>{{ request.username }}</td>
+                        <td>{{ request.email }}</td>
                         <td>{{ request.payment_date.strftime('%Y/%m/%d') }}</td>
                         <td>{{ request.amount }} {{ request.currency }}</td>
 
