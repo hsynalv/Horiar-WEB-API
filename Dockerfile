@@ -14,4 +14,4 @@ ENV FLASK_ENV=development
 
 EXPOSE 5000 9181
 
-CMD ["gunicorn", "-k", "eventlet", "-w", "4", "-b", "0.0.0.0:5000", "app:create_app()"]
+CMD ["gunicorn", "-k", "eventlet", "-w", "1", "-b", "0.0.0.0:5000", "app:create_app()"]
