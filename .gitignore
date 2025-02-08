@@ -1,0 +1,7 @@
+.vercel
+.env.development
+.env.production
+./logs
+/logs/
+docker-compose.yml
+Dockerfile
