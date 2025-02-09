@@ -19,6 +19,7 @@ from app.services.package_service import PackageService
 from app.services.provision_service import ProvisionService
 from app.services.subscription_service import SubscriptionService
 from app.services.user_service import UserService
+from app.utils.automate_mail import send_purchase_email
 
 
 class PaymentService:
@@ -330,13 +331,15 @@ class PaymentService:
                 currency=provision.currency
             )
 
-
+            send_purchase_email(provision.email, provision.username,
+                                "Satın Alımınız Gerçekleşti!", str(package["credits"]),
+                                str(subscription_date.strftime("%d/%m/%Y")), "Satın Alımınız Gerçekleşti!",
+                                "Araçlarımızı satın aldığınız için çok mutluyuz.")
 
             try:
                 # Veritabanına kaydet
                 subscription.save()
                 purchase.save()
-
                 provision.delete()
 
                 PaymentService.paytr_logger.info(f"Subscription created for user {provision.username} with merchant_oid {merchant_oid}")

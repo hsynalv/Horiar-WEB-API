@@ -23,6 +23,7 @@ from app.services.coupon_service import CouponService
 from app.services.enterprise.enterprise_service import EnterpriseService
 from app.services.user_service import UserService
 from app.forms.forms import LoginForm
+from app.utils.automate_mail import send_purchase_email
 
 admin_routes_bp = Blueprint('admin_routes_bp', __name__)
 
@@ -391,6 +392,12 @@ def assign_credit():
             used_coupon=None,  # İsteğe bağlı olarak kullanılabilir,
             max_credit_balance = int(credit)
         )
+
+        send_purchase_email(to=user.email, username=user.username,
+                            title="Kredi Tanımlamanız Gerçekleşti!", credit_count=str(credit),
+                            date=str(datetime.utcnow().strftime("%d/%m/%Y")),
+                            subject="Kredi Tanımlamanız Gerçekleşti!",
+                            first="Platformumuz tarafından size ücretsiz kredi tanımlaması gerçekleştirdik.")
 
         # Yeni abonelik kaydını veritabanına kaydet
         subscription.save()
