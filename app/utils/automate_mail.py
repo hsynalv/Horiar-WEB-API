@@ -12,7 +12,7 @@ def send_welcome_email(to,username):
     }
 
     try:
-        response = requests.post("http://0.0.0.0:3000/send-email", json=payload)
+        response = requests.post("http://localhost:3000/send-email", json=payload)
         response.raise_for_status()  # Hata durumunda istisna fırlatır
         logging.info("Email başarıyla gönderildi!", response.json())
         return response.json()
@@ -36,7 +36,7 @@ def send_purchase_email(to, username, title, credit_count, date, subject, first)
     logging.info(payload)
 
     try:
-        response = requests.post("http://0.0.0.0:3000/send-email", json=payload)
+        response = requests.post("http://localhost:3000/send-email", json=payload)
         response.raise_for_status()  # Hata durumunda istisna fırlatır
         logging.info("Email başarıyla gönderildi!", response.json())
         return response.json()
