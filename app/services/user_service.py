@@ -18,6 +18,7 @@ import datetime
 
 from app.services.base_service import BaseService
 from app.services.subscription_service import SubscriptionService
+from app.utils.automate_mail import send_welcome_email
 
 
 class UserService(BaseService):
@@ -45,6 +46,9 @@ class UserService(BaseService):
             user_data["registration_date"] = datetime.datetime.utcnow()
             user = User(**user_data)
             user.save()
+
+            username = user_data["google_username"] or user_data["discord_username"]
+            send_welcome_email(user_data["email"], username)
 
         return user  # Artık user id yerine tüm user nesnesini döndürüyoruz
 
@@ -87,6 +91,8 @@ class UserService(BaseService):
             hashed_password = pbkdf2_sha256.hash(password)
             user = User(email=email, username=random_username, password=hashed_password)
             user.save()
+
+            send_welcome_email(email, random_username)
 
             return str(user.id)
 
