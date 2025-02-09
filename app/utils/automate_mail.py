@@ -17,7 +17,7 @@ def send_welcome_email(to,username):
         logging.info("Email başarıyla gönderildi!", response.json())
         return response.json()
     except requests.exceptions.RequestException as e:
-        logging.ERROR(f"Email gönderme hatası: {e}")
+        logging.error(f"Email gönderme hatası: {e}")
 
 def send_purchase_email(to, username, title, credit_count, date, subject, first):
     payload = {
@@ -41,4 +41,4 @@ def send_purchase_email(to, username, title, credit_count, date, subject, first)
         logging.info("Email başarıyla gönderildi!", response.json())
         return response.json()
     except requests.exceptions.RequestException as e:
-        logging.ERROR(f"Email gönderme hatası: {e}")
+        logging.error(f"Email gönderme hatası: {e}")
