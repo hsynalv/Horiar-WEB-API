@@ -1,5 +1,7 @@
 import logging
 import os
+
+import mongoengine
 from flask import Flask, request
 from flask_cors import CORS
 from flask_login import LoginManager
@@ -7,6 +9,7 @@ from flask_mail import Mail
 from flask_mongoengine import MongoEngine
 from dotenv import load_dotenv
 from flask_socketio import SocketIO
+from pymongo.common import alias
 
 from app.auth import configure_oauth
 from app.extensions.socketio import socketio
@@ -28,8 +31,9 @@ load_dotenv(env_file)  # Doğru .env dosyasını yükle
 from app.config.development import DevelopmentConfig
 from app.config.production import ProductionConfig
 
-# MongoEngine örneği oluştur
-db = MongoEngine()
+# MongoEngine örnekleri
+db_primary = MongoEngine()
+db_secondary = MongoEngine()
 
 # LoginManager oluştur
 login_manager = LoginManager()
@@ -61,17 +65,16 @@ def create_app():
                                 "https://horiar-client-git-development-mostafa-horiar.vercel.app"], "supports_credentials": True}})
     else:
         CORS(app, resources={r"/*": {"origins": "*", "supports_credentials": True}})
-    # MongoDB bağlantı ayarları .env'den çekiliyor
-    mongo_uri = os.getenv('MONGO_URI')
-    if not mongo_uri:
-        raise ValueError("MONGO_URI not set in the environment variables.")
 
-    app.config['MONGODB_SETTINGS'] = {
-        'host': mongo_uri
-    }
+        # MongoDB URI'lerini çekiyoruz
+    mongo_uri_primary = os.getenv('MONGO_URI_PRIMARY')
+    mongo_uri_secondary = os.getenv('MONGO_URI_SECONDARY')
 
-    # MongoDB bağlantısını başlat
-    db.init_app(app)
+    if not mongo_uri_primary or not mongo_uri_secondary:
+        raise ValueError("MONGO_URI_PRIMARY or MONGO_URI_SECONDARY not set in the environment variables.")
+
+    mongoengine.connect(host=mongo_uri_primary, alias="default")
+    mongoengine.connect(host=mongo_uri_secondary, alias="secondary")
 
     # Ortam değişkenlerinden ayarları yükle
     app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
