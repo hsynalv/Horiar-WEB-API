@@ -212,11 +212,27 @@
           if (fullPrompt.length > 30) {
               truncatedPrompt = fullPrompt.substring(0, 30) + '...';
           }
+          // Tip alanı için özel stiller
+          var typeText = req.type || '';
+          var typeHtml = typeText;
+          if (typeText.toLowerCase() === 'imagine') {
+              typeHtml = '<span style="display: inline-block; padding: 2px 6px; background-color: #cce5ff; color: #004085; border-radius: 3px;">' + typeText + '</span>';
+          } else if (typeText.toLowerCase() === 'variation') {
+              typeHtml = '<span style="display: inline-block; padding: 2px 6px; background-color: #d4edda; color: #155724; border-radius: 3px;">' + typeText + '</span>';
+          } else if (typeText.toLowerCase() === 'upscale') {
+              typeHtml = '<span style="display: inline-block; padding: 2px 6px; background-color: #d1c4e9; color: #4a148c; border-radius: 3px;">' + typeText + '</span>';
+          }
+          var statusIcon = '';
+          if (req.status && req.status.toLowerCase() === "completed") {
+              statusIcon = '<i class="fas fa-check-circle" style="color: green;"></i>';
+          } else {
+              statusIcon = '<i class="fas fa-times-circle" style="color: red;"></i>';
+          }
           var row = '<tr>' +
-              '<td>' + (req.type || '') + '</td>' +
+              '<td>' + typeHtml + '</td>' +
               '<td>' + (req.messageId || '') + '</td>' +
               '<td>' + (req.timestamp ? new Date(req.timestamp).toLocaleString() : '') + '</td>' +
-              '<td>' + (req.status || '') + '</td>' +
+              '<td>' + statusIcon + '</td>' +
               '<td><a href="#" class="prompt-link" data-fullprompt="' + fullPrompt.replace(/"/g, '&quot;') + '">' + truncatedPrompt + '</a></td>' +
               '<td>' + (req.resolution || '') + '</td>' +
               '<td>' + (req.modelType || '') + '</td>';

@@ -47,7 +47,7 @@ def create_app():
     setup_logging()
 
     # Yeni: SocketIO uygulamaya entegre edildi
-    #socketio.init_app(app)
+    socketio.init_app(app)
 
     # Ortam değişkenine göre yapılandırmayı yükle
     if app.config['ENV'] == 'production':
