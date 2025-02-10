@@ -67,52 +67,76 @@
                     <ul class="nav nav-pills nav-sidebar flex-column" role="menu" data-accordion="false">
                         <li class="nav-item">
                             <a href="{{ url_for('admin_routes_bp.dashboard') }}" class="nav-link">
-                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <i class="nav-icon fas fa-home"></i>
                                 <p>Dashboard</p>
                             </a>
                         </li>
-                        <li class="nav-item menu-open"> <!-- Açılır menüyü varsayılan olarak açık tutmak isterseniz menu-open sınıfını ekleyebilirsiniz -->
-                            <div href="#" class="nav-link">
-                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-images"></i>
                                 <p>
                                     Galeri
                                     <i class="right fas fa-angle-left"></i>
                                 </p>
-                            </div>
+                            </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
                                     <a href="{{ url_for('admin_routes_bp.list_user_images') }}" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
+                                        <i class="far fa-image nav-icon"></i>
                                         <p>Galeriye Render Ekle</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="{{ url_for('admin_routes_bp.list_gallery_photos') }}" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
+                                        <i class="fas fa-edit nav-icon"></i>
                                         <p>Galeriyi Düzenle</p>
                                     </a>
                                 </li>
                             </ul>
                         </li>
-                        <li class="nav-item menu-open"> <!-- Açılır menüyü varsayılan olarak açık tutmak isterseniz menu-open sınıfını ekleyebilirsiniz -->
-                            <div href="#" class="nav-link">
-                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-building"></i>
                                 <p>
                                     Enterprise
                                     <i class="right fas fa-angle-left"></i>
                                 </p>
-                            </div>
+                            </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
                                     <a href="{{ url_for('admin_routes_bp.list_customers') }}" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
+                                        <i class="fas fa-user-tie nav-icon"></i>
                                         <p>Müşteriler</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="{{ url_for('admin_routes_bp.list_enterprise_requests') }}" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
+                                        <i class="fas fa-tasks nav-icon"></i>
                                         <p>Müşteri Renderları</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fab fa-discord"></i>
+                                <p>
+                                    Discord
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ url_for('admin_routes_bp.get_discord_users') }}" class="nav-link">
+                                        <i class="fas fa-users nav-icon"></i>
+                                        <p>Discord Kullanıcıları</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ url_for('admin_routes_bp.get_discord_stats') }}" class="nav-link">
+                                        <i class="fas fa-chart-bar nav-icon"></i>
+                                        <p>Discord İstatistik</p>
                                     </a>
                                 </li>
                             </ul>
@@ -125,76 +149,66 @@
                         </li>
                          <li class="nav-item">
                             <a href="{{ url_for('admin_routes_bp.list_subscription') }}" class="nav-link">
-                                <i class="nav-icon fa-solid fa-money-bill-1-wave"></i>
+                                <i class="nav-icon fas fa-crown"></i>
                                 <p>Abonelikler</p>
                             </a>
                         </li>
                         {% if current_user.is_authenticated and 'bc8650b1-a41f-417d-a4c2-ab59b2738195' in current_user.roles %}
                             <li class="nav-item">
                                 <a href="{{ url_for('admin_routes_bp.list_purchase') }}" class="nav-link">
-                                    <i class="nav-icon fa-solid fa-money-bill-1-wave"></i>
+                                    <i class="nav-icon fas fa-money-bill-wave"></i>
                                     <p>Mali Gelirler</p>
                                 </a>
                             </li>
                         {% endif %}
                         <li class="nav-item">
                             <a href="{{ url_for('admin_routes_bp.list_image_requests') }}" class="nav-link">
-                                <i class="nav-icon fa-regular fa-image"></i>
+                                <i class="nav-icon fas fa-magic"></i>
                                 <p>T2I Web Site</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ url_for('admin_routes_bp.list_upscale_requests') }}" class="nav-link">
-                                <i class="nav-icon fa-solid fa-images"></i>
+                                <i class="nav-icon fas fa-expand"></i>
                                 <p>Upscale</p>
-                            </a>
-                        </li>
-                         <li class="nav-item">
-                            <a href="{{ url_for('admin_routes_bp.get_discord_users') }}" class="nav-link">
-                                <i class="nav-icon fa-brands fa-discord"></i>
-                                <p>Discord Kullanıcıları</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ url_for('admin_routes_bp.get_discord_stats') }}" class="nav-link">
-                                <i class="nav-icon fa-brands fa-discord"></i>
-                                <p>Discord İstatistik</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ url_for('admin_routes_bp.list_text_to_video_requests') }}" class="nav-link">
-                                <i class="nav-icon fa-solid fa-video"></i>
+                                <i class="nav-icon fas fa-file-video"></i>
                                 <p>T2V İstekleri</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ url_for('admin_routes_bp.list_image_to_video_requests') }}" class="nav-link">
-                                <i class="nav-icon fa-solid fa-photo-film"></i>
+                                <i class="nav-icon fas fa-film"></i>
                                 <p>I2V İstekleri</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ url_for('admin_routes_bp.coupons') }}" class="nav-link">
-                                <i class="nav-icon fa-solid fa-ticket"></i>
+                                <i class="nav-icon fas fa-ticket-alt"></i>
                                 <p>Kuponlar</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ url_for('admin_routes_bp.list_packages') }}" class="nav-link">
-                                <i class="nav-icon fa-solid fa-money-check"></i>
+                                <i class="nav-icon fas fa-box"></i>
                                 <p>Paketler</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ url_for('admin_routes_bp.send_mail_page') }}" class="nav-link">
-                                <i class="nav-icon fa-regular fa-envelope"></i>
+                                <i class="nav-icon fas fa-envelope"></i>
                                 <p>Mail</p>
                             </a>
                         </li>
-                        <a href="{{ url_for('admin_routes_bp.announcements') }}" class="nav-link">
-                            <i class="far fa-circle nav-icon"></i>
-                            <p>Duyurular</p>
-                        </a>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_routes_bp.announcements') }}" class="nav-link">
+                                <i class="nav-icon fas fa-bullhorn"></i>
+                                <p>Duyurular</p>
+                            </a>
+                        </li>
 
                     </ul>
                 </nav>
@@ -227,6 +241,33 @@
 
     <script>
       $.widget.bridge('uibutton', $.ui.button)
+    </script>
+
+    <script>
+        $(document).ready(function() {
+            // Mevcut URL'yi al
+            var currentUrl = window.location.pathname;
+
+            // Tüm menü öğelerini kontrol et
+            $('.nav-sidebar .nav-link').each(function() {
+                var link = $(this).attr('href');
+                // Eğer alt menü öğesiyse ve current URL ile eşleşiyorsa
+                if (link === currentUrl) {
+                    // Üst menüyü bul ve aç
+                    $(this).addClass('active');
+                    $(this).parents('.nav-item').addClass('menu-open');
+                    $(this).parents('.nav-item').children('.nav-link').addClass('active');
+                }
+            });
+
+            // Menü tıklama olayı
+            $('.nav-sidebar .nav-link').on('click', function(e) {
+                if ($(this).next('.nav-treeview').length) {
+                    e.preventDefault();
+                    $(this).parent().toggleClass('menu-open');
+                }
+            });
+        });
     </script>
 
     {% block scripts %}{% endblock %}
