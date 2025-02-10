@@ -21,9 +21,9 @@ from app.models.text_to_video_model import TextToVideoGeneration
 from app.models.upscale_model import Upscale
 from app.models.user_model import User
 from app.services.coupon_service import CouponService
-from app.services.enterprise.enterprise_service import EnterpriseService
 from app.services.user_service import UserService
 from app.forms.forms import LoginForm
+from app.models.Discord.discord_users import DiscordUsers
 from app.utils.automate_mail import send_purchase_email
 
 admin_routes_bp = Blueprint('admin_routes_bp', __name__)
@@ -1038,14 +1038,19 @@ def list_customers_for_select():
 def announcements():
     return render_template('admin/announcements.html')
 
+
+# Discord BOT -------------------------------------------------------------------------------------------------
+
+
 @admin_routes_bp.route('/discord-stats', methods=['GET'])
 def get_discord_stats():
     discord_stats =  DiscordStats.objects.first()
-    print(discord_stats.to_dict())
     return render_template('admin/discord/discord_stats.html', discord_stats=discord_stats)
 
-
-
+@admin_routes_bp.route('/discord-users', methods=['GET'])
+def get_discord_users():
+    discord_users = DiscordUsers.objects.all()
+    return render_template('admin/discord/discord_users.html', discord_users=discord_users)
 
 
 

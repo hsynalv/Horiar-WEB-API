@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_page_styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/fontawesome-free/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/adminlte.min.css') }}">
+{% endblock %}
+
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Discord Bot Kullanıcıları</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="card">
+              <!-- /.card-header -->
+              <div class="card-body">
+                <table id="example1" class="table table-bordered table-striped">
+                  <thead>
+                  <tr>
+                      <th>User ID</th>
+                      <th>Kullanıcı Adı</th>
+                      <th>İstek Sayısı</th>
+                      <th>İlk İstek</th>
+                      <th>Son İstek</th>
+                      <th>Başarılı İstek</th>
+                      <th>Başarısız İstek</th>
+                      <th>Text to Image</th>
+                      <th>ReGenerate</th>
+                      <th>Upscale</th>
+                  </tr>
+                  </thead>
+                    <tbody>
+                    {% for item in discord_users %}
+                    <tr class="discord-user-row" data-username="{{ item.username }}" data-requests='{{ item.requests_json | tojson | safe }}'>
+                        <td>{{ item.userId }}</td>
+                        <td>{{ item.username }}</td>
+                        <td>{{ item.totalRequests }}</td>
+                        <td>{{ item.firstSeen.strftime('%Y/%m/%d') }}</td>
+                        <td>{{ item.lastSeen.strftime('%Y/%m/%d') }}</td>
+                        <td>{{ item.statistics.successCount }}</td>
+                        <td>{{ item.statistics.failureCount }}</td>
+                        <td>{{ item.statistics.generateCount }}</td>
+                        <td>{{ item.statistics.recreateCount }}</td>
+                        <td>{{ item.statistics.upscaleCount }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <!-- Modal Pencere -->
+                <div class="modal fade" id="requestModal" tabindex="-1" role="dialog" aria-labelledby="requestModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-xl" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="requestModalLabel">Kullanıcı İstekleri</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Kapat">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="table-responsive">
+                          <table class="table table-bordered">
+                            <thead>
+                              <tr>
+                                <th>Tip</th>
+                                <th>Mesaj ID</th>
+                                <th>Zaman</th>
+                                <th>Durum</th>
+                                <th>Prompt</th>
+                                <th>Çözünürlük</th>
+                                <th>Model Tipi</th>
+                                <th>Orijinal Resimler</th>
+                                <th>Seed</th>
+                              </tr>
+                            </thead>
+                            <tbody id="requestModalTableBody">
+                              <!-- Dinamik olarak doldurulacak -->
+                            </tbody>
+                          </table>
+                        </div>
+                        <div id="paginationControls" class="mt-2"></div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Prompt Detay Modal -->
+                <div class="modal fade" id="promptModal" tabindex="-1" role="dialog" aria-labelledby="promptModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-sm" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="promptModalLabel">Tam Prompt</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Kapat">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <p id="fullPromptText"></p>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- /.card-body -->
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<!-- DataTables & Plugins -->
+<script src="{{ url_for('static', filename='plugins/datatables/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/datatables-buttons/js/dataTables.buttons.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.bootstrap4.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/jszip/jszip.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/pdfmake/pdfmake.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/pdfmake/vfs_fonts.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/bootstrap-switch/js/bootstrap-switch.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+<!-- Page specific script -->
+<script>
+  $(function () {
+    $("#example1").DataTable({
+      "responsive": true, "lengthChange": false, "autoWidth": false,
+      "buttons": ["copy", "csv", "excel", "pdf", "print"]
+    }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+    $('#example2').DataTable({
+      "paging": true,
+      "lengthChange": false,
+      "searching": true,
+      "ordering": true,
+      "info": true,
+      "autoWidth": true,
+      "responsive": true,
+    });
+  });
+
+  var currentRequests = [];
+  var currentPage = 1;
+  
+  $(document).ready(function() {
+    $('.discord-user-row').on('click', function(){
+        var requests = $(this).attr('data-requests');
+        try {
+            requests = JSON.parse(requests);
+        } catch(e) {
+            requests = [];
+        }
+        // Kullanıcı adını data-username özniteliğinden al
+        var username = $(this).data('username') || '';
+        // Modal başlığını güncelle
+        $('#requestModalLabel').text("Kullanıcı İstekleri - " + username);
+
+        currentRequests = requests;
+        currentPage = 1;
+        renderRequestsPage(currentRequests, currentPage);
+        renderPaginationControls(currentRequests, currentPage);
+        $('#requestModal').modal('show');
+    });
+  
+    // Prompt link'e tıklanınca tam promptu gösteren modal'i aç
+    $(document).on('click', '.prompt-link', function(e) {
+        e.preventDefault();
+        var fullPrompt = $(this).data('fullprompt');
+        $('#fullPromptText').text(fullPrompt);
+        $('#promptModal').modal('show');
+    });
+    
+    // Pagination link'ine tıklanınca sayfayı değiştir
+    $(document).on('click', '#paginationControls .page-link', function(e) {
+        e.preventDefault();
+        var selectedPage = $(this).data('page');
+        if(selectedPage && !$(this).parent().hasClass('disabled') && !$(this).parent().hasClass('active')){
+          currentPage = selectedPage;
+          renderRequestsPage(currentRequests, currentPage);
+          renderPaginationControls(currentRequests, currentPage);
+        }
+    });
+  });
+  
+  // Fonksiyon: Belirtilen sayfadaki istekleri modal tablosuna ekler
+  function renderRequestsPage(requests, page) {
+      $('#requestModalTableBody').empty();
+      var startIndex = (page - 1) * 10;
+      var endIndex = page * 10;
+      for (var i = startIndex; i < endIndex && i < requests.length; i++) {
+          var req = requests[i];
+          var fullPrompt = req.prompt || '';
+          var truncatedPrompt = fullPrompt;
+          if (fullPrompt.length > 30) {
+              truncatedPrompt = fullPrompt.substring(0, 30) + '...';
+          }
+          var row = '<tr>' +
+              '<td>' + (req.type || '') + '</td>' +
+              '<td>' + (req.messageId || '') + '</td>' +
+              '<td>' + (req.timestamp ? new Date(req.timestamp).toLocaleString() : '') + '</td>' +
+              '<td>' + (req.status || '') + '</td>' +
+              '<td><a href="#" class="prompt-link" data-fullprompt="' + fullPrompt.replace(/"/g, '&quot;') + '">' + truncatedPrompt + '</a></td>' +
+              '<td>' + (req.resolution || '') + '</td>' +
+              '<td>' + (req.modelType || '') + '</td>';
+          var originalImagesHTML = '';
+          var seedHTML = '';
+          if (req.originalImages && req.originalImages.length > 0) {
+              $.each(req.originalImages, function(i, imageObj) {
+                  originalImagesHTML += '<a href="' + imageObj.url + '" target="_blank" style="margin:2px;"><img src="' + imageObj.url + '" width="50" height="50" /></a>';
+                  seedHTML += imageObj.seed + '<br/>';
+              });
+          }
+          row += '<td>' + originalImagesHTML + '</td>';
+          row += '<td>' + seedHTML + '</td>';
+          row += '</tr>';
+          $('#requestModalTableBody').append(row);
+      }
+  }
+  
+  // Fonksiyon: Sayfalama kontrollerini oluşturur
+  function renderPaginationControls(requests, currentPage) {
+      var totalPages = Math.ceil(requests.length / 10);
+      var html = '<nav aria-label="Sayfa navigasyonu"><ul class="pagination justify-content-center">';
+      if (currentPage > 1) {
+           html += '<li class="page-item"><a class="page-link" href="#" data-page="'+ (currentPage - 1) +'">Önceki</a></li>';
+      } else {
+           html += '<li class="page-item disabled"><a class="page-link" href="#">Önceki</a></li>';
+      }
+      for (var i = 1; i <= totalPages; i++) {
+           if(i === currentPage) {
+               html += '<li class="page-item active"><a class="page-link" href="#" data-page="'+ i +'">'+ i +'</a></li>';
+           } else {
+               html += '<li class="page-item"><a class="page-link" href="#" data-page="'+ i +'">'+ i +'</a></li>';
+           }
+      }
+      if (currentPage < totalPages) {
+           html += '<li class="page-item"><a class="page-link" href="#" data-page="'+ (currentPage + 1) +'">Sonraki</a></li>';
+      } else {
+           html += '<li class="page-item disabled"><a class="page-link" href="#">Sonraki</a></li>';
+      }
+      html += '</ul></nav>';
+      $('#paginationControls').html(html);
+  }
+</script>
+{% endblock %}
