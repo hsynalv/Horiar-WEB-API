@@ -26,7 +26,10 @@ class User(UserMixin, Document):
     registration_date = DateTimeField(default=datetime.datetime.utcnow)  # Kullanıcı kayıt tarihi
     last_login_date = DateTimeField()  # Son giriş tarihi
 
-    meta = {'collection': 'users'}
+    meta = {
+        'db_alias': "default",
+        'collection': 'users'
+    }
 
     def to_dict(self):
         return {

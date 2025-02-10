@@ -12,7 +12,10 @@ class ImageRequest(Document):
     request_time = DateTimeField(default=datetime.utcnow)
     consistent = BooleanField(default=False)
 
-    meta = {'collection': 'image_requests'}
+    meta = {
+        'db_alias': "default",
+        'collection': 'image_requests'
+    }
 
     def to_dict(self):
         return {

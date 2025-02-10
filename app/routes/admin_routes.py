@@ -6,6 +6,7 @@ from flask import render_template, redirect, url_for, flash, Blueprint, session,
 from flask_login import login_user, logout_user
 from mongoengine import Q
 
+from app.models.Discord.discord_stats import DiscordStats
 from app.models.coupon_model import Coupon
 from app.models.discord_image_request_model import DiscordImageRequest
 from app.models.enterprise.enterprise_customer_model import EnterpriseCustomer
@@ -667,9 +668,8 @@ def dashboard():
     subscription_count = Subscription.objects.count()
     web_site_users = User.objects.count()
 
-    discord_requests = TextToImage.objects(source="discord")
-    unique_discord_usernames = discord_requests.distinct('discord_username')
-    distinct_discord_user_count = len(unique_discord_usernames)
+    discord_stats =  DiscordStats.objects.first()
+    discord_requests = discord_stats.usage_stats.total_image_generated
     text_to_image_requests = TextToImage.objects(source="web").count()
     upscale_requets = Upscale.objects.count()
     text_to_video = TextToVideoGeneration.objects.count()
@@ -680,7 +680,7 @@ def dashboard():
 
     # Başka istatistikler de eklenebilir
     return render_template('admin/dashboard.html', subscription_count=subscription_count,
-                           web_site_users=web_site_users, discord_requests=discord_requests.count(),
+                           web_site_users=web_site_users, discord_requests=discord_requests,
                            text_to_image_requests=text_to_image_requests, upscale_requets=upscale_requets,
                            text_to_video=text_to_video, image_to_video=image_to_video, purchase=purchase,
                            enterprise_customer=enterprise_customer, enterprise_request=enterprise_request)
@@ -1037,6 +1037,13 @@ def list_customers_for_select():
 @admin_routes_bp.route('/announcements', methods=['GET'])
 def announcements():
     return render_template('admin/announcements.html')
+
+@admin_routes_bp.route('/discord-stats', methods=['GET'])
+def get_discord_stats():
+    discord_stats =  DiscordStats.objects.first()
+    print(discord_stats.to_dict())
+    return render_template('admin/discord/discord_stats.html', discord_stats=discord_stats)
+
 
 
 

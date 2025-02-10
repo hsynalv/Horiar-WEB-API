@@ -6,7 +6,10 @@ from mongoengine.fields import StringField
 class Feature(Document):
     name = StringField(required=True, unique=True, max_length=200)
 
-    meta = {'collection': 'features'}
+    meta = {
+        'db_alias': "default",
+        'collection': 'features'
+    }
 
     def to_dict(self):
         return {

@@ -4,7 +4,10 @@ class Dataset(Document):
     clip_l = StringField(required=True)
     t5xxl = StringField(required=True)
 
-    meta = {'collection': 'datasets'}
+    meta = {
+        'db_alias': "default",
+        'collection': 'datasets'
+    }
 
     def to_dict(self):
         return {

@@ -15,7 +15,10 @@ class Subscription(Document):
     used_coupon = StringField(required=False)
     package = StringField(required=False)
 
-    meta = {'collection': 'subscriptions'}
+    meta = {
+        'db_alias': "default",
+        'collection': 'subscriptions'
+    }
 
     def to_dict(self):
         return {

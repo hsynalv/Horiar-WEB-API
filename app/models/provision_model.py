@@ -16,7 +16,10 @@ class Provision(Document):
     amount = FloatField(required=False)
     currency = StringField(required=False)
 
-    meta = {'collection': 'provision'}
+    meta = {
+        'db_alias' : "default",
+        'collection': 'provision'
+    }
 
     def to_dict(self):
         return {

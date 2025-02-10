@@ -16,6 +16,7 @@ class ImageToImage(Document):
     prompt = StringField(required=True)
 
     meta = {
+        'db_alias': "default",
         'collection': 'image_to_image',
         'indexes': [
             'user_id',

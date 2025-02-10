@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_page_styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/fontawesome-free/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/adminlte.min.css') }}">
+{% endblock %}
+
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Discord Bot İstatistikleri</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+            <!-- Small boxes (Stat box) -->
+        <div class="row">
+            <div class="card-body" style="display: inline-flex">
+                <div class="col-lg-3 col-6">
+            <!-- small box -->
+            <div class="small-box bg-info">
+              <div class="inner">
+                <h3>{{ discord_stats.total_users }}</h3>
+                <p>Kullanıcı </p>
+              </div>
+              <div class="icon">
+                <i class="ion ion-bag"></i>
+              </div>
+            </div>
+          </div>
+                 <!-- ./col -->
+                {% if current_user.is_authenticated and 'bc8650b1-a41f-417d-a4c2-ab59b2738195' in current_user.roles %}
+                 <div class="col-lg-3 col-6">
+                      <!-- small box -->
+                      <div class="small-box bg-gradient-gray">
+                        <div class="inner">
+                          <h3>{{ discord_stats.total_servers }}</h3>
+                          <p>Server</p>
+                        </div>
+                        <div class="icon">
+                          <i class="ion ion-bag"></i>
+                        </div>
+                      </div>
+                 </div>
+                 <!-- ./col -->
+                {% endif %}
+
+                <div class="col-lg-3 col-6">
+            <!-- small box -->
+            <div class="small-box bg-success">
+              <div class="inner">
+                <h3>{{ discord_stats.usage_stats.total_image_generated }}</h3>
+
+                <p>Text to Image</p>
+              </div>
+              <div class="icon">
+                <i class="ion ion-stats-bars"></i>
+              </div>
+            </div>
+          </div>
+                 <!-- ./col -->
+                <div class="col-lg-3 col-6">
+            <!-- small box -->
+            <div class="small-box bg-warning">
+              <div class="inner">
+                <h3>{{ discord_stats.usage_stats.total_variations_created }}</h3>
+
+                <p>Upscale</p>
+              </div>
+              <div class="icon">
+                <i class="ion ion-person-add"></i>
+              </div>
+            </div>
+          </div>
+            </div>
+        </div>
+
+
+    <div class="card">
+              <!-- /.card-header -->
+              <div class="card-body">
+                <table id="example1" class="table table-bordered table-striped">
+                  <thead>
+                  <tr>
+                      <th>Server ID</th>
+                      <th>Server Adı</th>
+                      <th>Üye Sayısı</th>
+                      <th>İstek Sayısı</th>
+                      <th>Aktif mi?</th>
+                      <th>Katılma Tarihi</th>
+                      <th>Son Aktiflik</th>
+                  </tr>
+                  </thead>
+                    <tbody>
+                    {% for item in discord_stats.servers %}
+                    <tr>
+                        <td>{{ item.server_id }}</td>
+                        <td>{{ item.server_name }}</td>
+                        <td>{{ item.member_count }}</td>
+                        <td>{{ item.total_requests }}</td>
+                        <td>
+                        {% if item.is_active == True %}
+                                    <span style="display:inline-block; background-color: #4eff00; color: #000000; padding: 3px 6px; margin: 2px; border-radius: 4px;">
+                                        EVET
+                                    </span>
+                                {% elif role == False %}
+                                    <span style="display:inline-block; background-color: #ff0000; color: #000000; padding: 3px 6px; margin: 2px; border-radius: 4px;">
+                                        HAYIR
+                                    </span>
+                             {% endif %}
+                        </td>
+                        <td>{{ item.join_date.strftime('%Y/%m/%d') }}</td>
+                        <td>{{ item.last_active.strftime('%Y/%m/%d') }}</td>
+                    </tr>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+              </div>
+              <!-- /.card-body -->
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<!-- DataTables & Plugins -->
+<script src="{{ url_for('static', filename='plugins/datatables/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/datatables-buttons/js/dataTables.buttons.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.bootstrap4.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/jszip/jszip.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/pdfmake/pdfmake.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/pdfmake/vfs_fonts.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/bootstrap-switch/js/bootstrap-switch.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+
+
+<!-- Page specific script -->
+<script>
+  $(function () {
+    $("#example1").DataTable({
+      "responsive": true, "lengthChange": false, "autoWidth": false,
+      "buttons": ["copy", "csv", "excel", "pdf", "print"]
+    }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+    $('#example2').DataTable({
+      "paging": true,
+      "lengthChange": false,
+      "searching": true,
+      "ordering": true,
+      "info": true,
+      "autoWidth": true,
+      "responsive": true,
+    });
+  });
+
+  $(document).ready(function() {
+        // Bootstrap Switch'i etkinleştirin
+        $(".switch-status").bootstrapSwitch();
+
+        // Switch butonunun değişikliklerini dinleyin
+        $(".switch-status").on('switchChange.bootstrapSwitch', function(event, state) {
+            var userId = $(this).data("user-id");
+            var field = $(this).hasClass("is_enabled") ? "is_enabled" : "is_banned";
+            var value = state;
+
+            // AJAX ile durumu güncelle
+            $.ajax({
+                url: "/user/update_user_status",  // Güncelleme endpoint'i
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    user_id: userId,
+                    field: field,
+                    value: value
+                }),
+                success: function(response) {
+                    console.log("Kullanıcı durumu başarıyla güncellendi.");
+                },
+                error: function(xhr) {
+                    alert("Kullanıcı durumu güncellenirken hata oluştu.");
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

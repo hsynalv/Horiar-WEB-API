@@ -12,6 +12,7 @@ class TextToVideoGeneration(Document):
     datetime = DateTimeField(default=datetime.utcnow, required=True)  # Date and time of the request
 
     meta = {
+        'db_alias': "default",
         'collection': 'text_to_video'  # Collection name in the database
     }
 

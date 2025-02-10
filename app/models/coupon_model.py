@@ -13,7 +13,10 @@ class Coupon(Document):
 
     used_by = ListField(ReferenceField(User))  # Kuponu kullanan kullanıcılar
 
-    meta = {'collection': 'coupons'}
+    meta = {
+        'db_alias': "default",
+        'collection': 'coupons'
+    }
 
     def to_dict(self):
         return {

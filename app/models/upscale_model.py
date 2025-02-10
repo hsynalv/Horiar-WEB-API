@@ -15,6 +15,7 @@ class Upscale(Document):
     source = StringField(required=False)  # İstek kaynağı (Discord vb.)
 
     meta = {
+        'db_alias': "default",
         'collection': 'upscale_requests'  # Veritabanında kullanılacak koleksiyon adı
     }
 

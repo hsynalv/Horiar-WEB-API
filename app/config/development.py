@@ -6,7 +6,8 @@ load_dotenv()
 class DevelopmentConfig:
     DEBUG = True
     SECRET_KEY = os.getenv("SECRET_KEY")
-    MONGO_URI = os.getenv("MONGO_URI")
+    MONGO_URI_PRIMARY = os.getenv("MONGO_URI_PRIMARY")
+    MONGO_URI_SECONDARY = os.getenv("MONGO_URI_SECONDARY")
     DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
     DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
     DISCORD_REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI")

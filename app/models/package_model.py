@@ -23,7 +23,10 @@ class Package(Document):
         }
     )
 
-    meta = {'collection': 'packages'}
+    meta = {
+        'db_alias' : "default",
+        'collection': 'packages'
+    }
 
     def to_dict(self):
         return {

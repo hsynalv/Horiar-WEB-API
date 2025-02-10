@@ -20,6 +20,7 @@ class GalleryPhoto(Document):
     resolution = StringField()
 
     meta = {
+        'db_alias': "default",
         'collection': 'gallery',
         'indexes': [
             'user_id',

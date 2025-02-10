@@ -9,7 +9,10 @@ class Purchase(Document):
     payment_date = DateTimeField(default=datetime.utcnow)  # Satın alımın gerçekleştiği tarih
     currency = StringField(required=False)
 
-    meta = {'collection': 'purchases'}
+    meta = {
+        'db_alias': "default",
+        'collection': 'purchases'
+    }
 
     def to_dict(self):
         return {

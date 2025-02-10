@@ -13,6 +13,7 @@ class Announcement(Document):
     tags = ListField(StringField(max_length=50))  # Etiketler
 
     meta = {
+        'db_alias' : "default",
         'collection': 'announcements',  # Veritabanı koleksiyon adı
         'ordering': ['-created_at'],  # Varsayılan sıralama
     }

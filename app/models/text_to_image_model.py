@@ -23,7 +23,10 @@ class TextToImage(Document):
     username = StringField()
     consistent = BooleanField(default=False)
 
-    meta = {'collection': 'text_to_image'}
+    meta = {
+        'db_alias': "default",
+        'collection': 'text_to_image'
+    }
 
     def to_dict(self):
         return {

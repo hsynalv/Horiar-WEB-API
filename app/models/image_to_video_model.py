@@ -13,6 +13,7 @@ class ImageToVideo(Document):
     datetime = DateTimeField(default=datetime.utcnow, required=True)  # Date and time of the request
 
     meta = {
+        'db_alias': "default",
         'collection': 'image_to_video'  # Veritabanındaki koleksiyon adı
     }
 
