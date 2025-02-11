@@ -1,4 +1,5 @@
 from flask import request, Blueprint, jsonify
+import requests
 
 from app.auth import jwt_required
 from app.routes.admin_routes import admin_routes_bp
@@ -42,24 +43,34 @@ def send_mail():
 @admin_routes_bp.route('/admin-send-mail', methods=['POST'])
 def admin_send_mail():
     data = request.get_json()
-    subject = data.get('subject')
-    recipients = data.get('recipients')  # Örneğin ["alavhasan72892@gmail.com"]
-    body = data.get('body')
-    html_body = data.get('html_body')
-
-    print(recipients)
-
-    # Eğer html_body boş ise, body'yi markdown olarak alıp HTML'e çeviriyoruz
-    if html_body is None or html_body == "":
+    external_url = "http://3.68.189.144:3000/send-email"
+    
+    recipients = data.get('recipients', [])
+    body = data.get('body', '')
+    html_body = data.get('html_body', '')
+    if not html_body:
         html_body = markdown.markdown(body)
 
-    try:
-        send_email(
-            subject=subject,
-            recipients=recipients,
-            body=body,
-            html_body=html_body
-        )
-        return jsonify({"message": "Mail sent successfully!"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    print(f"body: {body}")
+    print(f"html_body: {html_body}")
+
+    errors = []
+    for email in recipients:
+        name = email.split('@')[0]
+        payload = {
+            "email": email,
+            "type": "announcement", 
+            "data": {
+                "name": name,
+                "message": html_body
+            }
+        }
+        try:
+            response = requests.post(external_url, json=payload)
+            response.raise_for_status()
+        except Exception as e:
+            errors.append({"email": email, "error": str(e)})
+            
+    if errors:
+        return jsonify({"error": "Some emails failed.", "details": errors}), 500
+    return jsonify({"message": "Mail sent successfully!"}), 200

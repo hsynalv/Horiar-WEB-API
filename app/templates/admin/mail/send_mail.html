@@ -85,33 +85,40 @@
         $(document).ready(function () {
         $('#sendMailForm').on('submit', function (event) {
             event.preventDefault();
-            const recipients = $('#recipients').val();  // Seçilen e-posta adreslerini alır
-            const subject = $('#subject').val();
-            const body = $('#body').val();
-            const htmlBody = $('#htmlBody').val();
+            const recipients = $('#recipients').val();  // seçilen mail adresleri (array)
+            const body = $('#body').val();                // mesajın düz metin hali
+            const htmlBody = $('#htmlBody').val();        // mesajın HTML hali (opsiyonel)
+
+            if (!recipients || recipients.length === 0) {
+                alert("Lütfen en az bir alıcı seçin.");
+                return;
+            }
+
+            // Sadece alıcı listesini ve mesaj içeriğini backend'e gönderiyoruz,
+            // diğer işlemler (ör. isim çıkarımı) backend tarafından yapılacaktır.
+            const payload = {
+                recipients: recipients,
+                body: body,
+                html_body: htmlBody
+            };
+
+            console.log(payload);
+            console.log(body)
 
             $.ajax({
-                url: "{{ url_for('admin_routes_bp.admin_send_mail') }}",
+                url: "{{ url_for('admin_routes_bp.admin_send_mail') }}", 
                 type: "POST",
                 contentType: "application/json",
-                data: JSON.stringify({
-                    recipients: recipients,
-                    subject: subject,
-                    body: body,
-                    html_body: htmlBody
-                }),
-                headers: {
-                    'Authorization': 'Bearer ' + '{{ jwt_token }}'  // JWT Token ekleme
+                data: JSON.stringify(payload),
+                success: function(response) {
+                    alert("Mail gönderildi!");
                 },
-                success: function (response) {
-                    alert("Mail başarıyla gönderildi!");
-                },
-                error: function (xhr) {
+                error: function(xhr) {
                     alert("Mail gönderilirken bir hata oluştu.");
                 }
             });
         });
-});
+    });
     </script>
 {% endblock %}
 

@@ -5,3 +5,13 @@
 /logs/
 docker-compose.yml
 Dockerfile
+
+# Python cache dosyaları
+__pycache__/
+*.py[cod]
+
+# Diğer önerilen dosya/dizinler (opsiyonel)
+*.egg-info/
+*.eggs/
+dist/
+build/
