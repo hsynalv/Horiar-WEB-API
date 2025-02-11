@@ -89,10 +89,11 @@ class UserService(BaseService):
 
             # Şifreyi hash'le ve kullanıcıyı ekle (pbkdf2_sha256 kullanılıyor)
             hashed_password = pbkdf2_sha256.hash(password)
+            username = email.split("@")[0]
             user = User(email=email, username=random_username, password=hashed_password)
             user.save()
 
-            send_welcome_email(email, random_username)
+            send_welcome_email(email, username)
 
             return str(user.id)
 
