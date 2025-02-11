@@ -105,7 +105,7 @@ class EnterpriseService(BaseService):
 
             # RunPod yanıtında "status" kontrolü yap
             if result.get("status") == "IN_QUEUE" and result.get("id"):
-                # Geçerli bir yanıt alındığında Redis’e kaydet
+                # Geçerli bir yanıt alındığında Redis'e kaydet
                 runpod_id = result.get("id")
                 redis_data = {
                     "prompt": prompt,
@@ -234,7 +234,7 @@ class EnterpriseService(BaseService):
 
             # RunPod yanıtında "status" kontrolü yap
             if result.get("status") == "IN_QUEUE" and result.get("id"):
-                # Geçerli bir yanıt alındığında Redis’e kaydet
+                # Geçerli bir yanıt alındığında Redis'e kaydet
                 runpod_id = result.get("id")
                 redis_data = {
                     "customer_id": customer_id,
@@ -303,7 +303,7 @@ class EnterpriseService(BaseService):
 
             # RunPod yanıtında "status" kontrolü yap
             if result.get("status") == "IN_QUEUE" and result.get("id"):
-                # Geçerli bir yanıt alındığında Redis’e kaydet
+                # Geçerli bir yanıt alındığında Redis'e kaydet
                 runpod_id = result.get("id")
                 redis_data = {
                     "customer_id": customer_id,
@@ -572,16 +572,16 @@ class EnterpriseService(BaseService):
         return req_dict
 
     def get_query_job_id(self, customer, job_id):
-        request = EnterpriseRequest.objects(job_id=job_id).first()
+        query_request = EnterpriseRequest.objects(job_id=job_id).first()
 
-        if not request:
+        if not query_request:
             return {"job_id": job_id, "message": "Your request has been queued.", "status": "queued"}
 
-        if request.error_message == "A server error occurred while processing your request":
-            return {"job_id": job_id, "message": request.error_message, "status": "failed"}
+        if query_request.error_message == "A server error occurred while processing your request":
+            return {"job_id": job_id, "message": query_request.error_message, "status": "failed"}
 
         return jsonify({
             "status": "completed",
             "job_id": job_id,
-            "output": request
+            "output": query_request.to_dict()
         })
