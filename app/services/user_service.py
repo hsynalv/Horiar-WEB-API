@@ -18,7 +18,7 @@ import datetime
 
 from app.services.base_service import BaseService
 from app.services.subscription_service import SubscriptionService
-from app.utils.automate_mail import send_welcome_email
+from app.utils.automate_mail import send_password_reset_email, send_welcome_email
 
 
 class UserService(BaseService):
@@ -243,3 +243,55 @@ class UserService(BaseService):
             render_list.append(render_data)
 
         return render_list
+    
+
+    @staticmethod
+    def initiate_password_reset(email):
+        """
+        Şifre sıfırlama isteğini başlatır. Kullanıcının e-posta adresi ile ilgili bir kullanıcı varsa,
+        geçerli bir reset token oluşturur ve bu token ile şifre sıfırlama e-postası gönderir.
+        """
+        email = email.lower()
+        user = UserService.find_user_by_email(email)
+        if user:
+            # Önceki tokenları temizle (opsiyonel)
+            from app.models.password_reset_token_model import PasswordResetToken
+            PasswordResetToken.objects(user=user).delete()
+            
+            token = uuid.uuid4().hex  # Rastgele token oluştur
+            # Token 1 saat (3600 saniye) geçerli olacak şekilde oluşturuldu
+            PasswordResetToken.create_token_for_user(user, token, expires_in=3600)
+
+            logging.info(f"token: {token}")
+            
+            # Şifre sıfırlama linkini oluşturun (domain adresinizi uygun şekilde düzenleyin)
+            reset_link = f"https://horiar.com/reset-password?token={token}"
+            send_password_reset_email(email, reset_link)
+        
+        # Güvenlik amacıyla, eğer kullanıcı bulunmasa bile aynı mesaj döndürülür.
+        return {"message": "Şifre sıfırlama linki gönderildi."}
+
+    @staticmethod
+    def reset_password(token, new_password):
+        """
+        Verilen şifre sıfırlama tokenını doğrular ve kullanıcının şifresini günceller.
+        """
+        from app.models.password_reset_token_model import PasswordResetToken
+        reset_token_obj = PasswordResetToken.objects(token=token).first()
+        if not reset_token_obj:
+            raise ValueError("Geçersiz şifre sıfırlama tokenı.")
+        
+        if reset_token_obj.expiration_date < datetime.datetime.utcnow():
+            reset_token_obj.delete()
+            raise ValueError("Şifre sıfırlama tokenı süresi dolmuş.")
+        
+        user = reset_token_obj.user
+        # Yeni şifreyi hash'le ve güncelle
+        hashed_password = pbkdf2_sha256.hash(new_password)
+        user.password = hashed_password
+        user.save()
+        
+        # Token kullanıldıktan sonra silinir
+        reset_token_obj.delete()
+        
+        return {"message": "Şifre başarıyla güncellendi."}

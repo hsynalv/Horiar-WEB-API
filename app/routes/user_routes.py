@@ -327,3 +327,27 @@ def get_user_requests(payload):
     renders = UserService.get_all_requests(payload, page=page, page_size=page_size)
 
     return jsonify(renders)
+
+# Yeni: Şifre sıfırlama isteği oluşturma endpoint'i
+@user_bp.route('/password-reset-request', methods=['POST'])
+def password_reset_request():
+    data = request.json
+    email = data.get('email')
+    if not email:
+        return jsonify({'message': 'Email alanı gereklidir.'}), 400
+    response = UserService.initiate_password_reset(email)
+    return jsonify(response), 200
+
+# Yeni: Şifre sıfırlama endpoint'i
+@user_bp.route('/reset-password', methods=['POST'])
+def reset_password_endpoint():
+    data = request.json
+    token = data.get('token')
+    new_password = data.get('new_password')
+    if not token or not new_password:
+        return jsonify({'message': 'Token veya yeni şifre eksik.'}), 400
+    try:
+        response = UserService.reset_password(token, new_password)
+        return jsonify(response), 200
+    except ValueError as e:
+        return jsonify({'message': str(e)}), 400
