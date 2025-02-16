@@ -70,16 +70,17 @@ def send_password_reset_email(email, reset_link):
     except requests.exceptions.RequestException as e:
         logging.error(f"Reset şifre email gönderme hatası: {e}") 
 
-def send_support_reset_email(email, username, message):
+def send_support_reset_email(authorized_email, email, username, message):
     """
     Kullanıcıya destek e-postası gönderir.
     """
     payload = {
-        "email": email,
+        "email": authorized_email,
         "type": "support",
         "data": {
             "name": username,
-            "message": message
+            "message": message,
+            "email": email
         }
     }
 
