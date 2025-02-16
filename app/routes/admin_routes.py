@@ -71,11 +71,63 @@ def logout():
     return redirect(url_for('admin_routes_bp.login'))
 
 
-@admin_routes_bp.route('/users')
+@admin_routes_bp.route('/users', methods=['GET'])
 def admin_users():
-    # Tüm kullanıcıları veritabanından al
-    users = UserService.get_all_users()
-    return render_template('admin/users.html', users=users)
+    if 'page' not in request.args:
+        return render_template('admin/users.html')
+
+    try:
+        # Sayfa, limit, sıralama ve arama parametrelerini al
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+        sort_order = request.args.get('sort_order', 'desc')
+        search_query = request.args.get('search', '').strip()
+
+        # Sorgu işlemi
+        query = User.objects()
+        if search_query:
+            query = query.filter(username__icontains=search_query)
+
+        # Sıralama işlemi
+        sort_field = '-registration_date' if sort_order == 'desc' else '+registration_date'
+        query = query.order_by(sort_field)
+
+        # Toplam öğe sayısını al
+        total_items = query.count()
+
+        # Sayfalama işlemi
+        users = query.skip((page - 1) * limit).limit(limit)
+
+        # Toplam sayfa sayısını hesapla
+        total_pages = (total_items + limit - 1) // limit
+
+        # JSON formatına dönüştür
+        users_list = [
+            {
+                "id": str(user.id),
+                "username": user.username,
+                "email": user.email,
+                "created_at": user.registration_date.strftime('%Y/%m/%d %H:%M'),
+                "roles": user.roles,
+                "is_active": user.is_active(),
+                "registration_type": (
+                    (["Manuel"] if user.password else []) +
+                    (["Discord"] if user.discord_id else []) +
+                    (["Google"] if user.google_id else [])
+                )
+            }
+            for user in users
+        ]
+
+        return jsonify({
+            "items": users_list,
+            "total_pages": total_pages,
+            "current_page": page,
+            "total_items": total_items,
+        }), 200
+    except Exception as e:
+        logging.error(f"Error fetching users: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 @admin_routes_bp.route('/image-requests', methods=['GET'])
@@ -130,7 +182,6 @@ def list_image_requests():
     except Exception as e:
         logging.error(f"Error fetching image requests: {e}")
         return jsonify({"error": str(e)}), 500
-
 
 
 @admin_routes_bp.route('/text-to-video-requests', methods=['GET'])
@@ -1054,6 +1105,57 @@ def get_discord_stats():
 def get_discord_users():
     discord_users = DiscordUsers.objects.all()
     return render_template('admin/discord/discord_users.html', discord_users=discord_users)
+
+@admin_routes_bp.route('/user/update_roles', methods=['POST'])
+def update_user_roles():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    roles = data.get('roles', [])
+    user = User.objects(id=user_id).first()
+    if not user:
+         return jsonify({'error': 'Kullanıcı bulunamadı'}), 404
+    user.update(set__roles=roles)
+    return jsonify({'success': True, 'message': 'Yetkiler güncellendi'}), 200
+
+# Yeni eklenen endpoint: Yetkili kullanıcıları listeleme
+@admin_routes_bp.route('/user/list_authorized', methods=['GET'])
+def list_authorized_users():
+    authorized_roles = [
+        "9951a9b2-f455-4940-931e-432bc057179a",  # Admin
+        "bc8650b1-a41f-417d-a4c2-ab59b2738195",  # Super Admin
+        "6a1b395f-0e6f-4096-add2-364fa5f15eac"   # Creator
+    ]
+    users = User.objects(roles__in=authorized_roles)
+    role_names = {
+        "9951a9b2-f455-4940-931e-432bc057179a": "Admin",
+        "bc8650b1-a41f-417d-a4c2-ab59b2738195": "Super Admin",
+        "37fb8744-faf9-4f62-a729-a284c842bf0a": "User",
+        "6a1b395f-0e6f-4096-add2-364fa5f15eac": "Creator"
+    }
+    users_list = [{
+         "id": str(user.id),
+         "username": user.username,
+         "email": user.email,
+         "roles": [role_names.get(role, role) for role in user.roles]
+    } for user in users]
+    return jsonify({"users": users_list}), 200
+
+# Yeni eklenen endpoint: Kullanıcı durumunu güncelleme
+@admin_routes_bp.route('/user/update_user_status', methods=['POST'])
+def update_user_status():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    field = data.get('field')
+    value = data.get('value')
+    
+    # Kullanıcı kontrolü
+    user = User.objects(id=user_id).first()
+    if not user:
+         return jsonify({'error': 'Kullanıcı bulunamadı'}), 404
+    
+    # Belirtilen alanı güncelle
+    user.update(**{f"set__{field}": value})
+    return jsonify({'success': True, 'message': 'Kullanıcı durumu güncellendi'}), 200
 
 
 

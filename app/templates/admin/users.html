@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/adminlte.min.css') }}">
 {% endblock %}
 
-
 {% block content %}
 <section class="content-header">
     <div class="container-fluid">
@@ -23,157 +22,325 @@
 </section>
 
 <section class="content">
-    <div class="card">
-              <!-- /.card-header -->
-              <div class="card-body">
-                <table id="example1" class="table table-bordered table-striped">
-                  <thead>
-                  <tr>
-                      <th>Kullanıcı Adı</th>
-                      <th>E-Posta</th>
-                      <th>Roller</th>
-                      <th>Ön Kredi</th>
-                      <th>Kayıt Tarihi</th>
-                      <th>Son Giriş Tarihi</th>
-                      <th>Kayıt Tipi</th>
-                      <th>Aktiflik Durumu</th>
-                      <th>Ban Durumu</th>
-                  </tr>
-                  </thead>
-                    <tbody>
-                    {% for user in users %}
-                    <tr>
-                        <td>{{ user.username }}</td>
-                        <td>{{ user.email }}</td>
-                        <td>
-                            {% for role in user.roles %}
-                                {% if role == "9951a9b2-f455-4940-931e-432bc057179a" %}
-                                    <span style="display:inline-block; background-color: #000000; color: #fff; padding: 3px 6px; margin: 2px; border-radius: 4px;">
-                                        Admin
-                                    </span>
-                                {% elif role == "37fb8744-faf9-4f62-a729-a284c842bf0a" %}
-                                    <span style="display:inline-block; background-color: #007bff; color: #fff; padding: 3px 6px; margin: 2px; border-radius: 4px;">
-                                        User
-                                    </span>
-                                {% elif role == "6a1b395f-0e6f-4096-add2-364fa5f15eac" %}
-                                    <span style="display:inline-block; background-color: #ffae00; color: #fff; padding: 3px 6px; margin: 2px; border-radius: 4px;">
-                                        Creator
-                                    </span>
-                                {% endif %}
-                            {% endfor %}
-                        </td>
-                        <td>{{ user.base_credits }}</td>
-                        <td>{{ user.registration_date.strftime('%Y/%m/%d') if user.registration_date else 'N/A' }}</td>
-                        <td>{{ user.last_login_date.strftime('%Y/%m/%d') if user.last_login_date else 'Kayıt Yok!' }}</td>
-                        <td>
-                          {% if user.google_username %}
-                            <span style="background-color: #000000; color: white; padding: 5px 10px; border-radius: 5px;">
-                              Google
-                            </span>
-                          {% endif %}
-
-                          {% if user.discord_username %}
-                            <span style="background-color: #505be5; color: white; padding: 5px 10px; border-radius: 5px;">
-                              Discord
-                            </span>
-                          {% endif %}
-
-                          {% if user.password %}
-                            <span style="background-color: #fb952b; color: white; padding: 5px 10px; border-radius: 5px;">
-                              Manuel
-                            </span>
-                          {% endif %}
-                        </td>
-                        <td>
-                            <input type="checkbox" class="switch-status is_enabled"
-                                   data-user-id="{{ user.id }}" {% if user.is_enabled %}checked{% endif %}
-                                   data-off-color="danger" data-on-color="success"
-                                   data-on-text="Aktif" data-off-text="Pasif"
-                            >
-                        </td>
-                        <td>
-                            <input type="checkbox" class="switch-status is_banned"
-                                   data-user-id="{{ user.id }}" {% if user.is_banned %}checked{% endif %}
-                                   data-off-color="success" data-on-color="danger"
-                                    data-on-text="Ban" data-off-text="Aktif"
-                            >
-                        </td>
-                    </tr>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+    <div class="container-fluid">
+       <div class="row">
+           <div class="col-md-12">
+              <div class="row">
+                 <div class="col-md-6">
+                    <input type="text" id="customSearch" class="form-control" placeholder="Arama yapınız..." style="width:300px; margin-bottom:10px;">
+                 </div>
+                 <div class="col-md-6 text-right">
+                    {% if "bc8650b1-a41f-417d-a4c2-ab59b2738195" in current_user.roles %}
+                    <button id="showAuthorizedUsers" class="btn btn-info" style="margin-bottom:10px;">Yetkili Kullanıcılar</button>
+                    {% endif %}
+                 </div>
               </div>
-              <!-- /.card-body -->
+           </div>
+       </div>
+    </div>
+    <div class="card">
+        <!-- /.card-header -->
+        <div class="card-body">
+            <table id="example1" class="table table-bordered table-striped">
+              <thead>
+              <tr>
+                  <th>Kullanıcı Adı</th>
+                  <th>E-Posta</th>
+                  <th>Kayıt Tipi</th>
+                  <th>Oluşturulma Tarihi</th>
+                  <th>Roller</th>
+                  <th>Aktiflik Durumu</th>
+                  <th>Ban Durumu</th>
+                  <th>Yetkilendirme</th>
+              </tr>
+              </thead>
+              <!-- Jinja döngüsü kaldırıldı, veri DataTables üzerinden AJAX ile yüklenecek -->
+              <tbody></tbody>
+            </table>
+        </div>
+        <!-- /.card-body -->
     </div>
 </section>
+
+<!-- Yetkilendirme Modal Penceresi -->
+<div class="modal fade" id="authorizeModal" tabindex="-1" role="dialog" aria-labelledby="authorizeModalLabel" aria-hidden="true">
+   <div class="modal-dialog" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h5 class="modal-title" id="authorizeModalLabel">Kullanıcı Yetkilendirmesi</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Kapat">
+               <span aria-hidden="true">&times;</span>
+            </button>
+         </div>
+         <div class="modal-body">
+            <form id="authorizeForm">
+               <input type="hidden" id="authorizeUserId" name="user_id" value="">
+               <div class="form-group">
+                  <label>Roller</label>
+                  <div class="form-check">
+                     <input class="form-check-input" type="checkbox" name="roles" value="9951a9b2-f455-4940-931e-432bc057179a" id="roleAdmin">
+                     <label class="form-check-label" for="roleAdmin">Admin</label>
+                  </div>
+                  <div class="form-check">
+                     <input class="form-check-input" type="checkbox" name="roles" value="bc8650b1-a41f-417d-a4c2-ab59b2738195" id="roleSuperAdmin">
+                     <label class="form-check-label" for="roleSuperAdmin">Super Admin</label>
+                  </div>
+                  <div class="form-check">
+                     <input class="form-check-input" type="checkbox" name="roles" value="37fb8744-faf9-4f62-a729-a284c842bf0a" id="roleUser">
+                     <label class="form-check-label" for="roleUser">User</label>
+                  </div>
+                  <div class="form-check">
+                     <input class="form-check-input" type="checkbox" name="roles" value="6a1b395f-0e6f-4096-add2-364fa5f15eac" id="roleCreator">
+                     <label class="form-check-label" for="roleCreator">Creator</label>
+                  </div>
+               </div>
+            </form>
+         </div>
+         <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+            <button type="button" class="btn btn-primary" id="saveRolesBtn">Kaydet</button>
+         </div>
+      </div>
+   </div>
+</div>
+
+<!-- Yetkili Kullanıcılar Modal Penceresi -->
+<div class="modal fade" id="authorizedUsersModal" tabindex="-1" role="dialog" aria-labelledby="authorizedUsersModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document" style="max-width:800px;">
+    <div class="modal-content">
+       <div class="modal-header">
+         <h5 class="modal-title" id="authorizedUsersModalLabel">Yetkili Kullanıcılar</h5>
+         <button type="button" class="close" data-dismiss="modal" aria-label="Kapat">
+           <span aria-hidden="true">&times;</span>
+         </button>
+       </div>
+       <div class="modal-body">
+         <table class="table table-bordered">
+            <thead>
+               <tr>
+                  <th>Kullanıcı Adı</th>
+                  <th>E-Posta</th>
+                  <th>Roller</th>
+               </tr>
+            </thead>
+            <tbody id="authorizedUsersList">
+              <!-- AJAX ile doldurulacak -->
+            </tbody>
+         </table>
+       </div>
+       <div class="modal-footer">
+         <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+       </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <!-- DataTables & Plugins -->
 <script src="{{ url_for('static', filename='plugins/datatables/jquery.dataTables.min.js') }}"></script>
 <script src="{{ url_for('static', filename='plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-<script src="{{ url_for('static', filename='plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
-<script src="{{ url_for('static', filename='plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
-<script src="{{ url_for('static', filename='plugins/datatables-buttons/js/dataTables.buttons.min.js') }}"></script>
-<script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.bootstrap4.min.js') }}"></script>
-<script src="{{ url_for('static', filename='plugins/jszip/jszip.min.js') }}"></script>
-<script src="{{ url_for('static', filename='plugins/pdfmake/pdfmake.min.js') }}"></script>
-<script src="{{ url_for('static', filename='plugins/pdfmake/vfs_fonts.js') }}"></script>
-<script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
-<script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
-<script src="{{ url_for('static', filename='plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
 <script src="{{ url_for('static', filename='plugins/bootstrap-switch/js/bootstrap-switch.min.js') }}"></script>
-<script src="{{ url_for('static', filename='plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-
-
 
 <!-- Page specific script -->
 <script>
   $(function () {
-    $("#example1").DataTable({
-      "responsive": true, "lengthChange": false, "autoWidth": false,
-      "buttons": ["copy", "csv", "excel", "pdf", "print"]
-    }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
-    $('#example2').DataTable({
-      "paging": true,
-      "lengthChange": false,
-      "searching": true,
-      "ordering": true,
-      "info": true,
-      "autoWidth": true,
-      "responsive": true,
+    // DataTable'ı sunucudan AJAX ile veri çekecek şekilde initialize ediyoruz
+    var table = $("#example1").DataTable({
+      "processing": true,
+      "serverSide": true,
+      "searching": false,
+      "ajax": function (data, callback, settings) {
+          // DataTables sayfalama bilgilerini gönderiyor; backend'in anlayacağı şekilde dönüştürüyoruz.
+          var page = Math.floor(data.start / data.length) + 1;
+          var limit = data.length;
+          $.ajax({
+              url: "/admin/users",
+              data: { 
+                  page: page, 
+                  limit: limit, 
+                  search: $('#customSearch').val()  // Yeni eklenen search değeri
+              },
+              success: function(response) {
+                  callback({
+                      data: response.items,
+                      recordsTotal: response.total_items,
+                      recordsFiltered: response.total_items
+                  });
+              },
+              error: function(xhr, status, error) {
+                  console.error("Veri çekme hatası: ", error);
+              }
+          });
+      },
+      "columns": [
+          { "data": "username" },
+          { "data": "email" },
+          { 
+              "data": "registration_type",
+              "orderable": false,
+              "render": function(data, type, row) {
+                  var html = "";
+                  if(data.indexOf("Manuel") > -1) {
+                      html += '<span style="background-color: #fb952b; color: white; padding: 5px 10px; border-radius: 5px; margin-right: 5px;">Manuel</span>';
+                  }
+                  if(data.indexOf("Discord") > -1) {
+                      html += '<span style="background-color: #505be5; color: white; padding: 5px 10px; border-radius: 5px; margin-right: 5px;">Discord</span>';
+                  }
+                  if(data.indexOf("Google") > -1) {
+                      html += '<span style="background-color: #000000; color: white; padding: 5px 10px; border-radius: 5px; margin-right: 5px;">Google</span>';
+                  }
+                  return html;
+              }
+          },
+          { "data": "created_at" },
+          { 
+              "data": "roles",
+              "render": function(data, type, row) {
+                  var rolesHtml = "";
+                  data.forEach(function(role) {
+                      if (role === "9951a9b2-f455-4940-931e-432bc057179a") {
+                          rolesHtml += '<span style="display:inline-block; background-color: #000000; color: #fff; padding: 3px 6px; margin: 2px; border-radius: 4px;">Admin</span>';
+                      } else if (role === "37fb8744-faf9-4f62-a729-a284c842bf0a") {
+                          rolesHtml += '<span style="display:inline-block; background-color: #007bff; color: #fff; padding: 3px 6px; margin: 2px; border-radius: 4px;">User</span>';
+                      } else if (role === "6a1b395f-0e6f-4096-add2-364fa5f15eac") {
+                          rolesHtml += '<span style="display:inline-block; background-color: #ffae00; color: #fff; padding: 3px 6px; margin: 2px; border-radius: 4px;">Creator</span>';
+                      }
+                  });
+                  return rolesHtml;
+              }
+          },
+          { 
+              "data": "is_active",
+              "render": function(data, type, row) {
+                  var checked = data ? "checked" : "";
+                  return '<input type="checkbox" class="switch-status is_enabled" data-user-id="'+ row.id +'" '+ checked +' data-off-color="danger" data-on-color="success" data-on-text="Aktif" data-off-text="Pasif">';
+              }
+          },
+          {
+              "data": "is_banned",
+              "render": function(data, type, row) {
+                  var checked = data ? "checked" : "";
+                  return '<input type="checkbox" class="switch-status is_banned" data-user-id="'+ row.id +'" '+ checked +' data-off-color="success" data-on-color="danger" data-on-text="Banlı" data-off-text="Aktif">';
+              }
+          },
+          {
+              "data": null,
+              "orderable": false,
+              "render": function(data, type, row) {
+                  // Mevcut roller dizisini virgülle birleştirerek data attribute olarak ekliyoruz.
+                  var rolesStr = row.roles.join(",");
+                  return '<button type="button" class="btn btn-warning btn-sm authorize-btn" data-user-id="'+ row.id +'" data-user-roles="'+ rolesStr +'">Yetkilendirme</button>';
+              }
+          }
+      ]
     });
-  });
 
-  $(document).ready(function() {
-        // Bootstrap Switch'i etkinleştirin
+    // DataTables her çizim sonrasında yeni elementler için Bootstrap Switch'i initialize ediyoruz
+    $('#example1').on('draw.dt', function() {
         $(".switch-status").bootstrapSwitch();
+    });
 
-        // Switch butonunun değişikliklerini dinleyin
-        $(".switch-status").on('switchChange.bootstrapSwitch', function(event, state) {
-            var userId = $(this).data("user-id");
-            var field = $(this).hasClass("is_enabled") ? "is_enabled" : "is_banned";
-            var value = state;
-
-            // AJAX ile durumu güncelle
-            $.ajax({
-                url: "/user/update_user_status",  // Güncelleme endpoint'i
-                method: "POST",
-                contentType: "application/json",
-                data: JSON.stringify({
-                    user_id: userId,
-                    field: field,
-                    value: value
-                }),
-                success: function(response) {
-                    console.log("Kullanıcı durumu başarıyla güncellendi.");
-                },
-                error: function(xhr) {
-                    alert("Kullanıcı durumu güncellenirken hata oluştu.");
-                }
-            });
+    // Buton değişikliklerini dinleme (event delegation ile)
+    $("#example1").on("switchChange.bootstrapSwitch", ".switch-status", function(event, state) {
+        var userId = $(this).data("user-id");
+        var field = $(this).hasClass("is_enabled") ? "is_enabled" : ($(this).hasClass("is_banned") ? "is_banned" : "unknown_field");
+        $.ajax({
+            url: "/admin/user/update_user_status",  // Güncelleme endpoint'i
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                user_id: userId,
+                field: field,
+                value: state
+            }),
+            success: function(response) {
+                console.log("Kullanıcı durumu başarıyla güncellendi.");
+            },
+            error: function(xhr) {
+                alert("Kullanıcı durumu güncellenirken hata oluştu.");
+            }
         });
     });
+
+    // Yetkilendirme butonuna tıklanınca modalı açıyoruz.
+    $("#example1").on("click", ".authorize-btn", function() {
+         var userId = $(this).data("user-id");
+         var rolesStr = $(this).data("user-roles"); // Virgülle ayrılmış role string
+         var rolesArray = rolesStr.split(",");
+         // Formdaki tüm checkbox'ları temizle
+         $("#authorizeForm input[type=checkbox]").prop("checked", false);
+         // Kullanıcı ID'sini gizli alana yaz
+         $("#authorizeUserId").val(userId);
+         // Her bir role için ilgili checkbox'ı işaretle
+         rolesArray.forEach(function(role) {
+              role = role.trim();
+              if(role === "9951a9b2-f455-4940-931e-432bc057179a") {
+                  $("#roleAdmin").prop("checked", true);
+              }
+              if(role === "bc8650b1-a41f-417d-a4c2-ab59b2738195") {
+                  $("#roleSuperAdmin").prop("checked", true);
+              }
+              if(role === "37fb8744-faf9-4f62-a729-a284c842bf0a") {
+                  $("#roleUser").prop("checked", true);
+              }
+              if(role === "6a1b395f-0e6f-4096-add2-364fa5f15eac") {
+                  $("#roleCreator").prop("checked", true);
+              }
+         });
+         $("#authorizeModal").modal("show");
+    });
+
+    // "Kaydet" butonuna tıklanınca, seçilen yetkileri gönderiyoruz.
+    $("#saveRolesBtn").on("click", function() {
+         var userId = $("#authorizeUserId").val();
+         var roles = [];
+         $("#authorizeForm input[name=roles]:checked").each(function() {
+              roles.push($(this).val());
+         });
+         $.ajax({
+              url: "/admin/user/update_roles",
+              method: "POST",
+              contentType: "application/json",
+              data: JSON.stringify({
+                  user_id: userId,
+                  roles: roles
+              }),
+              success: function(response) {
+                  alert("Yetkiler başarıyla güncellendi.");
+                  $("#authorizeModal").modal("hide");
+                  table.draw();
+              },
+              error: function(xhr) {
+                  alert("Yetkiler güncellenirken hata oluştu.");
+              }
+         });
+    });
+
+    // Kullanıcının arama kutusuna her karakter girişi yapması durumunda, DataTable'ı yeniden çiz
+    $('#customSearch').on('keyup', function() {
+         table.draw();
+    });
+
+    // Yetkili Kullanıcılar butonuna tıklayınca, endpoint'ten verileri çek ve modalde listele
+    $("#showAuthorizedUsers").on("click", function() {
+         $.ajax({
+              url: "/admin/user/list_authorized",
+              method: "GET",
+              success: function(response) {
+                  var users = response.users;
+                  var tbodyHtml = "";
+                  users.forEach(function(user) {
+                      tbodyHtml += "<tr><td>" + user.username + "</td><td>" + user.email + "</td><td>" + user.roles.join(", ") + "</td></tr>";
+                  });
+                  $("#authorizedUsersList").html(tbodyHtml);
+                  $("#authorizedUsersModal").modal("show");
+              },
+              error: function(xhr) {
+                  alert("Yetkili kullanıcılar alınırken hata oluştu.");
+              }
+         });
+    });
+  });
 </script>
 {% endblock %}
