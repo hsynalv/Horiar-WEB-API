@@ -670,7 +670,7 @@ def dashboard():
     web_site_users = User.objects.count()
 
     discord_stats =  DiscordStats.objects.first()
-    discord_requests = discord_stats.usage_stats.total_image_generated
+    discord_requests = discord_stats.usage_stats.total_image_generated + discord_stats.usage_stats.total_variations_created
     text_to_image_requests = TextToImage.objects(source="web").count()
     upscale_requets = Upscale.objects.count()
     text_to_video = TextToVideoGeneration.objects.count()
