@@ -51,7 +51,9 @@
                   <th>Roller</th>
                   <th>Aktiflik Durumu</th>
                   <th>Ban Durumu</th>
+                  {% if "bc8650b1-a41f-417d-a4c2-ab59b2738195" in current_user.roles %}
                   <th>Yetkilendirme</th>
+                  {% endif %}
               </tr>
               </thead>
               <!-- Jinja döngüsü kaldırıldı, veri DataTables üzerinden AJAX ile yüklenecek -->
@@ -145,35 +147,7 @@
 <!-- Page specific script -->
 <script>
   $(function () {
-    // DataTable'ı sunucudan AJAX ile veri çekecek şekilde initialize ediyoruz
-    var table = $("#example1").DataTable({
-      "processing": true,
-      "serverSide": true,
-      "searching": false,
-      "ajax": function (data, callback, settings) {
-          // DataTables sayfalama bilgilerini gönderiyor; backend'in anlayacağı şekilde dönüştürüyoruz.
-          var page = Math.floor(data.start / data.length) + 1;
-          var limit = data.length;
-          $.ajax({
-              url: "/admin/users",
-              data: { 
-                  page: page, 
-                  limit: limit, 
-                  search: $('#customSearch').val()  // Yeni eklenen search değeri
-              },
-              success: function(response) {
-                  callback({
-                      data: response.items,
-                      recordsTotal: response.total_items,
-                      recordsFiltered: response.total_items
-                  });
-              },
-              error: function(xhr, status, error) {
-                  console.error("Veri çekme hatası: ", error);
-              }
-          });
-      },
-      "columns": [
+    var columns = [
           { "data": "username" },
           { "data": "email" },
           { 
@@ -223,17 +197,46 @@
                   var checked = data ? "checked" : "";
                   return '<input type="checkbox" class="switch-status is_banned" data-user-id="'+ row.id +'" '+ checked +' data-off-color="success" data-on-color="danger" data-on-text="Banlı" data-off-text="Aktif">';
               }
-          },
-          {
+          }
+    ];
+    {% if "bc8650b1-a41f-417d-a4c2-ab59b2738195" in current_user.roles %}
+    columns.push({
               "data": null,
               "orderable": false,
               "render": function(data, type, row) {
-                  // Mevcut roller dizisini virgülle birleştirerek data attribute olarak ekliyoruz.
                   var rolesStr = row.roles.join(",");
                   return '<button type="button" class="btn btn-warning btn-sm authorize-btn" data-user-id="'+ row.id +'" data-user-roles="'+ rolesStr +'">Yetkilendirme</button>';
               }
-          }
-      ]
+          });
+    {% endif %}
+    
+    var table = $("#example1").DataTable({
+      "processing": true,
+      "serverSide": true,
+      "searching": false,
+      "ajax": function (data, callback, settings) {
+          var page = Math.floor(data.start / data.length) + 1;
+          var limit = data.length;
+          $.ajax({
+              url: "/admin/users",
+              data: { 
+                  page: page, 
+                  limit: limit, 
+                  search: $('#customSearch').val()
+              },
+              success: function(response) {
+                  callback({
+                      data: response.items,
+                      recordsTotal: response.total_items,
+                      recordsFiltered: response.total_items
+                  });
+              },
+              error: function(xhr, status, error) {
+                  console.error("Veri çekme hatası: ", error);
+              }
+          });
+      },
+      "columns": columns
     });
 
     // DataTables her çizim sonrasında yeni elementler için Bootstrap Switch'i initialize ediyoruz
