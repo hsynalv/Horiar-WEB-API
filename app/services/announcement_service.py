@@ -107,6 +107,6 @@ class AnnouncementService(BaseService):
         """
         query = Announcement.objects()
         if is_published is not None:
-            query = query.filter(is_published=is_published)
+            query = query.filter(is_published=True)
 
         return query.order_by('-created_at')  # En son oluşturulanlar önce gelir
