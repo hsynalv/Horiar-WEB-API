@@ -105,8 +105,6 @@ class AnnouncementService(BaseService):
         """
         Tüm duyuruları getirir. Yayın durumuna göre filtreleme yapılabilir.
         """
-        query = Announcement.objects()
-        if is_published is not None:
-            query = query.filter(is_published=True)
+        query = Announcement.objects(is_published=True)
 
         return query.order_by('-created_at')  # En son oluşturulanlar önce gelir
