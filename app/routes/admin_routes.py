@@ -6,6 +6,7 @@ from flask import render_template, redirect, url_for, flash, Blueprint, session,
 from flask_login import login_user, logout_user
 from mongoengine import Q
 
+from app.models.Discord.discord_server import DiscordServer
 from app.models.Discord.discord_stats import DiscordStats
 from app.models.coupon_model import Coupon
 from app.models.discord_image_request_model import DiscordImageRequest
@@ -1045,7 +1046,9 @@ def announcements():
 @admin_routes_bp.route('/discord-stats', methods=['GET'])
 def get_discord_stats():
     discord_stats =  DiscordStats.objects.first()
-    return render_template('admin/discord/discord_stats.html', discord_stats=discord_stats)
+    discord_servers = DiscordServer.objects.all()
+    return render_template('admin/discord/discord_stats.html', discord_stats=discord_stats, 
+                           discord_servers=discord_servers)
 
 @admin_routes_bp.route('/discord-users', methods=['GET'])
 def get_discord_users():

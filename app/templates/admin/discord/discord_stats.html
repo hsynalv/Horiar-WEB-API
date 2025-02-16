@@ -30,7 +30,7 @@
             <!-- small box -->
             <div class="small-box bg-info">
               <div class="inner">
-                <h3>{{ discord_stats.total_users }}</h3>
+                <h3>{{ discord_stats.general_stats.unique_users }}</h3>
                 <p>Kullanıcı </p>
               </div>
               <div class="icon">
@@ -44,7 +44,7 @@
                       <!-- small box -->
                       <div class="small-box bg-gradient-gray">
                         <div class="inner">
-                          <h3>{{ discord_stats.total_servers }}</h3>
+                          <h3>{{ discord_stats.general_stats.total_servers }}</h3>
                           <p>Server</p>
                         </div>
                         <div class="icon">
@@ -75,7 +75,7 @@
               <div class="inner">
                 <h3>{{ discord_stats.usage_stats.total_variations_created }}</h3>
 
-                <p>Upscale</p>
+                <p>Varyasyon</p>
               </div>
               <div class="icon">
                 <i class="ion ion-person-add"></i>
@@ -96,31 +96,19 @@
                       <th>Server Adı</th>
                       <th>Üye Sayısı</th>
                       <th>İstek Sayısı</th>
-                      <th>Aktif mi?</th>
                       <th>Katılma Tarihi</th>
                       <th>Son Aktiflik</th>
                   </tr>
                   </thead>
                     <tbody>
-                    {% for item in discord_stats.servers %}
+                    {% for item in discord_servers %}
                     <tr>
-                        <td>{{ item.server_id }}</td>
-                        <td>{{ item.server_name }}</td>
-                        <td>{{ item.member_count }}</td>
-                        <td>{{ item.total_requests }}</td>
-                        <td>
-                        {% if item.is_active == True %}
-                                    <span style="display:inline-block; background-color: #4eff00; color: #000000; padding: 3px 6px; margin: 2px; border-radius: 4px;">
-                                        EVET
-                                    </span>
-                                {% elif role == False %}
-                                    <span style="display:inline-block; background-color: #ff0000; color: #000000; padding: 3px 6px; margin: 2px; border-radius: 4px;">
-                                        HAYIR
-                                    </span>
-                             {% endif %}
-                        </td>
-                        <td>{{ item.join_date.strftime('%Y/%m/%d') }}</td>
-                        <td>{{ item.last_active.strftime('%Y/%m/%d') }}</td>
+                        <td>{{ item.serverId }}</td>
+                        <td>{{ item.serverName }}</td>
+                        <td>{{ item.memberCount }}</td>
+                        <td>{{ item.totalRequests }}</td>
+                        <td>{{ item.joinDate.strftime('%Y/%m/%d') }}</td>
+                        <td>{{ item.lastRequest.strftime('%Y/%m/%d') }}</td>
                     </tr>
                     </tr>
                     {% endfor %}

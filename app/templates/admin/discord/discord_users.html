@@ -37,8 +37,7 @@
                       <th>Başarılı İstek</th>
                       <th>Başarısız İstek</th>
                       <th>Text to Image</th>
-                      <th>ReGenerate</th>
-                      <th>Upscale</th>
+                      <th>Varyasyon</th>
                   </tr>
                   </thead>
                     <tbody>
@@ -52,8 +51,7 @@
                         <td>{{ item.statistics.successCount }}</td>
                         <td>{{ item.statistics.failureCount }}</td>
                         <td>{{ item.statistics.generateCount }}</td>
-                        <td>{{ item.statistics.recreateCount }}</td>
-                        <td>{{ item.statistics.upscaleCount }}</td>
+                        <td>{{ item.statistics.variationCount }}</td>
                     </tr>
                     {% endfor %}
                     </tbody>

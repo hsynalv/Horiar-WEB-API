@@ -15,7 +15,10 @@ class Request(EmbeddedDocument):
     prompt = StringField(db_field='prompt', required=True)
     resolution = StringField(db_field='resolution', required=True)
     modelType = StringField(db_field='modelType', required=True)
+    originalMessageId = StringField(db_field='originalMessageId')
     originalImages = ListField(EmbeddedDocumentField(OriginalImage), db_field='originalImages')
+    processingTime = IntField(db_field='processingTime', required=True)
+    userId = StringField(db_field='userId', required=True)
     _id = StringField(db_field='_id')
 
     @property
@@ -28,16 +31,21 @@ class Request(EmbeddedDocument):
             "prompt": self.prompt,
             "resolution": self.resolution,
             "modelType": self.modelType,
+            "originalMessageId": self.originalMessageId if self.originalMessageId else None,
+            "processingTime": self.processingTime,
+            "userId": self.userId,
             "_id": str(self._id) if self._id else None,
             "originalImages": [{"url": oi.url, "seed": oi.seed} for oi in self.originalImages]
         }
 
+    def to_dict(self):
+        return self.as_dict()
+
 class Statistics(EmbeddedDocument):
     failureCount = IntField(db_field='failureCount', required=True)
     generateCount = IntField(db_field='generateCount', required=True)
-    recreateCount = IntField(db_field='recreateCount', required=True)
     successCount = IntField(db_field='successCount', required=True)
-    upscaleCount = IntField(db_field='upscaleCount', required=True)
+    variationCount = IntField(db_field='variationCount', required=True)
 
 class DiscordUsers(Document):
     _id = StringField(db_field='_id', required=True)
