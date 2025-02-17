@@ -333,8 +333,7 @@ def get_user_requests(payload):
 def password_reset_request():
     data = request.json
     email = data.get('email')
-    # NEXT_LOCALE cookie'sini al, varsayılan olarak 'en' kullan
-    locale = request.cookies.get('NEXT_LOCALE', 'tr')
+    locale = data.get('locale', 'en')
     
     if not email:
         return jsonify({'message': 'Email alanı gereklidir.'}), 400
