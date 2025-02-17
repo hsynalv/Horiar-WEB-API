@@ -333,9 +333,12 @@ def get_user_requests(payload):
 def password_reset_request():
     data = request.json
     email = data.get('email')
+    # NEXT_LOCALE cookie'sini al, varsayılan olarak 'en' kullan
+    locale = request.cookies.get('NEXT_LOCALE', 'tr')
+    
     if not email:
         return jsonify({'message': 'Email alanı gereklidir.'}), 400
-    response = UserService.initiate_password_reset(email)
+    response = UserService.initiate_password_reset(email, locale)
     return jsonify(response), 200
 
 # Yeni: Şifre sıfırlama endpoint'i

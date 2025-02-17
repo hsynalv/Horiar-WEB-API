@@ -246,7 +246,7 @@ class UserService(BaseService):
     
 
     @staticmethod
-    def initiate_password_reset(email):
+    def initiate_password_reset(email, language):
         """
         Şifre sıfırlama isteğini başlatır. Kullanıcının e-posta adresi ile ilgili bir kullanıcı varsa,
         geçerli bir reset token oluşturur ve bu token ile şifre sıfırlama e-postası gönderir.
@@ -265,7 +265,7 @@ class UserService(BaseService):
             logging.info(f"token: {token}")
             
             # Şifre sıfırlama linkini oluşturun (domain adresinizi uygun şekilde düzenleyin)
-            reset_link = f"https://horiar.com/reset-password?token={token}"
+            reset_link = f"https://horiar.com/{language}/reset-password?token={token}"
             send_password_reset_email(email, reset_link)
         
         # Güvenlik amacıyla, eğer kullanıcı bulunmasa bile aynı mesaj döndürülür.
