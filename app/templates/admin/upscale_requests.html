@@ -11,8 +11,7 @@
             <!-- Sağ tarafa arama çubuğu -->
             <div class="col-sm-6">
                 <div class="input-group float-right">
-                    <input type="text" id="search-input" class="form-control" placeholder="Kullanıcı adı veya email ile ara...">
-                    <button class="btn btn-primary" id="search-button">Ara</button>
+                    <input type="text" id="search-input" class="form-control" placeholder="Kullanıcı adı ile ara...">
                 </div>
             </div>
         </div>
@@ -65,9 +64,9 @@ document.addEventListener('DOMContentLoaded', function () {
         loadUpscaleRequests(1, currentSortOrder, currentSearchQuery);
     });
 
-    // Arama butonuna tıklama
-    document.getElementById('search-button').addEventListener('click', function () {
-        currentSearchQuery = document.getElementById('search-input').value.trim();
+    // Arama kutusuna her girişte (input) tetiklenecek event listener
+    document.getElementById('search-input').addEventListener('input', function () {
+        currentSearchQuery = this.value.trim();
         loadUpscaleRequests(1, currentSortOrder, currentSearchQuery);
     });
 });

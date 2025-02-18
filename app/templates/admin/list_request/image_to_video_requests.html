@@ -16,8 +16,7 @@
             </div>
             <div class="col-sm-6 d-flex justify-content-end">
                 <div class="input-group" style="width: 300px;">
-                    <input type="text" id="search-input" class="form-control" placeholder="Kullanıcı adı veya e-posta ile ara...">
-                    <button class="btn btn-primary" id="search-button">Ara</button>
+                    <input type="text" id="search-input" class="form-control" placeholder="Kullanıcı adı ile ara...">
                 </div>
             </div>
         </div>
@@ -91,8 +90,8 @@ document.addEventListener('DOMContentLoaded', function () {
         loadImageRequests(1, currentSortOrder, currentSearchQuery);
     });
 
-    document.getElementById('search-button').addEventListener('click', function () {
-        currentSearchQuery = document.getElementById('search-input').value.trim();
+    document.getElementById('search-input').addEventListener('input', function () {
+        currentSearchQuery = this.value.trim();
         loadImageRequests(1, currentSortOrder, currentSearchQuery);
     });
 });
