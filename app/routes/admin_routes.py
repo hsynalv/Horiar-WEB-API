@@ -879,13 +879,13 @@ def list_user_images():
         # TextToImage koleksiyonundan verileri sayfalama ile alıyoruz
         if query:
             user_images = TextToImage.objects.filter(
-                Q(username__icontains=query) 
-            ).skip((page - 1) * limit).limit(limit)
+                Q(username__icontains=query)
+            ).order_by('-datetime').skip((page - 1) * limit).limit(limit)
             total_items = TextToImage.objects.filter(
                 Q(username__icontains=query)
             ).count()
         else:
-            user_images = TextToImage.objects.skip((page - 1) * limit).limit(limit)
+            user_images = TextToImage.objects.order_by('-datetime').skip((page - 1) * limit).limit(limit)
             total_items = TextToImage.objects.count()
 
         # JSON formatına dönüştürme

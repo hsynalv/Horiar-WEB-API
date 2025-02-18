@@ -25,7 +25,8 @@ class TextToImage(Document):
 
     meta = {
         'db_alias': "default",
-        'collection': 'text_to_image'
+        'collection': 'text_to_image',
+        'ordering': ['-datetime']
     }
 
     def to_dict(self):
@@ -47,7 +48,7 @@ class TextToImage(Document):
             "source": self.source,
             "user_id": self.user_id,
             "username": self.username,
-            "consistent":self.consistent
+            "consistent": self.consistent
         }
 
     def to_dict_frontend(self):
@@ -60,5 +61,5 @@ class TextToImage(Document):
             "resolution": self.resolution,
             "image_url": self.image_url,
             "image_url_webp": self.image_url_webp,
-            "consistent":self.consistent
+            "consistent": self.consistent
         }

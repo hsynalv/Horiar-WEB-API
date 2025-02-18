@@ -8,7 +8,6 @@
                 <h2>Kullanıcı Fotoğrafları</h2>
                 <div class="d-flex">
                     <input type="text" id="search-input" class="form-control mr-2" placeholder="Kullanıcı Adı ile ara">
-                    <button id="search-button" class="btn btn-primary">Ara</button>
                 </div>
             </div>
             <!-- Yüklenme spinner'ı -->
@@ -71,9 +70,9 @@
     document.addEventListener('DOMContentLoaded', function() {
         loadUserImages(1); // İlk sayfayı yüklüyoruz ve limit 20 olacak şekilde
 
-        // Arama butonuna tıklama
-        document.getElementById('search-button').addEventListener('click', function() {
-            const query = document.getElementById('search-input').value.trim();
+        // Arama kutusuna her giriş yapıldığında tetiklenecek event listener
+        document.getElementById('search-input').addEventListener('input', function() {
+            const query = this.value.trim();
             loadUserImages(1, query);
         });
     });
