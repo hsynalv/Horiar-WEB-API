@@ -49,6 +49,7 @@
                   <th>Kayıt Tipi</th>
                   <th>Oluşturulma Tarihi</th>
                   <th>Roller</th>
+                  <th>Kredi</th>
                   <th>Aktiflik Durumu</th>
                   <th>Ban Durumu</th>
                   {% if "bc8650b1-a41f-417d-a4c2-ab59b2738195" in current_user.roles %}
@@ -182,6 +183,12 @@
                       }
                   });
                   return rolesHtml;
+              }
+          },
+          { 
+              "data": "base_credits",
+              "render": function(data, type, row) {
+                  return data;  // Badge'i kaldırıp sadece sayıyı gösteriyoruz
               }
           },
           { 

@@ -114,7 +114,9 @@ def admin_users():
                     (["Manuel"] if user.password else []) +
                     (["Discord"] if user.discord_id else []) +
                     (["Google"] if user.google_id else [])
-                )
+                ),
+                "base_credits": user.base_credits,
+                "is_banned": user.is_banned
             }
             for user in users
         ]
@@ -877,7 +879,7 @@ def list_user_images():
         # TextToImage koleksiyonundan verileri sayfalama ile alıyoruz
         if query:
             user_images = TextToImage.objects.filter(
-                Q(username__icontains=query)
+                Q(username__icontains=query) 
             ).skip((page - 1) * limit).limit(limit)
             total_items = TextToImage.objects.filter(
                 Q(username__icontains=query)

@@ -47,7 +47,12 @@
                 </button>
             </div>
             <div class="modal-body" id="prompt-modal-body" style="font-size: 1.1rem; line-height: 1.6;">
-                <!-- Prompt içeriği burada gösterilecek -->
+                <div class="mb-3">
+                    <strong>Kullanıcı Adı:</strong> <span id="modal-username"></span>
+                </div>
+                <div>
+                    <strong>Prompt:</strong> <span id="modal-prompt"></span>
+                </div>
             </div>
             <div class="modal-footer border-0">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
@@ -107,7 +112,7 @@
                             </div>
                             <img src="${image.image_url_webp}" class="card-img-top" alt="User Image">
                             <div class="card-body">
-                                <p class="card-text prompt-text" data-prompt="${image.prompt}">${image.prompt.substring(0, 30)}...</p>
+                                <p class="card-text prompt-text" data-prompt="${image.prompt}" data-username="${image.username}">${image.prompt.substring(0, 30)}...</p>
                             </div>
                         </div>
                     </div>`;
@@ -126,7 +131,8 @@
                 document.querySelectorAll('.prompt-text').forEach(promptElement => {
                     promptElement.addEventListener('click', function() {
                         const fullPrompt = this.getAttribute('data-prompt');
-                        showPromptModal(fullPrompt);
+                        const username = this.getAttribute('data-username');
+                        showPromptModal(fullPrompt, username);
                     });
                 });
 
@@ -162,9 +168,13 @@
         });
     }
 
-    function showPromptModal(prompt) {
+    function showPromptModal(prompt, username) {
         const modalBody = document.getElementById('prompt-modal-body');
-        modalBody.textContent = prompt;
+        const modalUsername = document.getElementById('modal-username');
+        const modalPrompt = document.getElementById('modal-prompt');
+        
+        modalUsername.textContent = username;
+        modalPrompt.textContent = prompt;
 
         // Modal'ı açıyoruz
         $('#promptModal').modal('show');
