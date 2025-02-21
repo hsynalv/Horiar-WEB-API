@@ -14,8 +14,8 @@ def get_all_gallery_items():
         page = int(request.args.get('page', 1))
         limit = int(request.args.get('limit', 30))
 
-        # Sayfalama ile gallery öğelerini alıyoruz
-        gallery_items = GalleryPhoto.objects.skip((page - 1) * limit).limit(limit)
+        # Gallery öğelerini en son eklenenden başlamak üzere sıralıyoruz ve sayfalama uyguluyoruz
+        gallery_items = GalleryPhoto.objects.order_by('-created_at').skip((page - 1) * limit).limit(limit)
         total_items = GalleryPhoto.objects.count()
         total_pages = (total_items + limit - 1) // limit  # Toplam sayfa sayısını hesaplıyoruz
 
