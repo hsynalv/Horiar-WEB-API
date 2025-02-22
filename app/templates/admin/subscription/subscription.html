@@ -86,12 +86,11 @@
                     <tr>
                         <td>{{ request.username }}</td>
                         <td>{{ request.email }}</td>
-                        <td>{{ request.subscription_date }}</td>
-                        <td>{{ request.subscription_end_date }}</td>
+                        <td>{{ request.subscription_date.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>{{ request.subscription_end_date.strftime('%d/%m/%Y') }}</td>
                         <td>{{ request.merchant_oid }}</td>
                         <td>{{ request.credit_balance }}</td>
                         <td>{{ request.used_coupon }}</td>
-
                     </tr>
                     {% endfor %}
                 </tbody>
