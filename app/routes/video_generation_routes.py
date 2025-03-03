@@ -15,12 +15,13 @@ def generate_text_to_video(payload):
 
     room = payload.get("sub")
     prompt = data.get('prompt')
+    model = data.get('model', 'cog-video')
 
     if not prompt:
         return jsonify({"message": "Missing required fields"}), 400
 
     # Kuyruğa göre video generation işlemini başlatma
-    job = VideoGenerationService.generate_text_to_video_with_queue(prompt, payload, room)
+    job = VideoGenerationService.generate_text_to_video_with_queue(prompt, payload, model, room)
 
     return jsonify({"message": "Request has been queued", "job_id": job.id, "room": room}), 200
 

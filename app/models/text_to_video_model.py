@@ -9,7 +9,8 @@ class TextToVideoGeneration(Document):
     cost = FloatField(required=False)  # Cost of the video generation process
     execution_time = FloatField(required=False)  # Execution time in milliseconds
     video_url = StringField(required=True)  # URL of the generated video
-    datetime = DateTimeField(default=datetime.utcnow, required=True)  # Date and time of the request
+    datetime = DateTimeField(default=datetime.utcnow, required=True)  # Date and time of the request,
+    model = StringField(required=False)
 
     meta = {
         'db_alias': "default",
@@ -25,12 +26,14 @@ class TextToVideoGeneration(Document):
             "cost": self.cost,
             "execution_time": self.execution_time,
             "video_url": self.video_url,
-            "datetime": self.datetime
+            "datetime": self.datetime,
+            "model": self.model
         }
 
     def to_dict_frontend(self):
         return {
             "prompt": self.prompt,
             "video_url": self.video_url,
-            "datetime": self.datetime
+            "datetime": self.datetime,
+            "model": self.model
         }

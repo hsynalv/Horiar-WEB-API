@@ -195,6 +195,7 @@ def register_blueprints(app):
                         username=request_info.get("username"),
                         response=data,
                         prompt=request_info.get("prompt"),
+                        model=request_info.get("model")
                     )
                     message = {"status": status, "message": image_url}
 

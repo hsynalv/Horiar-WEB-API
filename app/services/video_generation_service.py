@@ -59,7 +59,7 @@ class VideoGenerationService(BaseService):
     # ----------------------------------------- Text To Video --------------------------------------------------------
 
     @staticmethod
-    def update_workflow_with_t2v(path, prompt):
+    def update_workflow_with_t2v(path, prompt, model):
         """
         workflow.json dosyasını okur ve verilen prompt ile günceller.
         """
@@ -68,12 +68,17 @@ class VideoGenerationService(BaseService):
 
         # JSON verisinde gerekli değişiklikleri yap
 
-        workflow_data["input"]["workflow"]["30"]["inputs"]["prompt"] = prompt
+        if model == "cog-video":
+            workflow_data["input"]["workflow"]["30"]["inputs"]["prompt"] = prompt
+        elif model == "hunyuan-video":
+            workflow_data["input"]["workflow"]["44"]["inputs"]["text"] = prompt
+        else:
+            workflow_data["input"]["workflow"]["30"]["inputs"]["prompt"] = prompt
 
         return workflow_data
 
     @staticmethod
-    def save_text_to_video_to_db(user_id, username, prompt, response):
+    def save_text_to_video_to_db(user_id, username, prompt, response, model):
         """
         Kullanıcı video üretim isteğini veritabanına kaydeder.
         """
@@ -97,7 +102,8 @@ class VideoGenerationService(BaseService):
             cost=cost,
             execution_time=float(execution_time) if execution_time else 0.0,
             user_id=user_id,
-            username=username
+            username=username,
+            model=model
         )
 
         # Veritabanına kaydet
@@ -143,17 +149,25 @@ class VideoGenerationService(BaseService):
             "per_page": per_page
         }
 
-    def generate_text_to_video_with_queue(prompt, payload, room):
+    def generate_text_to_video_with_queue(prompt, payload, model, room):
         """Kuyruğa göre video generation işlemini başlatır."""
+
         job = add_to_video_queue(
             VideoGenerationService.run_text_to_video_generation,
-            prompt=prompt, payload=payload, room=room
+            prompt=prompt, payload=payload, model=model,room=room
         )
         notify_status_update(room, 'processing', 'Your video request is being processed.')
         return job
 
     @staticmethod
-    def run_text_to_video_generation(prompt, payload, room=None):
+    def run_text_to_video_generation(prompt, payload, model, room=None):
+
+        print("Gelen parametreler text_to_video_generation")
+        print(f"{prompt} prompt")
+        print(f"{payload} payload")
+        print(f"{model} model")
+        print(f"{room} room")
+
         # create_app fonksiyonunu burada import edin
         from app import create_app
 
@@ -161,24 +175,36 @@ class VideoGenerationService(BaseService):
         app = create_app()
 
         with app.app_context():
-            workflow_path = os.path.join(os.getcwd(), 'app/workflows/T2V.json')
+
+            if model == "cog-video":
+                runpod_url = "RUNPOD_VIDEO_URL_COG"
+                workflow_path = os.path.join(os.getcwd(), 'app/workflows/T2V.json')
+            elif model == "hunyuan-video":
+                runpod_url = "RUNPOD_VIDEO_URL_HUNYUAN"
+                workflow_path = os.path.join(os.getcwd(), 'app/workflows/hunyuan_t2v.json')
+            else:
+                runpod_url = "RUNPOD_VIDEO_URL_COG"
+                workflow_path = os.path.join(os.getcwd(), 'app/workflows/T2V.json')
+
+
 
             translatePrompt = VideoGenerationService.translatePrompt(prompt)
 
             # workflow.json dosyasını güncelle
 
             updated_workflow = VideoGenerationService.update_workflow_with_t2v(
-                path=workflow_path, prompt=translatePrompt,
+                path=workflow_path, prompt=translatePrompt, model=model
             )
 
 
             user_id = payload["sub"]
             username = payload["username"]
 
+
             # RunPod isteği gönder
             result, status_code = send_runpod_request(
                 app=app, user_id=user_id, username=username,
-                data=json.dumps(updated_workflow), runpod_url="RUNPOD_VIDEO_URL",
+                data=json.dumps(updated_workflow), runpod_url=runpod_url,
                 timeout=600
             )
 
@@ -192,7 +218,8 @@ class VideoGenerationService(BaseService):
                     "prompt": prompt,
                     "room": room,
                     "status": "IN_PROGRESS",
-                    "job_type": "text_to_video_generation"
+                    "job_type": "text_to_video_generation",
+                    "model": model
                 }
                 redis_conn.setex(f"runpod_request:{runpod_id}", 3600, json.dumps(redis_data))
                 notify_status_update(room, 'in_progress', 'Your video request is being processed.')
@@ -297,7 +324,7 @@ class VideoGenerationService(BaseService):
             # RunPod isteği gönder
             result, status_code = send_runpod_request(
                 app=app, user_id=user_id, username=username,
-                data=json.dumps(updated_workflow), runpod_url="RUNPOD_VIDEO_URL",
+                data=json.dumps(updated_workflow), runpod_url="RUNPOD_VIDEO_URL_COG",
                 timeout=600
             )
 
