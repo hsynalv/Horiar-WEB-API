@@ -30,6 +30,8 @@ from app.services.video_generation_service import VideoGenerationService
 from app.utils.notification import notify_user_via_websocket
 from app.utils.queue_manager import redis_conn
 
+from PyPDF2 import PdfReader
+
 
 def register_blueprints(app):
     # Parent Blueprint tanımlaması
@@ -106,6 +108,38 @@ def register_blueprints(app):
         except Exception as e:
             logging.error(f"Kredi tanımlama hatası: {str(e)}")
             return jsonify({"success": False, "message": "Kredi tanımlama sırasında bir hata oluştu"}), 500
+
+    # Dosya uzantısı kontrolü
+    def allowed_file(filename):
+        ALLOWED_EXTENSIONS = {'pdf'}
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+    @app.route('/upload-scenerio', methods=['POST'])
+    def upload_scenerio():
+        if 'file' not in request.files:
+            return jsonify({'error': 'Dosya seçilmedi'}), 400
+
+        file = request.files['file']
+
+        if file.filename == '':
+            return jsonify({'error': 'Dosya seçilmedi'}), 400
+
+        if file and allowed_file(file.filename):
+            try:
+                # PDF'i oku
+                pdf_reader = PdfReader(file)
+                text = ""
+
+                # Her sayfayı oku
+                for page in pdf_reader.pages:
+                    text += page.extract_text()
+
+                return jsonify({'success': True, 'text': text})
+
+            except Exception as e:
+                return jsonify({'error': f'PDF okuma hatası: {str(e)}'}), 500
+
+        return jsonify({'error': 'İzin verilmeyen dosya türü'}), 400
 
     @app.route('/webhook', methods=['POST'])
     def runpod_webhook():
