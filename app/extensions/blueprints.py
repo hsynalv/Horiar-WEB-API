@@ -5,7 +5,7 @@ from flask import send_from_directory, current_app, jsonify, request
 import logging
 import json
 
-from app.auth import jwt_required
+from app.auth import jwt_required, verify_jwt_token
 from app.models.subscription_model import Subscription
 from app.models.user_model import User
 from app.routes.admin_routes import admin_routes_bp
@@ -411,5 +411,15 @@ def register_blueprints(app):
             logging.info(f"-------------------------------------------------------------------------------------")
             return jsonify({"message": f"Error processing webhook: {str(e)}"}), 500
 
+    @app.route('/verify-token', methods=['GET'])
+    @jwt_required(pass_payload=True)
+    def verify_token(payload):
+        """
+        Bearer token'ın geçerli olup olmadığını kontrol eden endpoint.
+        """
+        if payload:
+            return jsonify({"success": True, "message": "Token is valid"}), 200
+        else:
+            return jsonify({"success": False, "message": "Token is invalid"}), 401
 
 
